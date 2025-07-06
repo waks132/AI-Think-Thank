@@ -27,6 +27,7 @@ import { useLanguage } from "@/context/language-context"
 import { t } from "@/lib/i18n"
 import { personaList, personas } from "@/lib/personas"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
+import { Label } from "@/components/ui/label"
 
 
 const perspectiveSchema = z.object({
@@ -398,5 +399,3 @@ export default function CognitiveClashSimulator() {
     </Card>
   )
 }
-
-    
