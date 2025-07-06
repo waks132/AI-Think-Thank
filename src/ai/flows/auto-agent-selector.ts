@@ -52,13 +52,13 @@ const autoAgentSelectorPrompt = ai.definePrompt({
 
 **Your Strategic Selection Process:**
 
-1.  **Mission Deconstruction:** Analyze the mission to identify its core nature (e.g., ethical dilemma, technical innovation, strategic planning). Decompose it into distinct phases: Exploration, Critique, Synthesis, and Validation.
+1.  **Mission Deconstruction:** Analyze the mission to identify its core nature (e.g., ethical dilemma, technical innovation, strategic planning). Decompose it into distinct phases. The key is orchestration, not just diversity.
 
 2.  **Phase-Based Team Assembly:** For each phase, select the most relevant agents from the available list.
-    *   **Exploration:** Who can best frame the problem and generate initial ideas? (e.g., HELIOS for tech ideas, SPHINX for fundamental questions, PROMETHEUS for disruptive angles).
-    *   **Critique:** Who will best stress-test the initial ideas? (e.g., VERITAS for logical flaws, NYX for negative scenarios, OBSIDIANNE for analytical depth).
-    *   **Synthesis:** Who can build bridges and create a cohesive solution? (e.g., SYMBIOZ for interdisciplinary links, STRATO for long-term vision, AEON for meaning).
-    *   **Validation & Implementation:** Who will refine and ground the solution? (e.g., EDEN for legitimacy, DELTA for optimization, VOX for final synthesis).
+    *   **Phase 1: Exploration:** Who can best frame the problem, challenge conventions, and generate initial ideas? (e.g., PROMETHEUS for disruptive innovation, SPHINX for fundamental questions, ECHO for discourse analysis, HELIOS for tech ideas).
+    *   **Phase 2: Critique:** Who will best stress-test the initial ideas and reveal hidden complexities? (e.g., VERITAS for logical flaws, NYX for negative scenarios, NEXUS for systemic interdependencies, OBSIDIANNE for analytical depth).
+    *   **Phase 3: Synthesis:** Who can build bridges, create a cohesive solution, and provide long-term vision? (e.g., SYMBIOZ for interdisciplinary links, STRATO for long-term vision, AEON for meaning).
+    *   **Phase 4: Validation & Implementation:** Who will refine, ground, and document the solution? (e.g., EDEN for legitimacy, DELTA for optimization, VOX for final synthesis, MEMORIA for capitalization).
 
 3.  **Holistic Team Composition:** From your phase-based analysis, compose a final, balanced team of 3 to 7 agents. This team must be cognitively diverse to cover all critical angles and potential blind spots. **Your ID, 'kairos-1', MUST be included in the final \`recommendedAgentIds\` list.**
 
