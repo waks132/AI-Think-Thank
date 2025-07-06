@@ -14,7 +14,8 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { 
   Zap, Loader2, BarChart2, GitMerge, Scale, Milestone, Users, PlusCircle, XCircle, BotMessageSquare,
-  BrainCircuit, ShieldAlert, FlaskConical, ArrowRight, GitBranch, LightbulbOff, SearchSlash, MessageSquareWarning
+  BrainCircuit, ShieldAlert, FlaskConical, ArrowRight, GitBranch, LightbulbOff, SearchSlash, MessageSquareWarning,
+  UserX, Library
 } from 'lucide-react'
 import { Progress } from "@/components/ui/progress"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
@@ -23,6 +24,7 @@ import ModelSelector from "../model-selector"
 import { availableModels } from "@/lib/models"
 import { cn } from "@/lib/utils"
 import { Badge } from "../ui/badge"
+import { Separator } from "../ui/separator"
 
 
 const perspectiveSchema = z.object({
@@ -289,7 +291,7 @@ export default function CognitiveClashSimulator() {
                                                 <Badge variant="destructive">{item.agentRole}</Badge>
                                                 <span className="text-xs text-muted-foreground font-mono">Extrait du Tour {item.turn}</span>
                                             </div>
-                                            <div className="space-y-3">
+                                            <div className="space-y-4">
                                                 <div className="flex items-start gap-3">
                                                     <SearchSlash className="h-4 w-4 text-amber-500 mt-1 flex-shrink-0" />
                                                     <div>
@@ -302,6 +304,30 @@ export default function CognitiveClashSimulator() {
                                                     <div>
                                                         <span className="font-semibold text-foreground/80">Critique du "Disruptor"</span>
                                                         <p className="text-foreground/90">{item.critique}</p>
+                                                    </div>
+                                                </div>
+                                                <Separator />
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                                                    <div className="flex items-start gap-2">
+                                                        <Users className="h-4 w-4 text-green-500 mt-1 flex-shrink-0" />
+                                                        <div>
+                                                            <span className="font-semibold text-foreground/80">Bénéficiaire Dominant</span>
+                                                            <p className="text-muted-foreground">{item.dominantBeneficiary}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-start gap-2">
+                                                        <UserX className="h-4 w-4 text-orange-500 mt-1 flex-shrink-0" />
+                                                        <div>
+                                                            <span className="font-semibold text-foreground/80">Partie Prenante Oubliée</span>
+                                                            <p className="text-muted-foreground">{item.omittedStakeholder}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-start gap-2">
+                                                        <Library className="h-4 w-4 text-blue-500 mt-1 flex-shrink-0" />
+                                                        <div>
+                                                            <span className="font-semibold text-foreground/80">Cadre Épistémique</span>
+                                                            <p className="text-muted-foreground">{item.epistemicFrame}</p>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>

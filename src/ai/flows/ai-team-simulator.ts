@@ -53,6 +53,9 @@ const AssumptionAnalysisSchema = z.object({
     turn: z.number().describe("The turn number where the assumption was made."),
     assumption: z.string().describe("The underlying, often unstated, assumption in the agent's argument."),
     critique: z.string().describe("A critique of this assumption, often from a disruptive or meta-cognitive perspective."),
+    dominantBeneficiary: z.string().describe("The primary group or class that benefits from this assumption."),
+    omittedStakeholder: z.string().describe("A key stakeholder or group whose interests are overlooked by this assumption."),
+    epistemicFrame: z.string().describe("The underlying knowledge framework or worldview that this assumption relies on (e.g., 'Techno-solutionism', 'Market-fundamentalism')."),
 });
 
 const CognitiveClashSimulatorOutputSchema = z.object({
@@ -96,7 +99,14 @@ const prompt = ai.definePrompt({
     *   **Polarization Index:** Evaluate the final distance between the perspectives. Did they become more extreme and entrenched in their views? Score it from 0.0 (full agreement/fusion) to 1.0 (irreconcilable radicalization).
     *   **Emergent Synthesis:** Describe the final state of the system. What is the resolution? Is it a creative compromise, a clear victory for one side, a stalemate, or a complete breakdown in communication?
 4.  **Map Argument Flow:** Analyze the entire \`simulationLog\` you just generated. Identify and map the direct argumentative interactions where one perspective influences another. For each interaction, specify the source (\`fromPerspective\`), the target (\`toPerspective\`), the \`interactionType\`, and a concise \`summary\` of the influential point. Populate the \`argumentFlow\` array with this analysis.
-5.  **Analyze Underlying Assumptions:** After the simulation, reflect on the entire dialogue. Identify the most critical unstated assumptions made by the agents. For each, note the assumption, the agent who made it, the turn number, and provide a brief critique highlighting its potential biases or limitations. This analysis should reflect the perspective of a critical meta-regulator (like a "Disruptor" persona if one exists). Populate the \`assumptionAnalysis\` array.
+5.  **Analyze Underlying Assumptions:** After the simulation, reflect on the entire dialogue. Identify the most critical unstated assumptions made by the agents. For each identified assumption, provide a detailed analysis:
+    *   Note the \`assumption\` itself.
+    *   Identify the \`agentRole\` who made it and the \`turn\` number.
+    *   Provide a sharp \`critique\` of this assumption, highlighting its biases or limitations from a disruptive, meta-cognitive perspective.
+    *   Specify the \`dominantBeneficiary\` (the group that benefits most if this assumption is accepted).
+    *   Identify an \`omittedStakeholder\` (a group whose perspective is ignored by this assumption).
+    *   Name the \`epistemicFrame\` (the underlying worldview, e.g., 'Techno-solutionism', 'Managerialism', 'Ethical Precautionism').
+    *   Populate the \`assumptionAnalysis\` array with this structured analysis.
 
 Produce your entire analysis in the specified JSON format.
 `,
