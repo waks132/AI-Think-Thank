@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { 
   BrainCircuit, FlaskConical, ClipboardCheck, Lightbulb, Scale, FunctionSquare,
   Compass, Shield, Brain, Layers, BookOpen, Search, Drama, Milestone,
-  Zap, MessageSquare, Palette, Recycle, Code, Mic, Anchor, GitBranch, Users, Loader2, Sparkles, FileText
+  Zap, MessageSquare, Palette, Recycle, Code, Mic, Anchor, GitBranch, Users, Loader2, Sparkles, FileText,
+  ShieldCheck, CheckCircle, XCircle
 } from 'lucide-react';
 import AgentCard from './agent-card';
 import type { Agent } from '@/lib/types';
@@ -158,53 +159,79 @@ export default function MultiAgentDashboard() {
             <div className="space-y-4 animate-fade-in pt-4">
               <Separator />
               <h3 className="font-headline text-xl">Mission Outcome</h3>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><FileText />Collaboration Summary</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="whitespace-pre-wrap">{collaborationResult.collaborationSummary}</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><BrainCircuit />Reasoning</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="whitespace-pre-wrap text-muted-foreground">{collaborationResult.reasoning}</p>
-                </CardContent>
-              </Card>
+               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2"><FileText />Executive Summary</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="whitespace-pre-wrap">{collaborationResult.executiveSummary}</p>
+                    </CardContent>
+                  </Card>
+                   <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2"><BrainCircuit />Reasoning</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="whitespace-pre-wrap text-muted-foreground">{collaborationResult.reasoning}</p>
+                    </CardContent>
+                  </Card>
+                </div>
 
-              {collaborationResult.collaborationLog && collaborationResult.collaborationLog.length > 0 && (
-                <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem value="item-1">
-                        <AccordionTrigger>
-                            <div className="flex items-center gap-2 text-lg font-headline"><MessageSquare />View Collaboration Log</div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                            <div className="space-y-6 max-h-[400px] overflow-y-auto p-4 border rounded-lg bg-background/50">
-                                {collaborationResult.collaborationLog.map((log) => {
-                                    const Icon = agentIconMap.get(log.agentRole) || BrainCircuit;
-                                    return (
-                                        <div key={log.turn} className="flex items-start gap-4 animate-fade-in">
-                                            <div className="p-2 bg-accent rounded-full">
-                                                <Icon className="h-5 w-5 text-accent-foreground" />
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="flex items-baseline justify-between">
-                                                    <p className="font-semibold text-primary">{log.agentRole}</p>
-                                                    <span className="text-xs text-muted-foreground font-mono">Turn {log.turn}</span>
+                <div className="lg:col-span-1 space-y-6">
+                   <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg"><ShieldCheck />Orchestrator Validation</CardTitle>
+                      </CardHeader>
+                      <CardContent className="grid grid-cols-3 gap-4 text-center">
+                        <div className="flex flex-col items-center gap-1">
+                          {collaborationResult.validationGrid.logic ? <CheckCircle className="h-6 w-6 text-green-500" /> : <XCircle className="h-6 w-6 text-red-500" />}
+                          <span className="text-xs font-medium text-muted-foreground">Logic</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-1">
+                          {collaborationResult.validationGrid.ethics ? <CheckCircle className="h-6 w-6 text-green-500" /> : <XCircle className="h-6 w-6 text-red-500" />}
+                          <span className="text-xs font-medium text-muted-foreground">Ethics</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-1">
+                          {collaborationResult.validationGrid.feasibility ? <CheckCircle className="h-6 w-6 text-green-500" /> : <XCircle className="h-6 w-6 text-red-500" />}
+                          <span className="text-xs font-medium text-muted-foreground">Feasibility</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {collaborationResult.collaborationLog && collaborationResult.collaborationLog.length > 0 && (
+                        <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
+                            <AccordionItem value="item-1">
+                                <AccordionTrigger>
+                                    <div className="flex items-center gap-2 text-lg font-headline"><MessageSquare />View Collaboration Log</div>
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                    <div className="space-y-6 max-h-[400px] overflow-y-auto p-4 border rounded-lg bg-background/50">
+                                        {collaborationResult.collaborationLog.map((log) => {
+                                            const Icon = agentIconMap.get(log.agentRole) || BrainCircuit;
+                                            return (
+                                                <div key={log.turn} className="flex items-start gap-4 animate-fade-in">
+                                                    <div className="p-2 bg-accent rounded-full">
+                                                        <Icon className="h-5 w-5 text-accent-foreground" />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="flex items-baseline justify-between">
+                                                            <p className="font-semibold text-primary">{log.agentRole}</p>
+                                                            <span className="text-xs text-muted-foreground font-mono">Turn {log.turn}</span>
+                                                        </div>
+                                                        <p className="text-sm text-foreground/90">{log.contribution}</p>
+                                                    </div>
                                                 </div>
-                                                <p className="text-sm text-foreground/90">{log.contribution}</p>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </AccordionContent>
-                    </AccordionItem>
-                </Accordion>
-              )}
+                                            );
+                                        })}
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Accordion>
+                    )}
+                </div>
+              </div>
             </div>
           )}
         </CardContent>

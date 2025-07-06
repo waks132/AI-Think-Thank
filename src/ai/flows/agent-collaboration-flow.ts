@@ -28,10 +28,17 @@ const CollaborationTurnSchema = z.object({
     contribution: z.string().describe("The agent's message or contribution in this turn."),
  });
 
+const ValidationCriteriaSchema = z.object({
+    logic: z.boolean().describe("Was the final output logically sound?"),
+    ethics: z.boolean().describe("Does the final output adhere to ethical principles?"),
+    feasibility: z.boolean().describe("Is the proposed solution technically and operationally feasible?"),
+});
+
 const AgentCollaborationOutputSchema = z.object({
-  collaborationSummary: z.string().describe('The synthesized summary of the collaboration, representing the collective output of the agents.'),
+  executiveSummary: z.string().describe('A structured executive summary of the final proposed framework or solution, formatted with clear headings and bullet points.'),
   reasoning: z.string().describe('A step-by-step reasoning of how the agents interacted, their key contributions, and how the final synthesis was achieved.'),
   collaborationLog: z.array(CollaborationTurnSchema).describe("A detailed turn-by-turn log of the collaboration process, showing each agent's contribution sequentially."),
+  validationGrid: ValidationCriteriaSchema.describe("An assessment grid from the orchestrator's perspective, validating the final output."),
 });
 export type AgentCollaborationOutput = z.infer<typeof AgentCollaborationOutputSchema>;
 
@@ -56,9 +63,10 @@ You will simulate a discussion between the following agents, ensuring each contr
 {{/each}}
 
 **Your Process:**
-1.  **Simulate Discussion:** Generate a plausible, turn-by-turn conversation between the agents. Document each turn in the \`collaborationLog\` array, including the turn number, agent role, and their specific contribution.
-2.  **Synthesize Outcome:** Based on the simulated discussion, produce a comprehensive \`collaborationSummary\`. This is the final, actionable output that accomplishes the mission.
-3.  **Provide Reasoning:** Detail the \`reasoning\` behind the outcome. Explain the key contributions of each agent as seen in the log, how conflicts were resolved, and how the final summary was synthesized from their diverse inputs.
+1.  **Simulate Discussion:** Generate a plausible, turn-by-turn conversation between the agents. The discussion should show proposition, critique, and refinement. Document each turn in the \`collaborationLog\` array.
+2.  **Provide Reasoning:** Detail the \`reasoning\` behind the collaboration. Explain the key contributions of each agent as seen in the log, how conflicts were resolved, and how the final summary was synthesized.
+3.  **Synthesize Outcome:** Based on the simulated discussion, produce a comprehensive \`executiveSummary\`. This should be a final, actionable output that accomplishes the mission, formatted as a structured plan with clear headings and bullet points. **Do not just summarize the conversation; extract and formalize the final proposed solution.**
+4.  **Validate Outcome:** As the orchestrator, fill out the \`validationGrid\` to provide a final check on the output's quality.
 
 Produce your response in the specified JSON format.`,
 });
