@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { 
   Zap, Loader2, BarChart2, GitMerge, Scale, Milestone, Users, PlusCircle, XCircle, BotMessageSquare,
-  BrainCircuit, ShieldAlert, FlaskConical
+  BrainCircuit, ShieldAlert, FlaskConical, ArrowRight, GitBranch
 } from 'lucide-react'
 import { Progress } from "@/components/ui/progress"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
@@ -21,6 +21,7 @@ import { Label } from "../ui/label"
 import ModelSelector from "../model-selector"
 import { availableModels } from "@/lib/models"
 import { cn } from "@/lib/utils"
+import { Badge } from "../ui/badge"
 
 
 const perspectiveSchema = z.object({
@@ -198,8 +199,8 @@ export default function CognitiveClashSimulator() {
                     <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><BarChart2 />Emergent Synthesis</CardTitle></CardHeader>
                     <CardContent><p className="text-muted-foreground">{result.emergentSynthesis}</p></CardContent>
                 </Card>
-                 <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem value="item-1">
+                 <Accordion type="multiple" className="w-full">
+                    <AccordionItem value="log">
                         <AccordionTrigger>
                             <div className="flex items-center gap-2"><BotMessageSquare />View Simulation Log</div>
                         </AccordionTrigger>
@@ -251,6 +252,28 @@ export default function CognitiveClashSimulator() {
                         </div>
                         </AccordionContent>
                     </AccordionItem>
+                    {result.argumentFlow && result.argumentFlow.length > 0 && (
+                        <AccordionItem value="flow-map">
+                            <AccordionTrigger>
+                                <div className="flex items-center gap-2"><GitBranch />View Argument Influence Map</div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg bg-background/50 max-h-[500px] overflow-y-auto">
+                                    {result.argumentFlow.map((link, index) => (
+                                        <div key={index} className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
+                                            <div className="flex items-center gap-2 text-sm font-semibold">
+                                                <span>{link.fromPerspective}</span>
+                                                <ArrowRight className="h-4 w-4 text-primary" />
+                                                <span>{link.toPerspective}</span>
+                                            </div>
+                                            <Badge variant="secondary">{link.interactionType}</Badge>
+                                            <p className="text-sm text-muted-foreground text-center italic">"{link.summary}"</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+                    )}
                 </Accordion>
             </div>
           )}

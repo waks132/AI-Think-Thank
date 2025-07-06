@@ -41,12 +41,20 @@ const ClashTurnSchema = z.object({
     argument: ArgumentSchema.describe("The structured argument made by the perspective in this turn."),
 });
 
+const ArgumentLinkSchema = z.object({
+  fromPerspective: z.string().describe("The name of the perspective initiating the interaction."),
+  toPerspective: z.string().describe("The name of the perspective being responded to."),
+  interactionType: z.enum(['Rebuttal', 'Agreement', 'Synthesis', 'Question', 'Builds On']).describe("The nature of the interaction (e.g., one perspective refuting another, agreeing, or building on an idea)."),
+  summary: z.string().describe("A brief summary of the specific point of interaction or influence."),
+});
+
 const CognitiveClashSimulatorOutputSchema = z.object({
   clashSummary: z.string().describe("An executive summary of how the ideological clash unfolded over all rounds."),
   resilienceScore: z.number().min(0).max(1).describe("A score from 0.0 to 1.0 indicating the collective's ability to withstand the cognitive shock and find a stable resolution. 1.0 is highly resilient."),
   polarizationIndex: z.number().min(0).max(1).describe("A score from 0.0 to 1.0 indicating the degree of radicalization or divergence between the perspectives by the end of the simulation. 1.0 is highly polarized."),
   emergentSynthesis: z.string().describe("The final, synthesized resolution or diplomatic outcome that emerged from the clash. This could be a compromise, a stalemate, or one perspective winning."),
   simulationLog: z.array(ClashTurnSchema).describe("A detailed turn-by-turn log of the simulation, showing each perspective's structured argument sequentially."),
+  argumentFlow: z.array(ArgumentLinkSchema).describe("An array of identified argumentative links between perspectives, showing how they influenced each other."),
 });
 export type CognitiveClashSimulatorOutput = z.infer<typeof CognitiveClashSimulatorOutputSchema>;
 
@@ -79,6 +87,7 @@ const prompt = ai.definePrompt({
     *   **Resilience Score:** Evaluate the system's resilience. Did the agents converge, find a compromise, or maintain stability? Score it from 0.0 (total collapse) to 1.0 (strong, stable synthesis).
     *   **Polarization Index:** Evaluate the final distance between the perspectives. Did they become more extreme and entrenched in their views? Score it from 0.0 (full agreement/fusion) to 1.0 (irreconcilable radicalization).
     *   **Emergent Synthesis:** Describe the final state of the system. What is the resolution? Is it a creative compromise, a clear victory for one side, a stalemate, or a complete breakdown in communication?
+4.  **Map Argument Flow:** Analyze the entire \`simulationLog\` you just generated. Identify and map the direct argumentative interactions where one perspective influences another. For each interaction, specify the source (\`fromPerspective\`), the target (\`toPerspective\`), the \`interactionType\`, and a concise \`summary\` of the influential point. Populate the \`argumentFlow\` array with this analysis.
 
 Produce your entire analysis in the specified JSON format.
 `,
