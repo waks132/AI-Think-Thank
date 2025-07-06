@@ -11,8 +11,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
-import { WandSparkles, Loader2, Lightbulb } from 'lucide-react'
-import { Separator } from "@/components/ui/separator"
+import { WandSparkles, Loader2, Lightbulb, Sigma } from 'lucide-react'
+import { Progress } from "@/components/ui/progress"
+import { Label } from "@/components/ui/label"
 
 const formSchema = z.object({
   originalPrompt: z.string().min(10, { message: "Original prompt must be at least 10 characters." }),
@@ -55,7 +56,7 @@ export default function AdaptivePromptOrchestrator() {
     <Card>
       <CardHeader>
         <CardTitle className="font-headline text-2xl">Adaptive Prompt Orchestrator</CardTitle>
-        <CardDescription>Adaptively rewrite prompts based on agent performance and lacunae.</CardDescription>
+        <CardDescription>Adaptively rewrite prompts using the PersonaForge Σ-Dual engine.</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -123,7 +124,7 @@ export default function AdaptivePromptOrchestrator() {
             {isLoading && (
               <div className="flex flex-col items-center justify-center h-full p-8 border-2 border-dashed rounded-lg">
                 <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-                <p className="text-muted-foreground">AI is thinking...</p>
+                <p className="text-muted-foreground">PersonaForge Σ-Dual is thinking...</p>
               </div>
             )}
             {result && (
@@ -137,6 +138,27 @@ export default function AdaptivePromptOrchestrator() {
                   </CardHeader>
                   <CardContent>
                     <p className="whitespace-pre-wrap">{result.rewrittenPrompt}</p>
+                  </CardContent>
+                </Card>
+                 <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                       <Sigma className="text-secondary h-5 w-5" />
+                       Analysis & Metrics
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="psi-score">Ψ (Psi) Score</Label>
+                      <div className="flex items-center gap-4 mt-1">
+                        <Progress value={result.psiScore * 100} id="psi-score" className="flex-1" />
+                        <span className="font-bold text-lg text-primary">{result.psiScore.toFixed(2)}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Traceability Note</Label>
+                      <p className="text-xs text-muted-foreground mt-1 italic">{result.traceabilityNote}</p>
+                    </div>
                   </CardContent>
                 </Card>
                  <Card>
