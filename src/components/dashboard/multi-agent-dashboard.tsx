@@ -6,7 +6,7 @@ import AgentCard from './agent-card';
 import type { Agent, LogEntry } from '@/lib/types';
 import useLocalStorage from '@/hooks/use-local-storage';
 import { runAgentCollaboration, type AgentCollaborationOutput } from '@/ai/flows/agent-collaboration-flow';
-import { autoAgentSelector } from '@/ai/flows/auto-agent-selector';
+import { autoAgentSelector, type AutoAgentSelectorOutput } from '@/ai/flows/auto-agent-selector';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Textarea } from '../ui/textarea';
 import { Button } from '../ui/button';
@@ -190,7 +190,7 @@ export default function MultiAgentDashboard() {
           specialization: a.specialization,
         }));
 
-        const result = await autoAgentSelector({
+        const result: AutoAgentSelectorOutput = await autoAgentSelector({
           mission,
           agents: availableAgentsForFlow,
           model: selectedModel,
@@ -198,12 +198,22 @@ export default function MultiAgentDashboard() {
         });
 
         if (result && result.recommendedAgentIds) {
-          setSelectedAgentIds(new Set(result.recommendedAgentIds));
-          toast({
-            title: t.dashboard.toast_suggest_title[language],
-            description: `${t.dashboard.toast_suggest_description[language]} ${result.reasoning}`,
-            duration: 9000,
-          });
+          if (result.recommendedAgentIds.length > 0) {
+            setSelectedAgentIds(new Set(result.recommendedAgentIds));
+            toast({
+              title: result.recommendation || t.dashboard.toast_suggest_title[language],
+              description: result.orchestrationRationale,
+              duration: 9000,
+            });
+          } else {
+             setSelectedAgentIds(new Set());
+             toast({
+              variant: "destructive",
+              title: result.recommendation || "Mission Rejected",
+              description: result.orchestrationRationale,
+              duration: 9000,
+            });
+          }
         }
       } catch (error) {
         console.error("Error suggesting team:", error);
