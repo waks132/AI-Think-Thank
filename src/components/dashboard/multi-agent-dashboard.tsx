@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Users, Loader2, Sparkles, FileText, BrainCircuit, ShieldCheck, MessageSquare } from 'lucide-react';
 import AgentCard from './agent-card';
 import type { Agent, LogEntry } from '@/lib/types';
 import useLocalStorage from '@/hooks/use-local-storage';
 import { runAgentCollaboration, type AgentCollaborationOutput } from '@/ai/flows/agent-collaboration-flow';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '../ui/card';
 import { Textarea } from '../ui/textarea';
 import { Button } from '../ui/button';
 import { Label } from '../ui/label';
@@ -19,10 +19,16 @@ import { Progress } from '../ui/progress';
 import { useLanguage } from '@/context/language-context';
 import { t } from '@/lib/i18n';
 import { personaList } from '@/lib/personas';
+import { Skeleton } from '../ui/skeleton';
 
 
 export default function MultiAgentDashboard() {
   const { language } = useLanguage();
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   const initialAgents = useMemo(() => personaList.filter(p => p.id !== 'disruptor').map(p => ({
     id: p.id,
@@ -30,7 +36,7 @@ export default function MultiAgentDashboard() {
     specialization: p.specialization[language],
     prompt: p.values[language],
     icon: p.icon,
-  })), [language]);
+  })).sort((a, b) => a.id.localeCompare(b.id)), [language]);
 
   const [storedAgents, setStoredAgents] = useLocalStorage<Agent[]>('agents', initialAgents);
   const [logs, setLogs] = useLocalStorage<LogEntry[]>('cognitive-logs', []);
@@ -53,11 +59,18 @@ export default function MultiAgentDashboard() {
         }
       }
       return agent;
-    });
+    }).sort((a, b) => a.id.localeCompare(b.id));
   }, [storedAgents, language]);
   
   const agentMap = useMemo(() => new Map(agents.map(a => [a.role, a])), [agents]);
-  const agentIconMap = useMemo(() => new Map(personaList.map(p => [p.name[language], p.icon])), [language]);
+  const agentIconMap = useMemo(() => {
+    const map = new Map<string, React.ElementType>();
+    personaList.forEach(p => {
+      map.set(p.name.fr, p.icon);
+      map.set(p.name.en, p.icon);
+    });
+    return map;
+  }, []);
 
 
   const handlePromptChange = (agentId: string, newPrompt: string) => {
@@ -167,7 +180,7 @@ export default function MultiAgentDashboard() {
             {isLoading ? (
               <><Loader2 className="mr-2 animate-spin" /> {t.dashboard.start_button_loading[language]}</>
             ) : (
-              <><Sparkles className="mr-2" /> {t.dashboard.start_button[language]} ({selectedAgentIds.size} {t.dashboard.agents_selected[language]})</>
+              <><Sparkles className="mr-2" /> {t.dashboard.start_button[language]} ({hasMounted ? selectedAgentIds.size : 0} {t.dashboard.agents_selected[language]})</>
             )}
           </Button>
 
@@ -286,7 +299,7 @@ export default function MultiAgentDashboard() {
         <h2 className="text-2xl font-bold font-headline mb-2">{t.dashboard.roster_title[language]}</h2>
         <p className="text-muted-foreground mb-6">{t.dashboard.roster_description[language]}</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {agents.map(agent => (
+          {hasMounted ? agents.map(agent => (
             <AgentCard 
               key={agent.id} 
               agent={agent} 
@@ -295,6 +308,29 @@ export default function MultiAgentDashboard() {
               onSelectionChange={handleAgentSelectionChange}
               selectedModel={selectedModel}
             />
+          )) : Array.from({ length: 12 }).map((_, index) => (
+            <Card key={index} className="flex flex-col h-full">
+                <CardHeader className="flex flex-row items-start gap-4">
+                    <div className="flex flex-col items-center gap-4">
+                        <Skeleton className="h-10 w-10 rounded-lg" />
+                        <Skeleton className="h-4 w-4" />
+                    </div>
+                    <div className="space-y-2 flex-grow">
+                        <Skeleton className="h-5 w-3/5" />
+                        <Skeleton className="h-4 w-4/5" />
+                    </div>
+                </CardHeader>
+                <CardContent className="flex-grow">
+                    <div className="space-y-2 h-full">
+                        <Skeleton className="h-4 w-1/4" />
+                        <Skeleton className="h-[150px] w-full" />
+                    </div>
+                </CardContent>
+                <CardFooter className="flex justify-end gap-2">
+                    <Skeleton className="h-9 w-24" />
+                    <Skeleton className="h-9 w-24" />
+                </CardFooter>
+            </Card>
           ))}
         </div>
       </div>
