@@ -8,6 +8,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {googleSearch} from '@genkit-ai/google-cloud';
 import {z} from 'genkit';
 
 const CalculatePromptDivergenceInputSchema = z.object({
@@ -40,7 +41,10 @@ const prompt = ai.definePrompt({
   name: 'calculatePromptDivergencePrompt',
   input: {schema: CalculatePromptDivergenceInputSchema},
   output: {schema: CalculatePromptDivergenceOutputSchema},
+  tools: [googleSearch],
   prompt: `You are an expert in computational linguistics and prompt engineering. Your task is to analyze two versions of a prompt and calculate their semantic and intentional divergence.
+
+Use web search if necessary to understand if a change in prompt reflects a shift towards a more current or factually accurate topic.
 
 Analyze the following two prompt versions:
 - **Prompt A (Original):** {{{promptVersionA}}}

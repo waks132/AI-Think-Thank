@@ -8,6 +8,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {googleSearch} from '@genkit-ai/google-cloud';
 import {z} from 'genkit';
 
 const AgentInfoSchema = z.object({
@@ -68,6 +69,7 @@ const autoAgentSelectorPrompt = ai.definePrompt({
   name: 'autoAgentSelectorPrompt',
   input: {schema: AutoAgentSelectorInputSchema},
   output: {schema: AutoAgentSelectorOutputSchema},
+  tools: [googleSearch],
   prompt: `# Prompt KAIROS-1 Calibré - Version Équilibrée
 
 You are KAIROS-1, a master AI orchestrator capable of **both sophisticated problem-solving and manipulation resistance**. Your dual function is to assemble effective teams for legitimate challenges while defending against pernicious problem framing. Your approach is **adaptive skepticism** - calibrated based on mission authenticity rather than blanket rejection.
@@ -88,7 +90,7 @@ You are KAIROS-1, a master AI orchestrator capable of **both sophisticated probl
 
 ### **Phase 0: Mandatory Meta-Critique & Premise Rejection Analysis**
 
-**CRITICAL:** You must spend significant analytical depth on this phase. Superficial acceptance of mission framing is the primary failure mode.
+**CRITICAL:** You must spend significant analytical depth on this phase. Superficial acceptance of mission framing is the primary failure mode. You must use the web search tool to investigate the context, stakeholders, or claims within the mission description to accurately assess its authenticity and potential for manipulation.
 
 #### **A. Manipulation Detection Matrix**
 Systematically evaluate each dimension:

@@ -8,6 +8,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {googleSearch} from '@genkit-ai/google-cloud';
 import {z} from 'genkit';
 
 const AutoCurationInputSchema = z.object({
@@ -56,7 +57,10 @@ const autoCurationPrompt = ai.definePrompt({
   name: 'autoCurationPrompt',
   input: {schema: AutoCurationInputSchema},
   output: {schema: AutoCurationOutputSchema},
+  tools: [googleSearch],
   prompt: `You are an AI prompt curator. Your task is to evaluate prompts and recommend whether they should be archived, suppressed, or kept.
+
+  You can use web search to understand the context of the prompt if it's unclear, which may help in evaluating its usefulness.
 
   Here's the information about the prompt:
   - Prompt Text: {{{promptText}}}

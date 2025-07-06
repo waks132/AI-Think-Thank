@@ -8,6 +8,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {googleSearch} from '@genkit-ai/google-cloud';
 import {z} from 'genkit';
 
 const CognitiveHeatmapInputSchema = z.object({
@@ -34,7 +35,10 @@ const prompt = ai.definePrompt({
   name: 'cognitiveHeatmapPrompt',
   input: {schema: CognitiveHeatmapInputSchema},
   output: {schema: CognitiveHeatmapOutputSchema},
+  tools: [googleSearch],
   prompt: `You are a specialist in semantic analysis. Your task is to analyze the provided text and create a "cognitive heatmap".
+
+You can use web search to understand the domain-specific importance of certain terms if the context is highly specialized.
 
 Identify the key concepts, strategic terms, and important entities in the text. For each significant word, assign a "semantic activation weight" from 0.0 to 1.0. A weight of 1.0 represents a core concept, while a lower weight represents a supporting or less critical term. Common words (articles, prepositions) should have a weight of 0 and be excluded from the output.
 
