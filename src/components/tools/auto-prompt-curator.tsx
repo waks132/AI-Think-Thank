@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -17,6 +17,9 @@ import ModelSelector from "../model-selector"
 import { availableModels } from "@/lib/models"
 import { useLanguage } from "@/context/language-context"
 import { t } from "@/lib/i18n"
+import { personaList } from "@/lib/personas"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
+import { Label } from "../ui/label"
 
 const formSchema = z.object({
   promptText: z.string().min(10, { message: "Prompt text must be at least 10 characters." }),
@@ -31,20 +34,35 @@ export default function AutoPromptCurator() {
   const [result, setResult] = useState<AutoCurationOutput | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
+  const [selectedAgentId, setSelectedAgentId] = useState<string>(personaList[0].id);
   const { toast } = useToast()
   const { language } = useLanguage();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      promptText: "Generate a marketing slogan for a new coffee brand.",
-      promptId: "prompt-1234",
-      usageFrequency: 5,
-      successRate: 0.2,
-      averageRating: 1.5,
-      similarityToOtherPrompts: 0.9,
+      promptText: "",
+      promptId: "",
+      usageFrequency: 0,
+      successRate: 0,
+      averageRating: 0,
+      similarityToOtherPrompts: 0,
     },
   })
+
+  useEffect(() => {
+    const selectedPersona = personaList.find(p => p.id === selectedAgentId);
+    if (selectedPersona) {
+      form.setValue('promptText', selectedPersona.values[language]);
+      form.setValue('promptId', selectedPersona.id);
+      // Simulate plausible metrics to make the tool feel connected
+      form.setValue('usageFrequency', Math.floor(Math.random() * 200) + 5);
+      form.setValue('successRate', Math.round((Math.random() * 0.6 + 0.3) * 100) / 100); // 30%-90%
+      form.setValue('averageRating', Math.round((Math.random() * 3 + 2) * 10) / 10); // 2-5
+      form.setValue('similarityToOtherPrompts', Math.round((Math.random() * 0.5) * 100) / 100); // 0-50%
+    }
+  }, [selectedAgentId, language, form]);
+
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true)
@@ -86,14 +104,29 @@ export default function AutoPromptCurator() {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <ModelSelector selectedModel={selectedModel} onModelChange={setSelectedModel} />
+                
+                <FormItem>
+                  <Label>{t.curator.select_agent_label[language]}</Label>
+                  <Select onValueChange={setSelectedAgentId} defaultValue={selectedAgentId}>
+                    <SelectTrigger>
+                        <SelectValue placeholder={t.curator.select_agent_placeholder[language]} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {personaList.map(p => (
+                        <SelectItem key={p.id} value={p.id}>{p.name[language]}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+
                 <FormField
                   control={form.control}
                   name="promptText"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t.curator.prompt_text_label[language]}</FormLabel>
+                      <FormLabel>{t.curator.prompt_text_readonly_label[language]}</FormLabel>
                       <FormControl>
-                        <Textarea placeholder={t.curator.prompt_text_placeholder[language]} {...field} />
+                        <Textarea readOnly {...field} className="bg-muted/50 h-36" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -103,23 +136,21 @@ export default function AutoPromptCurator() {
                   control={form.control}
                   name="promptId"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t.curator.prompt_id_label[language]}</FormLabel>
+                    <FormItem className="hidden">
                       <FormControl>
-                        <Input placeholder="e.g., prompt-123" {...field} />
+                        <Input {...field} />
                       </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
                 <div className="grid grid-cols-2 gap-4">
                   <FormField control={form.control} name="usageFrequency" render={({ field }) => (<FormItem><FormLabel>{t.curator.usage_label[language]}</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField control={form.control} name="successRate" render={({ field }) => (<FormItem><FormLabel>{t.curator.success_rate_label[language]}</FormLabel><FormControl><Input type="number" step="0.1" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  <FormField control={form.control} name="successRate" render={({ field }) => (<FormItem><FormLabel>{t.curator.success_rate_label[language]}</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>)} />
                   <FormField control={form.control} name="averageRating" render={({ field }) => (<FormItem><FormLabel>{t.curator.rating_label[language]}</FormLabel><FormControl><Input type="number" step="0.1" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField control={form.control} name="similarityToOtherPrompts" render={({ field }) => (<FormItem><FormLabel>{t.curator.similarity_label[language]}</FormLabel><FormControl><Input type="number" step="0.1" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  <FormField control={form.control} name="similarityToOtherPrompts" render={({ field }) => (<FormItem><FormLabel>{t.curator.similarity_label[language]}</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>)} />
                 </div>
                 <Button type="submit" disabled={isLoading} className="w-full">
-                  {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> : t.curator.get_reco_button[language]}
+                  {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t.curator.get_reco_button[language]}</> : t.curator.get_reco_button[language]}
                 </Button>
               </form>
             </Form>
