@@ -9,7 +9,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import {googleSearch} from '@genkit-ai/google-cloud';
 
 const AgentCollaborationInputSchema = z.object({
   mission: z.string().describe('The overall mission or task for the agents to collaborate on.'),
@@ -49,7 +48,6 @@ const collaborationPrompt = ai.definePrompt({
   name: 'agentCollaborationPrompt',
   input: {schema: AgentCollaborationInputSchema},
   output: {schema: AgentCollaborationOutputSchema},
-  tools: [googleSearch],
   prompt: `You are a master orchestrator of a cognitive collective of AI agents. Your task is to facilitate a collaboration between a selection of specialized agents to accomplish a given mission.
 
 **Mission:**
@@ -64,7 +62,6 @@ You will simulate a discussion between the following agents, ensuring each contr
 2.  **Provide Reasoning:** Detail the \`reasoning\` behind the collaboration. Explain the key contributions of each agent as seen in the log, how conflicts were resolved, and how the final summary was synthesized.
 3.  **Synthesize Outcome:** Based on the simulated discussion, produce a comprehensive \`executiveSummary\`. This should be a final, actionable output that accomplishes the mission, formatted as a structured plan with clear headings and bullet points. **Do not just summarize the conversation; extract and formalize the final proposed solution.**
 4.  **Validate Outcome:** As the orchestrator, score the final output from 0.0 to 1.0 on the criteria defined in the \`validationGrid\`. Provide a holistic assessment of the collective intelligence performance.
-5.  **Use Tools:** If you lack specific data or context, use the provided tools (like web search) to find the information you need to have a more informed and effective discussion. Announce when you are using a tool in your contribution.
 
 Produce your response in the specified JSON format. Your entire response, including all text fields, must be in this language: {{{language}}}.`,
 });
