@@ -121,7 +121,10 @@ const cognitiveClashSimulatorFlow = ai.defineFlow(
     outputSchema: CognitiveClashSimulatorOutputSchema,
   },
   async (input) => {
-    const {output} = await prompt(input, {model: input.model});
+    const {output} = await prompt(input, {
+      model: input.model,
+      config: { maxOutputTokens: 8192 }
+    });
     return output!;
   }
 );
