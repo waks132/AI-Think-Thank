@@ -57,6 +57,7 @@ export default function AgentCard({ agent, onPromptChange, isSelected, onSelecti
         originalPrompt: prompt,
         agentPerformance: "The current prompt could be clearer, more specific, and provide more actionable guidance to fulfill its role effectively. It should be refined for better performance.",
         model: selectedModel,
+        language: language,
       });
 
       if (result) {
@@ -140,5 +141,3 @@ export default function AgentCard({ agent, onPromptChange, isSelected, onSelecti
     </Card>
   );
 }
-
-    

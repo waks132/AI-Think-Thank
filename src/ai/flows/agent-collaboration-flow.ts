@@ -18,6 +18,7 @@ const AgentSchema = z.object({
 const AgentCollaborationInputSchema = z.object({
   mission: z.string().describe('The overall mission or task for the agents to collaborate on.'),
   agents: z.array(AgentSchema).describe('The selected agents participating in the collaboration.'),
+  language: z.enum(['fr', 'en']).describe('The language for the response.'),
   model: z.string().optional().describe('The AI model to use for the generation.'),
 });
 export type AgentCollaborationInput = z.infer<typeof AgentCollaborationInputSchema>;
@@ -69,7 +70,7 @@ You will simulate a discussion between the following agents, ensuring each contr
 3.  **Synthesize Outcome:** Based on the simulated discussion, produce a comprehensive \`executiveSummary\`. This should be a final, actionable output that accomplishes the mission, formatted as a structured plan with clear headings and bullet points. **Do not just summarize the conversation; extract and formalize the final proposed solution.**
 4.  **Validate Outcome:** As the orchestrator, score the final output from 0.0 to 1.0 on the criteria defined in the \`validationGrid\`. Provide a holistic assessment of the collective intelligence performance.
 
-Produce your response in the specified JSON format.`,
+Produce your response in the specified JSON format. Your entire response, including all text fields, must be in this language: {{{language}}}.`,
 });
 
 const agentCollaborationFlow = ai.defineFlow(

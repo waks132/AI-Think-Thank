@@ -57,6 +57,7 @@ export default function CausalFlowTracker() {
             const result = await trackCausalFlow({
                 logEntries: JSON.stringify(logs),
                 model: selectedModel,
+                language,
             });
             setFlows(result.causalFlows);
         } catch (error) {
@@ -122,5 +123,3 @@ export default function CausalFlowTracker() {
     </Card>
   )
 }
-
-    

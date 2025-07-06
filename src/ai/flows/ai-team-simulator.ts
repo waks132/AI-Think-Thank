@@ -25,6 +25,7 @@ const CognitiveClashSimulatorInputSchema = z.object({
     .number()
     .describe('The number of simulation rounds to run.')
     .default(3),
+  language: z.enum(['fr', 'en']).describe('The language for the response.'),
   model: z.string().optional().describe('The AI model to use for the generation.'),
 });
 export type CognitiveClashSimulatorInput = z.infer<typeof CognitiveClashSimulatorInputSchema>;
@@ -109,7 +110,7 @@ const prompt = ai.definePrompt({
     *   Name the \`epistemicFrame\` (the underlying worldview, e.g., 'Techno-solutionism', 'Managerialism', 'Ethical Precautionism').
     *   Populate the \`assumptionAnalysis\` array with this structured analysis.
 
-Produce your entire analysis in the specified JSON format.
+Produce your entire analysis in the specified JSON format. Your entire response, including all text fields, must be in this language: {{{language}}}.
 `,
 });
 
@@ -124,5 +125,3 @@ const cognitiveClashSimulatorFlow = ai.defineFlow(
     return output!;
   }
 );
-
-    

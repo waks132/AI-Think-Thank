@@ -50,7 +50,7 @@ export default function AutoPromptCurator() {
     setIsLoading(true)
     setResult(null)
     try {
-      const output = await autoCuration({...values, model: selectedModel})
+      const output = await autoCuration({...values, model: selectedModel, language})
       setResult(output)
     } catch (error) {
       console.error("Error during auto-curation:", error)
@@ -152,5 +152,3 @@ export default function AutoPromptCurator() {
     </Card>
   )
 }
-
-    

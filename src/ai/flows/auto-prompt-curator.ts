@@ -31,7 +31,8 @@ const AutoCurationInputSchema = z.object({
     .describe(
       'A score indicating how similar this prompt is to other prompts (0 to 1).'
     ),
-    model: z.string().optional().describe('The AI model to use for the generation.'),
+  language: z.enum(['fr', 'en']).describe('The language for the response.'),
+  model: z.string().optional().describe('The AI model to use for the generation.'),
 });
 export type AutoCurationInput = z.infer<typeof AutoCurationInputSchema>;
 
@@ -80,7 +81,7 @@ const autoCurationPrompt = ai.definePrompt({
     "reason": "<reasoning for the recommendation>"
   }
 
-  Respond with valid JSON.
+  Respond with valid JSON. Your entire response, including all text fields, must be in this language: {{{language}}}.
 `,
 });
 

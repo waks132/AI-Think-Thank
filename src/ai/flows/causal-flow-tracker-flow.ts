@@ -12,6 +12,7 @@ import {z} from 'genkit';
 
 const CausalFlowTrackerInputSchema = z.object({
   logEntries: z.string().describe('A JSON string of an array of LogEntry objects representing the conversation.'),
+  language: z.enum(['fr', 'en']).describe('The language for the response.'),
   model: z.string().optional().describe('The AI model to use for the generation.'),
 });
 export type CausalFlowTrackerInput = z.infer<typeof CausalFlowTrackerInputSchema>;
@@ -43,6 +44,8 @@ Here is the conversation log:
 {{{logEntries}}}
 
 Identify all the clear causal links and represent them in the specified JSON output format. For each link, specify the 'from' agent role, the 'to' agent role, and a brief 'reason' for the influence. Focus only on direct, clear influences.
+
+Your entire response, including all text fields, must be in this language: {{{language}}}.
 `,
 });
 

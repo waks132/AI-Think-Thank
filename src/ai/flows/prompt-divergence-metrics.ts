@@ -13,6 +13,7 @@ import {z} from 'genkit';
 const CalculatePromptDivergenceInputSchema = z.object({
   promptVersionA: z.string().describe('The first prompt version (the original).'),
   promptVersionB: z.string().describe('The second prompt version (the new one).'),
+  language: z.enum(['fr', 'en']).describe('The language for the response.'),
   model: z.string().optional().describe('The AI model to use for the generation.'),
 });
 export type CalculatePromptDivergenceInput = z.infer<
@@ -51,7 +52,7 @@ Your analysis should result in four things:
 3.  **divergenceType**: The dominant type of divergence. Choose one from: ['Lexical', 'Semantic', 'Intentional', 'Stylistic', 'Mixed'].
 4.  **audienceShift**: A brief description of any detected change in the target audience.
 
-Produce your analysis in the specified JSON format.
+Produce your analysis in the specified JSON format. Your entire response, including all text fields, must be in this language: {{{language}}}.
 `,
 });
 

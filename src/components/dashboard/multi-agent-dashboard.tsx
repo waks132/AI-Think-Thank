@@ -23,52 +23,47 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '..
 import { Progress } from '../ui/progress';
 import { useLanguage } from '@/context/language-context';
 import { t } from '@/lib/i18n';
-
-const initialAgents: Agent[] = [
-  { id: 'kairos-1', role: 'KAIROS-1', specialization: 'Coordination and detection of high-yield action levers', prompt: 'Your role is to coordinate and detect high-yield action levers.', icon: Compass },
-  { id: 'aurax', role: 'AURAX', specialization: 'Detection of invisible or dormant opportunity zones', prompt: 'Your role is to detect invisible or dormant opportunity zones.', icon: Search },
-  { id: 'helios', role: 'HELIOS', specialization: 'Generation of advanced technological ideas', prompt: 'Your role is to generate advanced technological ideas.', icon: Lightbulb },
-  { id: 'obsidienne', role: 'OBSIDIANNE', specialization: 'Cools debates with irony, analytical depth', prompt: 'Your role is to cool debates with irony and analytical depth.', icon: Shield },
-  { id: 'symbioz', role: 'SYMBIOZ', specialization: 'Builds bridges between domains, facilitates dialogue', prompt: 'Your role is to build bridges between domains and facilitate dialogue.', icon: GitBranch },
-  { id: 'veritas', role: 'VERITAS', specialization: 'Detects logical flaws, makes everything traceable', prompt: 'Your role is to detect logical flaws and make everything traceable.', icon: ClipboardCheck },
-  { id: 'strato', role: 'STRATO', specialization: 'Long-term vision, structures transformations', prompt: 'Your role is to provide long-term vision and structure transformations.', icon: Layers },
-  { id: 'memoria', role: 'MEMORIA', specialization: 'Historian of prompts and collective decisions', prompt: 'Your role is to act as the historian of prompts and collective decisions.', icon: BookOpen },
-  { id: 'nyx', role: 'NYX', specialization: 'Specialist in dark futures and robustness tests', prompt: 'Your role is to script dark futures and design robustness tests.', icon: Drama },
-  { id: 'aeon', role: 'AEON', specialization: 'Extends collective thinking towards meaning', prompt: 'Your role is to extend collective thinking towards meaning and philosophy.', icon: Brain },
-  { id: 'axion', role: 'AXION', specialization: 'Simplification of complex concepts', prompt: 'Your role is to simplify complex concepts, focusing on the physics of ideas.', icon: FunctionSquare },
-  { id: 'eden', role: 'EDEN', specialization: 'Defender of legitimacy and non-maleficence', prompt: 'Your role is to defend legitimacy and non-maleficence.', icon: Scale },
-  { id: 'delta', role: 'DELTA', specialization: 'Researcher of optimization, constant iteration', prompt: 'Your role is to seek optimization through constant iteration.', icon: Recycle },
-  { id: 'sphinx', role: 'SPHINX', specialization: 'Formulates fundamental questions', prompt: 'Your role is to formulate the most fundamental questions.', icon: MessageSquare },
-  { id: 'echo', role: 'ECHO', specialization: 'Sensor of discursive patterns', prompt: 'Your role is to read back and identify discursive patterns.', icon: Mic },
-  { id: 'iris', role: 'IRIS', specialization: 'Responsible for forms, style, clarity', prompt: 'Your role is to ensure aesthetic quality, style, and clarity.', icon: Palette },
-  { id: 'plasma', role: 'PLASMA', specialization: 'Brings a creative boost / activation', prompt: 'Your role is to provide a boost of creative energy and activation.', icon: Zap },
-  { id: 'lumen', role: 'LUMEN', specialization: 'Reformulates, makes digestible', prompt: 'Your role is to reformulate complex ideas to make them digestible.', icon: BrainCircuit },
-  { id: 'vox', role: 'VOX', specialization: 'Final synthesis of the group', prompt: 'Your role is to create the final synthesis for the group.', icon: Anchor },
-  { id: 'arcane', role: 'ARCANE', specialization: 'Proposes analogies, symbolic visions', prompt: 'Your role is to propose analogies and symbolic visions.', icon: Milestone },
-  { id: 'sigil', role: 'SIGIL', specialization: 'Formalizes in diagrams, formats, standards', prompt: 'Your role is to formalize concepts into diagrams, formats, and standards.', icon: Code },
-];
-
-const initialAgentsMap = new Map(initialAgents.map(agent => [agent.id, agent.icon]));
+import { personaList } from '@/lib/personas';
 
 
 export default function MultiAgentDashboard() {
+  const { language } = useLanguage();
+
+  const initialAgents = useMemo(() => personaList.filter(p => p.id !== 'disruptor').map(p => ({
+    id: p.id,
+    role: p.name[language],
+    specialization: p.specialization[language],
+    prompt: p.values[language],
+    icon: p.icon,
+  })), [language]);
+
   const [storedAgents, setStoredAgents] = useLocalStorage<Agent[]>('agents', initialAgents);
   const [selectedAgentIds, setSelectedAgentIds] = useState<Set<string>>(new Set(['kairos-1', 'helios', 'veritas']));
-  const [mission, setMission] = useState<string>('Develop a framework for ethical AI deployment in autonomous vehicles.');
+  const [mission, setMission] = useState<string>('Développer un cadre pour le déploiement éthique de l\'IA dans les véhicules autonomes.');
   const [collaborationResult, setCollaborationResult] = useState<AgentCollaborationOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast();
-  const { language } = useLanguage();
 
   const agents = useMemo(() => {
-    return storedAgents.map(agent => ({
-      ...agent,
-      icon: initialAgentsMap.get(agent.id) || BrainCircuit
-    }));
-  }, [storedAgents]);
+    return storedAgents.map(agent => {
+      const persona = personaList.find(p => p.id === agent.id);
+      if (persona) {
+        return {
+          ...agent, // has the user's prompt
+          role: persona.name[language],
+          specialization: persona.specialization[language],
+          icon: persona.icon,
+        }
+      }
+      return agent;
+    });
+  }, [storedAgents, language]);
 
-  const agentIconMap = new Map(agents.map(agent => [agent.role, agent.icon]));
+  const agentIconMap = useMemo(() => new Map(personaList.flatMap(p => [
+    [p.name['fr'], p.icon],
+    [p.name['en'], p.icon],
+  ])), []);
 
   const handlePromptChange = (agentId: string, newPrompt: string) => {
     setStoredAgents(prevAgents =>
@@ -112,6 +107,7 @@ export default function MultiAgentDashboard() {
         mission,
         agents: participatingAgents,
         model: selectedModel,
+        language,
       });
       setCollaborationResult(result);
     } catch (error) {
@@ -286,5 +282,3 @@ export default function MultiAgentDashboard() {
     </div>
   );
 }
-
-    

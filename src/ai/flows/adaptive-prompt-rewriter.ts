@@ -16,6 +16,7 @@ const AdaptivePromptRewriterInputSchema = z.object({
   originalPrompt: z.string().describe('The original prompt to be rewritten.'),
   agentPerformance: z.string().describe('A description of the agent\'s performance with the original prompt, including any identified lacunae (e.g., lack of factual accuracy, redundancy).'),
   metricsDivergence: z.number().optional().describe('KL divergence between versions of prompts'),
+  language: z.enum(['fr', 'en']).describe('The language for the response.'),
   model: z.string().optional().describe('The AI model to use for the generation.'),
 });
 export type AdaptivePromptRewriterInput = z.infer<typeof AdaptivePromptRewriterInputSchema>;
@@ -61,7 +62,7 @@ Your operational cycle is as follows:
 *   **Metrics Divergence**: {{{metricsDivergence}}} (This can be used as a risk/coherence factor in your Ψ evaluation)
 {{/if}}
 
-Produce your output in the specified JSON format.
+Produce your output in the specified JSON format. Your entire response, including all text fields, must be in this language: {{{language}}}.
 `,
 });
 

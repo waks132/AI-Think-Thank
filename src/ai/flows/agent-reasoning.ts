@@ -13,6 +13,7 @@ import {z} from 'genkit';
 const AgentReasoningInputSchema = z.object({
   task: z.string().describe('The task for the agent to perform.'),
   context: z.string().describe('The context in which the task should be performed.'),
+  language: z.enum(['fr', 'en']).describe('The language for the response.'),
   model: z.string().optional().describe('The AI model to use for the generation.'),
 });
 export type AgentReasoningInput = z.infer<typeof AgentReasoningInputSchema>;
@@ -52,6 +53,8 @@ Break down your thought process into a structured array of steps. For each step:
 After detailing all the steps in 'thoughtProcess':
 1.  Provide a final 'conclusion'.
 2.  Provide a 'reflexiveReview' of your own plan, asking a critical question about a potential weakness or alternative approach.
+
+Produce your entire response in this language: {{{language}}}.
 `,
 });
 

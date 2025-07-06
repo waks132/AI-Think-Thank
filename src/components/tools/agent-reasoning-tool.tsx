@@ -44,7 +44,7 @@ export default function AgentReasoningTool() {
     setIsLoading(true)
     setResult(null)
     try {
-      const output = await agentReasoning({...values, model: selectedModel})
+      const output = await agentReasoning({...values, model: selectedModel, language})
       setResult(output)
     } catch (error) {
       console.error("Error getting reasoning:", error)
@@ -167,5 +167,3 @@ export default function AgentReasoningTool() {
     </Card>
   )
 }
-
-    

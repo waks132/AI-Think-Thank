@@ -91,7 +91,8 @@ export default function CognitiveClashSimulator() {
         scenarioDescription: values.scenarioDescription,
         numRounds: values.numRounds,
         perspectives: selectedPersonas,
-        model: selectedModel
+        model: selectedModel,
+        language,
       };
 
       const output = await cognitiveClashSimulator(flowInput);
@@ -400,5 +401,3 @@ export default function CognitiveClashSimulator() {
     </Card>
   )
 }
-
-    

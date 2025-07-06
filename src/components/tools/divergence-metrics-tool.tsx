@@ -58,7 +58,7 @@ export default function DivergenceMetricsTool() {
     setIsLoading(true)
     setResult(null)
     try {
-      const output = await calculatePromptDivergence({...values, model: selectedModel})
+      const output = await calculatePromptDivergence({...values, model: selectedModel, language})
       setResult(output)
     } catch (error) {
       console.error("Error calculating divergence:", error)
@@ -160,5 +160,3 @@ export default function DivergenceMetricsTool() {
     </Card>
   )
 }
-
-    

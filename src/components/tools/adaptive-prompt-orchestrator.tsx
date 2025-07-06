@@ -44,7 +44,7 @@ export default function AdaptivePromptOrchestrator() {
     setIsLoading(true)
     setResult(null)
     try {
-      const output = await adaptivePromptRewriter({...values, model: selectedModel})
+      const output = await adaptivePromptRewriter({...values, model: selectedModel, language})
       setResult(output)
     } catch (error) {
       console.error("Error rewriting prompt:", error)
@@ -192,5 +192,3 @@ export default function AdaptivePromptOrchestrator() {
     </Card>
   )
 }
-
-    
