@@ -44,7 +44,7 @@ const ClashTurnSchema = z.object({
 const ArgumentLinkSchema = z.object({
   fromPerspective: z.string().describe("The name of the perspective initiating the interaction."),
   toPerspective: z.string().describe("The name of the perspective being responded to."),
-  interactionType: z.enum(['Rebuttal', 'Agreement', 'Synthesis', 'Question', 'Builds On']).describe("The nature of the interaction (e.g., one perspective refuting another, agreeing, or building on an idea)."),
+  interactionType: z.enum(['Réfutation', 'Accord', 'Synthèse', 'Question', 'Élaboration']).describe("La nature de l'interaction (par exemple, une perspective en réfute une autre, est d'accord ou s'appuie sur une idée)."),
   summary: z.string().describe("A brief summary of the specific point of interaction or influence."),
 });
 
