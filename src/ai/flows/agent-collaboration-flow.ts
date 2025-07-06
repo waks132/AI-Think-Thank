@@ -27,6 +27,7 @@ const CollaborationTurnSchema = z.object({
     turn: z.number().describe("The turn number in the collaboration."),
     agentRole: z.string().describe("The role of the agent speaking."),
     contribution: z.string().describe("The agent's message or contribution in this turn."),
+    annotation: z.string().optional().describe("A brief, insightful annotation of the contribution's function (e.g., 'Proposes new synthesis', 'Critiques prior assumption', 'Reframes the problem').")
  });
 
 const ValidationCriteriaSchema = z.object({
@@ -65,7 +66,7 @@ You will simulate a discussion between the following agents, ensuring each contr
 {{/each}}
 
 **Your Process:**
-1.  **Simulate Discussion:** Generate a plausible, turn-by-turn conversation between the agents. The discussion should show proposition, critique, and refinement. Document each turn in the \`collaborationLog\` array.
+1.  **Simulate Discussion:** Generate a plausible, turn-by-turn conversation between the agents. The discussion should show proposition, critique, and refinement. For each turn, provide the agent's contribution and a brief, insightful \`annotation\` describing its function (e.g., 'Proposes new synthesis', 'Critiques prior assumption'). Document each turn in the \`collaborationLog\` array.
 2.  **Provide Reasoning:** Detail the \`reasoning\` behind the collaboration. Explain the key contributions of each agent as seen in the log, how conflicts were resolved, and how the final summary was synthesized.
 3.  **Synthesize Outcome:** Based on the simulated discussion, produce a comprehensive \`executiveSummary\`. This should be a final, actionable output that accomplishes the mission, formatted as a structured plan with clear headings and bullet points. **Do not just summarize the conversation; extract and formalize the final proposed solution.**
 4.  **Validate Outcome:** As the orchestrator, score the final output from 0.0 to 1.0 on the criteria defined in the \`validationGrid\`. Provide a holistic assessment of the collective intelligence performance.

@@ -126,6 +126,12 @@ export const t = {
       fr: 'Sélectionnez les agents pour la mission et éditez leurs prompts pour adapter leur comportement.',
       en: 'Select agents for the mission and edit their core prompts to adapt their behavior.',
     },
+    toast_select_title: { fr: 'Erreur de Sélection', en: 'Selection Error' },
+    toast_select_description: { fr: 'Veuillez sélectionner au moins deux agents pour la collaboration.', en: 'Please select at least two agents for collaboration.' },
+    toast_log_title: { fr: 'Log de Mission Enregistré', en: 'Mission Log Saved' },
+    toast_log_description: { fr: 'La collaboration a été ajoutée au visualiseur de logs.', en: 'The collaboration has been added to the log viewer.' },
+    toast_fail_title: { fr: 'Échec de la Collaboration', en: 'Collaboration Failed' },
+    toast_fail_description: { fr: 'La mission n\'a pas pu être terminée. Veuillez réessayer.', en: 'The mission could not be completed. Please try again.' },
   },
   agentCard: {
     psi_score: { fr: 'Score Psi', en: 'Psi Score' },
@@ -283,8 +289,9 @@ export const t = {
   },
   logs: {
     title: { fr: 'Visualiseur de Logs Cognitifs Annotés', en: 'Annotated Cognitive Log Viewer' },
-    description: { fr: 'Visualisez les conversations journalisées avec des annotations automatiques.', en: 'View journaled conversations with automatic annotations.' },
+    description: { fr: 'Visualisez les conversations journalisées avec des annotations automatiques, générées en temps réel par vos missions.', en: 'View journaled conversations with automatic annotations, generated in real-time by your missions.' },
     no_entries: { fr: 'Aucune entrée de log trouvée.', en: 'No log entries found.' },
+    no_entries_tip: { fr: 'Lancez une mission depuis le Dashboard pour commencer à peupler les logs.', en: 'Launch a mission from the Dashboard to start populating logs.'}
   },
   heatmap: {
     title: { fr: 'Heatmap Cognitive', en: 'Cognitive Heatmap' },
@@ -299,9 +306,12 @@ export const t = {
     description: { fr: 'Analysez les logs cognitifs pour visualiser dynamiquement comment les agents s\'influencent.', en: 'Analyze cognitive logs to dynamically visualize how agents influence each other.' },
     analyze_button: { fr: 'Analyser le Flux', en: 'Analyze Flow' },
     loading_text: { fr: 'Analyse des schémas d\'influence...', en: 'Analyzing influence patterns...' },
-    no_links: { fr: 'Aucun lien causal détecté.', en: 'No causal links detected.' },
-    re_analyze: { fr: 'Cliquez sur "Analyser le Flux" pour traiter les derniers logs.', en: 'Click "Analyze Flow" to process the latest logs.' },
+    no_links: { fr: 'Aucun lien causal détecté dans les logs actuels.', en: 'No causal links detected in the current logs.' },
+    re_analyze: { fr: 'Lancez une mission ou cliquez sur "Analyser" pour traiter les derniers logs.', en: 'Launch a mission or click "Analyze" to process the latest logs.' },
+    toast_no_logs_title: { fr: 'Aucun Log à Analyser', en: 'No Logs to Analyze' },
+    toast_no_logs_description: { fr: 'Le journal cognitif est vide. Lancez une mission d\'abord.', en: 'The cognitive log is empty. Launch a mission first.' },
+    toast_fail_title: { fr: 'Échec de l\'Analyse', en: 'Analysis Failed' },
+    toast_fail_description: { fr: 'Impossible de déterminer le flux causal des logs.', en: 'Could not determine causal flow from logs.' },
+    turn: { fr: 'au tour', en: 'at turn' },
   },
 };
-
-    

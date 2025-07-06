@@ -32,4 +32,6 @@ export interface CausalLink {
     from: string;
     to: string;
     reason: string;
+    turn: number;
+    influentialQuote: string;
 }

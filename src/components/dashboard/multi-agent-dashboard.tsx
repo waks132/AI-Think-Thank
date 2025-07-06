@@ -1,14 +1,9 @@
 "use client"
 
 import { useState, useMemo } from 'react';
-import { 
-  BrainCircuit, FlaskConical, ClipboardCheck, Lightbulb, Scale, FunctionSquare,
-  Compass, Shield, Brain, Layers, BookOpen, Search, Drama, Milestone,
-  Zap, MessageSquare, Palette, Recycle, Code, Mic, Anchor, GitBranch, Users, Loader2, Sparkles, FileText,
-  ShieldCheck
-} from 'lucide-react';
+import { Users, Loader2, Sparkles, FileText, BrainCircuit, ShieldCheck, MessageSquare } from 'lucide-react';
 import AgentCard from './agent-card';
-import type { Agent } from '@/lib/types';
+import type { Agent, LogEntry } from '@/lib/types';
 import useLocalStorage from '@/hooks/use-local-storage';
 import { runAgentCollaboration, type AgentCollaborationOutput } from '@/ai/flows/agent-collaboration-flow';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
@@ -38,6 +33,7 @@ export default function MultiAgentDashboard() {
   })), [language]);
 
   const [storedAgents, setStoredAgents] = useLocalStorage<Agent[]>('agents', initialAgents);
+  const [logs, setLogs] = useLocalStorage<LogEntry[]>('cognitive-logs', []);
   const [selectedAgentIds, setSelectedAgentIds] = useState<Set<string>>(new Set(['kairos-1', 'helios', 'veritas']));
   const [mission, setMission] = useState<string>('Développer un cadre pour le déploiement éthique de l\'IA dans les véhicules autonomes.');
   const [collaborationResult, setCollaborationResult] = useState<AgentCollaborationOutput | null>(null);
@@ -59,11 +55,10 @@ export default function MultiAgentDashboard() {
       return agent;
     });
   }, [storedAgents, language]);
+  
+  const agentMap = useMemo(() => new Map(agents.map(a => [a.role, a])), [agents]);
+  const agentIconMap = useMemo(() => new Map(personaList.map(p => [p.name[language], p.icon])), [language]);
 
-  const agentIconMap = useMemo(() => new Map(personaList.flatMap(p => [
-    [p.name['fr'], p.icon],
-    [p.name['en'], p.icon],
-  ])), []);
 
   const handlePromptChange = (agentId: string, newPrompt: string) => {
     setStoredAgents(prevAgents =>
@@ -89,8 +84,8 @@ export default function MultiAgentDashboard() {
     if (selectedAgentIds.size < 2) {
       toast({
         variant: 'destructive',
-        title: 'Selection Error',
-        description: 'Please select at least two agents for collaboration.',
+        title: t.dashboard.toast_select_title[language],
+        description: t.dashboard.toast_select_description[language],
       });
       return;
     }
@@ -110,12 +105,31 @@ export default function MultiAgentDashboard() {
         language,
       });
       setCollaborationResult(result);
+      
+      if (result.collaborationLog) {
+        const newLogEntries: LogEntry[] = result.collaborationLog.map(log => ({
+          id: `${new Date().toISOString()}-${log.turn}`,
+          agentId: agentMap.get(log.agentRole)?.id || 'unknown',
+          agentRole: log.agentRole,
+          message: log.contribution,
+          annotation: log.annotation,
+          timestamp: new Date().toISOString(),
+        }));
+        
+        setLogs(prevLogs => [...prevLogs, ...newLogEntries]);
+        
+        toast({
+          title: t.dashboard.toast_log_title[language],
+          description: t.dashboard.toast_log_description[language],
+        });
+      }
+
     } catch (error) {
       console.error("Error during agent collaboration:", error);
       toast({
         variant: "destructive",
-        title: "Collaboration Failed",
-        description: "The mission could not be completed. Please try again.",
+        title: t.dashboard.toast_fail_title[language],
+        description: t.dashboard.toast_fail_description[language],
       });
     } finally {
       setIsLoading(false);
@@ -247,6 +261,11 @@ export default function MultiAgentDashboard() {
                                                             <span className="text-xs text-muted-foreground font-mono">{t.dashboard.turn[language]} {log.turn}</span>
                                                         </div>
                                                         <p className="text-sm text-foreground/90">{log.contribution}</p>
+                                                         {log.annotation && (
+                                                          <p className="mt-1 text-xs text-secondary font-medium italic">
+                                                            -- {log.annotation}
+                                                          </p>
+                                                        )}
                                                     </div>
                                                 </div>
                                             );

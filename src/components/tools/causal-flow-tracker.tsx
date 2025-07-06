@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowRight, Loader2, RefreshCw } from "lucide-react"
 import type { CausalLink, LogEntry } from "@/lib/types";
@@ -12,23 +12,18 @@ import { availableModels } from "@/lib/models";
 import ModelSelector from "../model-selector";
 import { useLanguage } from "@/context/language-context";
 import { t } from "@/lib/i18n";
+import { personaList } from "@/lib/personas";
+import { Badge } from "../ui/badge";
 
-const AGENT_DATA: Partial<Record<string, { color: string }>> = {
-    'HELIOS': { color: 'bg-purple-500' },
-    'VERITAS': { color: 'bg-green-500' },
-    'SYMBIOZ': { color: 'bg-orange-500' },
-    'VOX': { color: 'bg-blue-500' },
-    'KAIROS-1': { color: 'bg-red-500' },
-    'OBSIDIANNE': { color: 'bg-gray-500' },
-};
-  
-
-const AgentNode = ({ role }: { role: string }) => {
-    const agentData = AGENT_DATA[role] || { color: 'bg-indigo-500' };
+const AgentNode = ({ role, language }: { role: string, language: 'fr' | 'en' }) => {
+    const agentData = useMemo(() => personaList.find(p => p.name[language] === role || p.name['fr'] === role || p.name['en'] === role), [role, language]);
+    const Icon = agentData?.icon || ArrowRight;
     return (
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-card border shadow-sm min-w-[220px] justify-center">
-            <div className={`h-3 w-3 rounded-full ${agentData.color}`} />
-            <span className="font-medium">{role}</span>
+        <div className="flex items-center gap-3 p-3 rounded-lg bg-card border shadow-sm min-w-[220px] justify-start">
+            <div className="p-2 bg-accent rounded-full">
+                <Icon className="h-5 w-5 text-accent-foreground" />
+            </div>
+            <span className="font-medium text-primary">{role}</span>
         </div>
     )
 };
@@ -45,8 +40,8 @@ export default function CausalFlowTracker() {
         if (logs.length === 0) {
             toast({
                 variant: 'destructive',
-                title: "No logs to analyze",
-                description: "The cognitive log is empty.",
+                title: t.causal.toast_no_logs_title[language],
+                description: t.causal.toast_no_logs_description[language],
             });
             return;
         }
@@ -55,7 +50,7 @@ export default function CausalFlowTracker() {
         setFlows([]);
         try {
             const result = await trackCausalFlow({
-                logEntries: JSON.stringify(logs),
+                logEntries: JSON.stringify(logs.map((log, index) => ({...log, index}))), // Add index for the AI
                 model: selectedModel,
                 language,
             });
@@ -64,8 +59,8 @@ export default function CausalFlowTracker() {
             console.error("Error tracking causal flow:", error);
             toast({
                 variant: "destructive",
-                title: "Analysis Failed",
-                description: "Could not determine causal flow from logs.",
+                title: t.causal.toast_fail_title[language],
+                description: t.causal.toast_fail_description[language],
             });
         } finally {
             setIsLoading(false);
@@ -77,7 +72,7 @@ export default function CausalFlowTracker() {
             analyzeFlow();
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [logs]);
 
   return (
     <Card>
@@ -89,7 +84,7 @@ export default function CausalFlowTracker() {
         <div className="flex flex-col sm:flex-row gap-4">
             <ModelSelector selectedModel={selectedModel} onModelChange={setSelectedModel} className="flex-grow"/>
             <Button onClick={analyzeFlow} disabled={isLoading} className="w-full sm:w-auto">
-                {isLoading ? <Loader2 className="animate-spin" /> : <RefreshCw />}
+                {isLoading ? <Loader2 className="animate-spin mr-2" /> : <RefreshCw className="mr-2"/>}
                 {t.causal.analyze_button[language]}
             </Button>
         </div>
@@ -100,15 +95,19 @@ export default function CausalFlowTracker() {
                 <p>{t.causal.loading_text[language]}</p>
             </div>
           ) : flows.length > 0 ? (
-            <div className="w-full max-w-2xl space-y-8">
+            <div className="w-full max-w-4xl space-y-8">
               {flows.map((flow, index) => (
-                <div key={index} className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
-                  <AgentNode role={flow.from} />
-                  <div className="flex flex-col items-center">
-                    <span className="text-xs text-muted-foreground px-2 py-1 rounded bg-accent">{flow.reason}</span>
-                    <ArrowRight className="h-8 w-8 text-primary/50 my-2 sm:my-0" />
+                <div key={index} className="flex flex-col md:flex-row items-center justify-center gap-4 animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
+                  <AgentNode role={flow.from} language={language} />
+                  <div className="flex flex-col items-center text-center w-full md:w-auto">
+                    <Badge variant="secondary" className="mb-2">{flow.reason}</Badge>
+                    <ArrowRight className="h-8 w-8 text-primary/50 my-2 rotate-90 md:rotate-0" />
+                    <blockquote className="text-xs italic text-muted-foreground border-l-2 pl-2 my-2 max-w-xs">
+                        "{flow.influentialQuote}"
+                    </blockquote>
+                    <span className="text-xs font-mono text-muted-foreground">{t.causal.turn[language]} {flow.turn}</span>
                   </div>
-                  <AgentNode role={flow.to} />
+                  <AgentNode role={flow.to} language={language} />
                 </div>
               ))}
             </div>

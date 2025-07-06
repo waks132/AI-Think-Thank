@@ -1,83 +1,28 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import useLocalStorage from '@/hooks/use-local-storage';
 import type { LogEntry } from '@/lib/types';
-import { Compass, Shield, ClipboardCheck, BrainCircuit, Lightbulb, GitBranch, Anchor } from 'lucide-react';
+import { BrainCircuit } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { t } from '@/lib/i18n';
-
-const initialLogs: LogEntry[] = [
-  {
-    id: 'log1',
-    agentId: 'kairos-1',
-    agentRole: 'KAIROS-1',
-    message: 'Initial objective set: Model the emergence of collective intelligence in a decentralized network.',
-    timestamp: new Date(Date.now() - 3600000).toISOString(),
-  },
-  {
-    id: 'log2',
-    agentId: 'obsidienne',
-    agentRole: 'OBSIDIANNE',
-    message: 'The term "intelligence" itself is a loaded assumption. Are we measuring task completion efficiency or genuine synergistic insight? The distinction is critical.',
-    annotation: 'OBSIDIANNE questions premise',
-    timestamp: new Date(Date.now() - 3000000).toISOString(),
-  },
-   {
-    id: 'log3',
-    agentId: 'helios',
-    agentRole: 'HELIOS',
-    message: 'New idea: What if we model the network as a fluid dynamic system, where "intelligence" is the emergent vortex from interacting currents?',
-    annotation: 'HELIOS proposes new model',
-    timestamp: new Date(Date.now() - 2400000).toISOString(),
-  },
-  {
-    id: 'log4',
-    agentId: 'veritas',
-    agentRole: 'VERITAS',
-    message: 'Correction: The initial prompt for the simulation nodes lacked a mechanism for resource conflict, making true "collective" problem-solving impossible. The logic is flawed.',
-    annotation: 'VERITAS corrected KAIROS-1',
-    timestamp: new Date(Date.now() - 1800000).toISOString(),
-  },
-  {
-    id: 'log5',
-    agentId: 'symbioz',
-    agentRole: 'SYMBIOZ',
-    message: 'Connecting HELIOS\' fluid dynamics idea with VERITAS\' logic flaw. The "resource conflict" could be the turbulence that creates the "vortex" of intelligence.',
-    annotation: 'SYMBIOZ builds a bridge',
-    timestamp: new Date(Date.now() - 1200000).toISOString(),
-  },
-  {
-    id: 'log6',
-    agentId: 'vox',
-    agentRole: 'VOX',
-    message: 'Synthesis: The collective will proceed by simulating a resource-constrained network based on a fluid dynamics model. Key metrics will be vortex stability (synergy) and flow efficiency (task completion).',
-    annotation: 'VOX provides final synthesis',
-    timestamp: new Date(Date.now() - 600000).toISOString(),
-  },
-];
-
-const agentIcons: { [key: string]: React.ElementType } = {
-  'KAIROS-1': Compass,
-  'OBSIDIANNE': Shield,
-  'VERITAS': ClipboardCheck,
-  'HELIOS': Lightbulb,
-  'SYMBIOZ': GitBranch,
-  'VOX': Anchor,
-};
+import { personaList } from '@/lib/personas';
 
 export default function CognitiveLogViewer() {
-  const [logs, setLogs] = useLocalStorage<LogEntry[]>('cognitive-logs', []);
+  const [logs] = useLocalStorage<LogEntry[]>('cognitive-logs', []);
   const { language } = useLanguage();
   
-  useEffect(() => {
-    // On first load, if logs are empty, populate with initial data.
-    if (logs.length === 0) {
-      setLogs(initialLogs);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const agentIconMap = useMemo(() => {
+    const map = new Map<string, React.ElementType>();
+    personaList.forEach(p => {
+      map.set(p.name.fr, p.icon);
+      map.set(p.name.en, p.icon);
+    });
+    return map;
   }, []);
+
+  const sortedLogs = useMemo(() => logs.slice().sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()), [logs]);
 
   return (
     <Card>
@@ -87,8 +32,8 @@ export default function CognitiveLogViewer() {
       </CardHeader>
       <CardContent>
         <div className="space-y-6 max-h-[600px] overflow-y-auto p-4 border rounded-lg bg-background/50">
-          {logs.map((log) => {
-            const Icon = agentIcons[log.agentRole] || BrainCircuit;
+          {sortedLogs.map((log) => {
+            const Icon = agentIconMap.get(log.agentRole) || BrainCircuit;
             return (
               <div key={log.id} className="flex items-start gap-4 animate-fade-in">
                 <div className="p-2 bg-accent rounded-full">
@@ -114,6 +59,7 @@ export default function CognitiveLogViewer() {
            {logs.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
               <p>{t.logs.no_entries[language]}</p>
+              <p className="text-sm">{t.logs.no_entries_tip[language]}</p>
             </div>
            )}
         </div>
@@ -121,5 +67,3 @@ export default function CognitiveLogViewer() {
     </Card>
   );
 }
-
-    
