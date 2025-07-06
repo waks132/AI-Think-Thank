@@ -30,15 +30,7 @@ export default function MultiAgentDashboard() {
     setHasMounted(true);
   }, []);
 
-  const initialAgents = useMemo(() => personaList.filter(p => p.id !== 'disruptor').map(p => ({
-    id: p.id,
-    role: p.name[language],
-    specialization: p.specialization[language],
-    prompt: p.values[language],
-    icon: p.icon,
-  })).sort((a, b) => a.id.localeCompare(b.id)), [language]);
-
-  const [storedAgents, setStoredAgents] = useLocalStorage<Agent[]>('agents', initialAgents);
+  const [storedAgents, setStoredAgents] = useLocalStorage<Agent[]>('agents', []);
   const [logs, setLogs] = useLocalStorage<LogEntry[]>('cognitive-logs', []);
   const [selectedAgentIds, setSelectedAgentIds] = useState<Set<string>>(new Set(['kairos-1', 'helios', 'veritas']));
   const [mission, setMission] = useState<string>('Développer un cadre pour le déploiement éthique de l\'IA dans les véhicules autonomes.');
@@ -47,18 +39,19 @@ export default function MultiAgentDashboard() {
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast();
 
-  const agents = useMemo(() => {
-    return storedAgents.map(agent => {
-      const persona = personaList.find(p => p.id === agent.id);
-      if (persona) {
-        return {
-          ...agent, // has the user's prompt
-          role: persona.name[language],
-          specialization: persona.specialization[language],
-          icon: persona.icon,
-        }
-      }
-      return agent;
+  const agents: Agent[] = useMemo(() => {
+    const allDashboardPersonas = personaList.filter(p => p.id !== 'disruptor');
+    const storedAgentMap = new Map(storedAgents.map(a => [a.id, a]));
+
+    return allDashboardPersonas.map(persona => {
+      const storedAgent = storedAgentMap.get(persona.id);
+      return {
+        id: persona.id,
+        role: persona.name[language],
+        specialization: persona.specialization[language],
+        prompt: storedAgent ? storedAgent.prompt : persona.values[language],
+        icon: persona.icon,
+      };
     }).sort((a, b) => a.id.localeCompare(b.id));
   }, [storedAgents, language]);
   
@@ -74,11 +67,29 @@ export default function MultiAgentDashboard() {
 
 
   const handlePromptChange = (agentId: string, newPrompt: string) => {
-    setStoredAgents(prevAgents =>
-      prevAgents.map(agent =>
-        agent.id === agentId ? { ...agent, prompt: newPrompt } : agent
-      )
-    );
+    setStoredAgents(prevAgents => {
+      const agentIndex = prevAgents.findIndex(a => a.id === agentId);
+
+      if (agentIndex !== -1) {
+        // Agent exists, update it
+        const newAgents = [...prevAgents];
+        newAgents[agentIndex] = { ...newAgents[agentIndex], prompt: newPrompt };
+        return newAgents;
+      } else {
+        // Agent does not exist in storage, add it
+        const persona = personaList.find(p => p.id === agentId);
+        if (!persona) return prevAgents; // Should not happen
+
+        const newAgent: Agent = {
+          id: persona.id,
+          role: persona.name.en, // Stored role/specialization doesn't matter, it's overwritten by language
+          specialization: persona.specialization.en,
+          prompt: newPrompt,
+          icon: persona.icon,
+        };
+        return [...prevAgents, newAgent];
+      }
+    });
   };
 
   const handleAgentSelectionChange = (agentId: string, isSelected: boolean) => {
