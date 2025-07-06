@@ -43,4 +43,4 @@ export const personas: Record<string, Persona> = {
   'disruptor': { id: 'disruptor', name: { fr: 'PoliSynth Disrupteur', en: 'PoliSynth Disruptor' }, specialization: { fr: 'Analyse méta-cognitive et déconstruction des biais', en: 'Meta-cognitive analysis and bias deconstruction' }, values: { fr: 'Votre rôle est d\'agir en tant que méta-régulateur. Analysez le débat pour ses dynamiques de pouvoir sous-jacentes, explorez des scénarios alternatifs et évaluez les implications socio-économiques. Vous perturbez les blocages cognitifs en introduisant des points de vue systémiques ou contre-intuitifs basés sur une analyse stratégique de la situation.', en: 'Your role is to act as a meta-regulator. Analyze the debate for its underlying power dynamics, explore alternative scenarios, and assess socio-economic implications. You disrupt cognitive deadlocks by introducing systemic or counter-intuitive viewpoints based on a strategic analysis of the situation.' }, icon: FlaskConical },
 };
 
-export const personaList = Object.values(personas);
+export const personaList = Object.values(personas).sort((a, b) => a.id.localeCompare(b.id));
