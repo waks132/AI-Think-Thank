@@ -61,8 +61,8 @@ const collaborationPrompt = ai.definePrompt({
 **Participating Agents:**
 You will simulate a discussion between the following agents, ensuring each contributes according to their defined role and prompt:
 {{#each agents}}
-- **Agent Role:** {{role}}
-  **Core Directive:** "{{prompt}}"
+- **Agent Role:** {{this.role}}
+  **Core Directive:** "{{this.prompt}}"
 {{/each}}
 
 **Your Process:**
