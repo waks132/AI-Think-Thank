@@ -10,13 +10,17 @@ import { History, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import useLocalStorage from '@/hooks/use-local-storage';
 import type { PromptVersion } from '@/lib/types';
+import { Checkbox } from '../ui/checkbox';
+import { cn } from '@/lib/utils';
 
 interface AgentCardProps {
   agent: Agent;
   onPromptChange: (agentId: string, newPrompt: string) => void;
+  isSelected: boolean;
+  onSelectionChange: (agentId: string, isSelected: boolean) => void;
 }
 
-export default function AgentCard({ agent, onPromptChange }: AgentCardProps) {
+export default function AgentCard({ agent, onPromptChange, isSelected, onSelectionChange }: AgentCardProps) {
   const [prompt, setPrompt] = useState(agent.prompt);
   const [promptHistory, setPromptHistory] = useLocalStorage<PromptVersion[]>(`prompt-history-${agent.id}`, []);
   const { toast } = useToast();
@@ -36,10 +40,18 @@ export default function AgentCard({ agent, onPromptChange }: AgentCardProps) {
   };
 
   return (
-    <Card className="flex flex-col h-full transition-shadow duration-300 hover:shadow-xl">
+    <Card className={cn("flex flex-col h-full transition-all duration-300 hover:shadow-xl", isSelected && "ring-2 ring-primary")}>
       <CardHeader className="flex flex-row items-start gap-4">
-        <div className="p-3 bg-accent rounded-lg">
-          <agent.icon className="h-6 w-6 text-accent-foreground" />
+        <div className="flex flex-col items-center gap-4">
+          <div className="p-3 bg-accent rounded-lg">
+            <agent.icon className="h-6 w-6 text-accent-foreground" />
+          </div>
+          <Checkbox 
+            id={`select-${agent.id}`}
+            checked={isSelected}
+            onCheckedChange={(checked) => onSelectionChange(agent.id, !!checked)}
+            aria-label={`Select ${agent.role}`}
+          />
         </div>
         <div>
           <CardTitle className="font-headline">{agent.role}</CardTitle>

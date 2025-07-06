@@ -4,11 +4,18 @@ import { useState } from 'react';
 import { 
   BrainCircuit, FlaskConical, ClipboardCheck, Lightbulb, Scale, FunctionSquare,
   Compass, Shield, Brain, Layers, BookOpen, Search, Drama, Milestone,
-  Zap, MessageSquare, Palette, Recycle, Code, Mic, Anchor, GitBranch
+  Zap, MessageSquare, Palette, Recycle, Code, Mic, Anchor, GitBranch, Users, Loader2, Sparkles, FileText
 } from 'lucide-react';
 import AgentCard from './agent-card';
 import type { Agent } from '@/lib/types';
 import useLocalStorage from '@/hooks/use-local-storage';
+import { runAgentCollaboration, type AgentCollaborationOutput } from '@/ai/flows/agent-collaboration-flow';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Textarea } from '../ui/textarea';
+import { Button } from '../ui/button';
+import { Label } from '../ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { Separator } from '../ui/separator';
 
 const initialAgents: Agent[] = [
   { id: 'kairos-1', role: 'KAIROS-1', specialization: 'Coordination and detection of high-yield action levers', prompt: 'Your role is to coordinate and detect high-yield action levers.', icon: Compass },
@@ -37,6 +44,11 @@ const initialAgents: Agent[] = [
 
 export default function MultiAgentDashboard() {
   const [agents, setAgents] = useLocalStorage<Agent[]>('agents', initialAgents);
+  const [selectedAgentIds, setSelectedAgentIds] = useState<Set<string>>(new Set(['kairos-1', 'helios', 'veritas']));
+  const [mission, setMission] = useState<string>('Develop a framework for ethical AI deployment in autonomous vehicles.');
+  const [collaborationResult, setCollaborationResult] = useState<AgentCollaborationOutput | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handlePromptChange = (agentId: string, newPrompt: string) => {
     setAgents(prevAgents =>
@@ -46,14 +58,133 @@ export default function MultiAgentDashboard() {
     );
   };
 
+  const handleAgentSelectionChange = (agentId: string, isSelected: boolean) => {
+    setSelectedAgentIds(prev => {
+      const newSet = new Set(prev);
+      if (isSelected) {
+        newSet.add(agentId);
+      } else {
+        newSet.delete(agentId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleStartMission = async () => {
+    if (selectedAgentIds.size < 2) {
+      toast({
+        variant: 'destructive',
+        title: 'Selection Error',
+        description: 'Please select at least two agents for collaboration.',
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    setCollaborationResult(null);
+
+    const participatingAgents = agents
+      .filter(agent => selectedAgentIds.has(agent.id))
+      .map(({ role, prompt }) => ({ role, prompt }));
+
+    try {
+      const result = await runAgentCollaboration({
+        mission,
+        agents: participatingAgents,
+      });
+      setCollaborationResult(result);
+    } catch (error) {
+      console.error("Error during agent collaboration:", error);
+      toast({
+        variant: "destructive",
+        title: "Collaboration Failed",
+        description: "The mission could not be completed. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="animate-fade-in">
-      <h1 className="text-3xl font-bold font-headline mb-2">Multi-Agent Dashboard</h1>
-      <p className="text-muted-foreground mb-6">Manage your team of AI agents. Edit their core prompts to adapt their behavior.</p>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {agents.map(agent => (
-          <AgentCard key={agent.id} agent={agent} onPromptChange={handlePromptChange} />
-        ))}
+    <div className="animate-fade-in space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold font-headline mb-2">Multi-Agent Dashboard</h1>
+        <p className="text-muted-foreground">Orchestrate your cognitive collective. Define missions and manage your team of AI agents.</p>
+      </div>
+
+      <Card className="bg-card/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+            <Users />
+            Mission Hub
+          </CardTitle>
+          <CardDescription>Define a mission, select your agents, and launch the collaboration.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="mission-description">Mission Description</Label>
+            <Textarea 
+              id="mission-description"
+              value={mission}
+              onChange={(e) => setMission(e.target.value)}
+              placeholder="Enter the mission objective for the collective..."
+              rows={3}
+            />
+          </div>
+          <Button onClick={handleStartMission} disabled={isLoading} className="w-full">
+            {isLoading ? (
+              <><Loader2 className="mr-2 animate-spin" /> Orchestrating...</>
+            ) : (
+              <><Sparkles className="mr-2" /> Start Mission ({selectedAgentIds.size} agents)</>
+            )}
+          </Button>
+
+          {isLoading && (
+            <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed rounded-lg">
+                <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+                <p className="text-muted-foreground">Cognitive collective is deliberating...</p>
+            </div>
+          )}
+
+          {collaborationResult && (
+            <div className="space-y-4 animate-fade-in pt-4">
+              <Separator />
+              <h3 className="font-headline text-xl">Mission Outcome</h3>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><FileText />Collaboration Summary</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="whitespace-pre-wrap">{collaborationResult.collaborationSummary}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><BrainCircuit />Reasoning</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="whitespace-pre-wrap text-muted-foreground">{collaborationResult.reasoning}</p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      
+      <div>
+        <h2 className="text-2xl font-bold font-headline mb-2">Agent Roster</h2>
+        <p className="text-muted-foreground mb-6">Select agents for the mission and edit their core prompts to adapt their behavior.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {agents.map(agent => (
+            <AgentCard 
+              key={agent.id} 
+              agent={agent} 
+              onPromptChange={handlePromptChange} 
+              isSelected={selectedAgentIds.has(agent.id)}
+              onSelectionChange={handleAgentSelectionChange}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -8,3 +8,4 @@ import '@/ai/flows/ai-team-simulator.ts';
 import '@/ai/flows/adaptive-prompt-rewriter.ts';
 import '@/ai/flows/cognitive-heatmap-flow.ts';
 import '@/ai/flows/causal-flow-tracker-flow.ts';
+import '@/ai/flows/agent-collaboration-flow.ts';
