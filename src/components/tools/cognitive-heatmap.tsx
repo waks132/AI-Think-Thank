@@ -10,6 +10,8 @@ import { generateCognitiveHeatmap } from "@/ai/flows/cognitive-heatmap-flow"
 import type { HeatmapWord } from "@/lib/types"
 import ModelSelector from "../model-selector"
 import { availableModels } from "@/lib/models"
+import { useLanguage } from "@/context/language-context"
+import { t } from "@/lib/i18n"
 
 const initialText = "The primary mission objective is to establish a self-sustaining hydroponics farm on Mars. Key challenges include radiation shielding, water reclamation, and adapting Earth-based plants to the Martian environment. Our strategy prioritizes a modular, scalable architecture, allowing for incremental expansion. The initial phase will focus on robust life support and energy systems, followed by the deployment of the agricultural modules. This approach mitigates risk and ensures core systems are operational before expanding."
 
@@ -51,6 +53,7 @@ export default function CognitiveHeatmap() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast();
+  const { language } = useLanguage();
 
   const handleAnalyze = async () => {
     setIsLoading(true);
@@ -73,34 +76,32 @@ export default function CognitiveHeatmap() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline text-2xl">Cognitive Heatmap</CardTitle>
-        <CardDescription>
-          Enter text to dynamically generate a visual representation of its semantic activation zones.
-        </CardDescription>
+        <CardTitle className="font-headline text-2xl">{t.heatmap.title[language]}</CardTitle>
+        <CardDescription>{t.heatmap.description[language]}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <ModelSelector selectedModel={selectedModel} onModelChange={setSelectedModel}/>
         <Textarea 
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Enter text to analyze..."
+            placeholder={t.heatmap.placeholder[language]}
             rows={8}
         />
         <Button onClick={handleAnalyze} disabled={isLoading || !text}>
             {isLoading ? <Loader2 className="animate-spin"/> : <Thermometer />}
-            Analyze Text
+            {t.heatmap.analyze_button[language]}
         </Button>
         <div className="p-6 border rounded-lg shadow-inner bg-background/50 min-h-[200px]">
            {isLoading ? (
              <div className="flex items-center justify-center h-full text-muted-foreground">
                 <Loader2 className="h-8 w-8 animate-spin text-primary mr-2"/>
-                Analyzing semantic weights...
+                {t.heatmap.loading_text[language]}
              </div>
            ) : heatmap.length > 0 ? (
              <HeatmapTextView text={text} heatmap={heatmap} />
            ) : (
              <div className="flex items-center justify-center h-full text-muted-foreground">
-                <p>Analysis results will appear here.</p>
+                <p>{t.heatmap.no_results[language]}</p>
              </div>
            )}
         </div>
@@ -108,3 +109,5 @@ export default function CognitiveHeatmap() {
     </Card>
   )
 }
+
+    

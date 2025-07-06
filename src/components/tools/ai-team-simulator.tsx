@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from "react"
@@ -19,17 +18,19 @@ import {
 } from 'lucide-react'
 import { Progress } from "@/components/ui/progress"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Label } from "../ui/label"
 import ModelSelector from "../model-selector"
 import { availableModels } from "@/lib/models"
 import { cn } from "@/lib/utils"
 import { Badge } from "../ui/badge"
 import { Separator } from "../ui/separator"
+import { useLanguage } from "@/context/language-context"
+import { t } from "@/lib/i18n"
+import { personaList, personas } from "@/lib/personas"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 
 
 const perspectiveSchema = z.object({
-    name: z.string().min(3, { message: "Le nom du persona est requis." }),
-    values: z.string().min(10, { message: "Les valeurs du persona sont requises." }),
+  id: z.string().min(1, { message: "La sélection d'un persona est requise." }),
 });
 
 const formSchema = z.object({
@@ -48,17 +49,18 @@ export default function CognitiveClashSimulator() {
   const [isLoading, setIsLoading] = useState(false)
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast()
+  const { language } = useLanguage();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       scenarioDescription: "Une nouvelle technologie puissante, mais éthiquement ambiguë, a été développée par le collectif. Le groupe doit décider de la déployer, de la restreindre ou de la détruire.",
       perspectives: [
-        { name: "HELIOS (Techno-Optimiste)", values: "Votre rôle est de générer des idées technologiques avancées. Poussez pour un déploiement et une innovation rapides, en vous concentrant sur les avantages et les percées potentiels. Le potentiel de gain l'emporte sur les dangers hypothétiques." },
-        { name: "EDEN (Gardien Éthique)", values: "Votre rôle est de défendre la légitimité et la non-malfaisance. Examinez toutes les propositions pour déceler les dommages potentiels, les conséquences imprévues et les violations éthiques. La précaution et la sécurité sont primordiales." },
-        { name: "SYMBIOZ (Médiateur Pragmatique)", values: "Votre rôle est de jeter des ponts entre les domaines et de faciliter le dialogue. Trouvez une voie équilibrée, en intégrant le meilleur des points de vue opposés dans un compromis réalisable et responsable via des bacs à sable réglementaires et des programmes pilotes." },
-        { name: "VOX (Défenseur du Public)", values: "Votre rôle est de représenter l'intérêt public. Mettez l'accent sur la transparence, l'accessibilité et l'impact sociétal à long terme. Vous devez vous assurer que la solution finale est non seulement techniquement solide et éthiquement robuste, mais aussi compréhensible et légitime aux yeux des citoyens qu'elle affectera." },
-        { name: "Disrupteur PoliSynth", values: "Votre rôle est d'agir en tant que méta-régulateur. Analysez le débat pour ses dynamiques de pouvoir sous-jacentes, explorez des scénarios alternatifs et évaluez les implications socio-économiques. Vous perturbez les blocages cognitifs en introduisant des points de vue systémiques ou contre-intuitifs basés sur une analyse stratégique de la situation." }
+        { id: "helios" },
+        { id: "eden" },
+        { id: "symbioz" },
+        { id: "vox" },
+        { id: "disruptor" }
       ],
       numRounds: 5,
     },
@@ -69,12 +71,29 @@ export default function CognitiveClashSimulator() {
     name: "perspectives",
   });
 
+  const watchPerspectives = form.watch('perspectives');
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true)
     setResult(null)
     try {
-      const output = await cognitiveClashSimulator({...values, model: selectedModel})
-      setResult(output)
+      const selectedPersonas = values.perspectives.map(p => {
+        const fullPersona = personas[p.id as keyof typeof personas];
+        return {
+          name: fullPersona.name[language],
+          values: fullPersona.values[language],
+        };
+      });
+
+      const flowInput = {
+        scenarioDescription: values.scenarioDescription,
+        numRounds: values.numRounds,
+        perspectives: selectedPersonas.map(p => ({ name: p.name, prompt: p.values })),
+        model: selectedModel
+      };
+
+      const output = await cognitiveClashSimulator(flowInput);
+      setResult(output);
     } catch (error) {
       console.error("Error running simulation:", error)
       toast({
@@ -87,11 +106,17 @@ export default function CognitiveClashSimulator() {
     }
   }
 
+  const getPersonaName = (id: string) => {
+    const persona = personaList.find(p => p.id === id);
+    return persona ? persona.name[language] : '';
+  }
+
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline text-2xl">Simulateur de Clash Cognitif</CardTitle>
-        <CardDescription>Simulez des conflits idéologiques entre vos agents spécialisés pour mesurer la résilience du système et la synthèse émergente.</CardDescription>
+        <CardTitle className="font-headline text-2xl">{t.simulator.title[language]}</CardTitle>
+        <CardDescription>{t.simulator.description[language]}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
         <Form {...form}>
@@ -102,9 +127,9 @@ export default function CognitiveClashSimulator() {
               name="scenarioDescription"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description du Scénario de Clash</FormLabel>
+                  <FormLabel>{t.simulator.scenario_label[language]}</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Décrivez le scénario qui provoquera le conflit..." {...field} rows={3}/>
+                    <Textarea placeholder={t.simulator.scenario_placeholder[language]} {...field} rows={3}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -112,12 +137,35 @@ export default function CognitiveClashSimulator() {
             />
             
             <div>
-              <Label className="mb-4 flex items-center gap-2"><Users />Personas en Compétition</Label>
+              <Label className="mb-4 flex items-center gap-2"><Users />{t.simulator.perspectives_label[language]}</Label>
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-4">
                 {fields.map((item, index) => (
                   <div key={item.id} className={cn("space-y-4 p-4 border-2 rounded-lg relative", perspectiveColors[index % perspectiveColors.length])}>
-                    <FormField control={form.control} name={`perspectives.${index}.name`} render={({ field }) => (<FormItem><FormLabel>Nom du Persona</FormLabel><FormControl><Input placeholder="ex: HELIOS" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name={`perspectives.${index}.values`} render={({ field }) => (<FormItem><FormLabel>Directive Principale & Argument</FormLabel><FormControl><Textarea placeholder="Décrivez leurs croyances fondamentales et leur stratégie..." {...field} rows={4} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField
+                      control={form.control}
+                      name={`perspectives.${index}.id`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t.simulator.perspective[language]} {index + 1}</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder={t.simulator.select_persona_placeholder[language]} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {personaList.map(p => 
+                                <SelectItem key={p.id} value={p.id}>{p.name[language]}</SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <p className="text-xs text-muted-foreground pt-2 min-h-[50px]">
+                            {personaList.find(p => p.id === field.value)?.values[language] || t.simulator.directive_placeholder[language]}
+                          </p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                      {fields.length > 2 && (
                         <Button
                           type="button"
@@ -137,10 +185,10 @@ export default function CognitiveClashSimulator() {
                   variant="outline"
                   size="sm"
                   className="mt-4"
-                  onClick={() => append({ name: "Nouveau Persona", values: "Décrivez ses croyances fondamentales..." })}
+                  onClick={() => append({ id: "" })}
                 >
                   <PlusCircle className="mr-2 h-4 w-4" />
-                  Ajouter un Persona
+                  {t.simulator.add_button[language]}
                 </Button>
             </div>
             
@@ -149,7 +197,7 @@ export default function CognitiveClashSimulator() {
                 name="numRounds"
                 render={({ field }) => (
                   <FormItem className="max-w-xs">
-                    <FormLabel>Nombre de Rounds</FormLabel>
+                    <FormLabel>{t.simulator.rounds_label[language]}</FormLabel>
                     <FormControl>
                       <Input type="number" {...field} />
                     </FormControl>
@@ -159,92 +207,92 @@ export default function CognitiveClashSimulator() {
               />
             <Button type="submit" disabled={isLoading} className="w-full">
               {isLoading ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Simulation en cours...</>
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t.simulator.start_button_loading[language]}</>
               ) : (
-                <><Zap className="mr-2 h-4 w-4" /> Lancer le Clash Cognitif</>
+                <><Zap className="mr-2 h-4 w-4" /> {t.simulator.start_button[language]}</>
               )}
             </Button>
           </form>
         </Form>
         
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold font-headline">Analyse de la Simulation</h3>
+          <h3 className="text-lg font-semibold font-headline">{t.simulator.analysis_title[language]}</h3>
           {isLoading && (
             <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed rounded-lg">
               <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-              <p className="text-muted-foreground">Analyse des dynamiques cognitives...</p>
+              <p className="text-muted-foreground">{t.simulator.analysis_loading[language]}</p>
             </div>
           )}
           {result && (
             <div className="space-y-6 animate-fade-in">
                 <Card>
-                    <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><Milestone />Résumé du Clash</CardTitle></CardHeader>
+                    <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><Milestone />{t.simulator.summary_title[language]}</CardTitle></CardHeader>
                     <CardContent><p className="text-muted-foreground">{result.clashSummary}</p></CardContent>
                 </Card>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <Card>
-                        <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><Scale />Score de Résilience</CardTitle></CardHeader>
+                        <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><Scale />{t.simulator.resilience_title[language]}</CardTitle></CardHeader>
                         <CardContent className="space-y-2">
                              <Progress value={result.resilienceScore * 100} />
                              <p className="text-center font-bold text-2xl text-primary">{result.resilienceScore.toFixed(2)}</p>
-                             <p className="text-xs text-center text-muted-foreground">Capacité à trouver une résolution stable.</p>
+                             <p className="text-xs text-center text-muted-foreground">{t.simulator.resilience_description[language]}</p>
                         </CardContent>
                     </Card>
                     <Card>
-                        <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><GitMerge className="rotate-90"/>Indice de Polarisation</CardTitle></CardHeader>
+                        <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><GitMerge className="rotate-90"/>{t.simulator.polarization_title[language]}</CardTitle></CardHeader>
                         <CardContent className="space-y-2">
                              <Progress value={result.polarizationIndex * 100} />
                              <p className="text-center font-bold text-2xl text-primary">{result.polarizationIndex.toFixed(2)}</p>
-                             <p className="text-xs text-center text-muted-foreground">Degré de radicalisation.</p>
+                             <p className="text-xs text-center text-muted-foreground">{t.simulator.polarization_description[language]}</p>
                         </CardContent>
                     </Card>
                 </div>
                  <Card>
-                    <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><BarChart2 />Synthèse Émergente</CardTitle></CardHeader>
+                    <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><BarChart2 />{t.simulator.synthesis_title[language]}</CardTitle></CardHeader>
                     <CardContent><p className="text-muted-foreground">{result.emergentSynthesis}</p></CardContent>
                 </Card>
                  <Accordion type="multiple" className="w-full">
                     <AccordionItem value="log">
                         <AccordionTrigger>
-                            <div className="flex items-center gap-2"><BotMessageSquare />Voir le Journal de Simulation</div>
+                            <div className="flex items-center gap-2"><BotMessageSquare />{t.simulator.log_title[language]}</div>
                         </AccordionTrigger>
                         <AccordionContent>
                         <div className="space-y-6 max-h-[500px] overflow-y-auto p-4 border rounded-lg bg-background/50">
-                            {result.simulationLog.map((turn, index) => {
-                                const perspectiveIndex = form.getValues('perspectives').findIndex(p => p.name === turn.perspectiveName);
+                            {result.simulationLog.map((turn) => {
+                                const perspectiveIndex = watchPerspectives.findIndex(p => getPersonaName(p.id) === turn.perspectiveName);
                                 return (
                                     <div key={turn.turn} className="flex items-start gap-4 animate-fade-in">
                                         <div className={cn("flex-1 p-4 rounded-lg border-2", perspectiveColors[perspectiveIndex % perspectiveColors.length] || 'border-gray-500/50')}>
                                             <div className="flex items-baseline justify-between">
                                                 <p className="font-semibold text-primary">{turn.perspectiveName}</p>
-                                                <span className="text-xs text-muted-foreground font-mono">Tour {turn.turn}</span>
+                                                <span className="text-xs text-muted-foreground font-mono">{t.simulator.turn[language]} {turn.turn}</span>
                                             </div>
                                             <div className="mt-4 text-sm space-y-4">
                                                 <div className="flex items-start gap-3">
                                                     <Milestone className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
                                                     <div>
-                                                        <span className="font-semibold text-foreground/80">Position</span>
+                                                        <span className="font-semibold text-foreground/80">{t.simulator.position[language]}</span>
                                                         <p className="text-foreground/90">{turn.argument.position}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-start gap-3">
                                                     <BrainCircuit className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
                                                     <div>
-                                                        <span className="font-semibold text-foreground/80">Justification</span>
+                                                        <span className="font-semibold text-foreground/80">{t.simulator.justification[language]}</span>
                                                         <p className="text-foreground/90">{turn.argument.justification}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-start gap-3">
                                                     <ShieldAlert className="h-4 w-4 text-amber-500 mt-1 flex-shrink-0" />
                                                     <div>
-                                                        <span className="font-semibold text-foreground/80">Risque Perçu</span>
+                                                        <span className="font-semibold text-foreground/80">{t.simulator.risk[language]}</span>
                                                         <p className="text-foreground/90">{turn.argument.riskPerceived}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-start gap-3">
                                                     <FlaskConical className="h-4 w-4 text-secondary mt-1 flex-shrink-0" />
                                                     <div>
-                                                        <span className="font-semibold text-foreground/80">Proposition</span>
+                                                        <span className="font-semibold text-foreground/80">{t.simulator.proposal[language]}</span>
                                                         <p className="text-foreground/90">{turn.argument.proposal}</p>
                                                     </div>
                                                 </div>
@@ -259,7 +307,7 @@ export default function CognitiveClashSimulator() {
                     {result.argumentFlow && result.argumentFlow.length > 0 && (
                         <AccordionItem value="flow-map">
                             <AccordionTrigger>
-                                <div className="flex items-center gap-2"><GitBranch />Voir la Carte d'Influence des Arguments</div>
+                                <div className="flex items-center gap-2"><GitBranch />{t.simulator.influence_title[language]}</div>
                             </AccordionTrigger>
                             <AccordionContent>
                                 <div className="space-y-6 p-4 border rounded-lg bg-background/50 max-h-[500px] overflow-y-auto">
@@ -281,7 +329,7 @@ export default function CognitiveClashSimulator() {
                     {result.assumptionAnalysis && result.assumptionAnalysis.length > 0 && (
                         <AccordionItem value="assumptions">
                             <AccordionTrigger>
-                                <div className="flex items-center gap-2"><LightbulbOff />Analyse des Hypothèses Implicites</div>
+                                <div className="flex items-center gap-2"><LightbulbOff />{t.simulator.assumptions_title[language]}</div>
                             </AccordionTrigger>
                             <AccordionContent>
                                 <div className="space-y-6 p-4 border rounded-lg bg-background/50 max-h-[500px] overflow-y-auto">
@@ -289,20 +337,20 @@ export default function CognitiveClashSimulator() {
                                         <div key={index} className="p-4 rounded-lg border bg-card animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
                                             <div className="flex items-center justify-between mb-3">
                                                 <Badge variant="destructive">{item.agentRole}</Badge>
-                                                <span className="text-xs text-muted-foreground font-mono">Extrait du Tour {item.turn}</span>
+                                                <span className="text-xs text-muted-foreground font-mono">{t.simulator.extracted_from_turn[language]} {item.turn}</span>
                                             </div>
                                             <div className="space-y-4">
                                                 <div className="flex items-start gap-3">
                                                     <SearchSlash className="h-4 w-4 text-amber-500 mt-1 flex-shrink-0" />
                                                     <div>
-                                                        <span className="font-semibold text-foreground/80">Hypothèse Implicite</span>
+                                                        <span className="font-semibold text-foreground/80">{t.simulator.implicit_assumption[language]}</span>
                                                         <p className="text-foreground/90 italic">"{item.assumption}"</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-start gap-3">
                                                     <MessageSquareWarning className="h-4 w-4 text-red-500 mt-1 flex-shrink-0" />
                                                     <div>
-                                                        <span className="font-semibold text-foreground/80">Critique du "Disrupteur"</span>
+                                                        <span className="font-semibold text-foreground/80">{t.simulator.disruptor_critique[language]}</span>
                                                         <p className="text-foreground/90">{item.critique}</p>
                                                     </div>
                                                 </div>
@@ -311,21 +359,21 @@ export default function CognitiveClashSimulator() {
                                                     <div className="flex items-start gap-2">
                                                         <Users className="h-4 w-4 text-green-500 mt-1 flex-shrink-0" />
                                                         <div>
-                                                            <span className="font-semibold text-foreground/80">Bénéficiaire Dominant</span>
+                                                            <span className="font-semibold text-foreground/80">{t.simulator.dominant_beneficiary[language]}</span>
                                                             <p className="text-muted-foreground">{item.dominantBeneficiary}</p>
                                                         </div>
                                                     </div>
                                                     <div className="flex items-start gap-2">
                                                         <UserX className="h-4 w-4 text-orange-500 mt-1 flex-shrink-0" />
                                                         <div>
-                                                            <span className="font-semibold text-foreground/80">Partie Prenante Oubliée</span>
+                                                            <span className="font-semibold text-foreground/80">{t.simulator.omitted_stakeholder[language]}</span>
                                                             <p className="text-muted-foreground">{item.omittedStakeholder}</p>
                                                         </div>
                                                     </div>
                                                     <div className="flex items-start gap-2">
                                                         <Library className="h-4 w-4 text-blue-500 mt-1 flex-shrink-0" />
                                                         <div>
-                                                            <span className="font-semibold text-foreground/80">Cadre Épistémique</span>
+                                                            <span className="font-semibold text-foreground/80">{t.simulator.epistemic_frame[language]}</span>
                                                             <p className="text-muted-foreground">{item.epistemicFrame}</p>
                                                         </div>
                                                     </div>
@@ -342,7 +390,7 @@ export default function CognitiveClashSimulator() {
           )}
           {!isLoading && !result && (
             <div className="flex items-center justify-center h-48 border-2 border-dashed rounded-lg">
-              <p className="text-muted-foreground text-center">Les résultats de l'analyse du clash apparaîtront ici.</p>
+              <p className="text-muted-foreground text-center">{t.simulator.no_results[language]}</p>
             </div>
           )}
         </div>
@@ -350,3 +398,5 @@ export default function CognitiveClashSimulator() {
     </Card>
   )
 }
+
+    

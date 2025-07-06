@@ -9,6 +9,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { formatDistanceToNow } from 'date-fns';
 import { Textarea } from '@/components/ui/textarea';
+import { useLanguage } from '@/context/language-context';
+import { t } from '@/lib/i18n';
 
 const Diff = require('diff');
 
@@ -36,6 +38,7 @@ export default function PromptLineageViewer() {
   const [promptHistory] = useLocalStorage<PromptVersion[]>(selectedAgentId ? `prompt-history-${selectedAgentId}` : '', []);
   const [selectedVersion1, setSelectedVersion1] = useState<PromptVersion | null>(null);
   const [selectedVersion2, setSelectedVersion2] = useState<PromptVersion | null>(null);
+  const { language } = useLanguage();
 
   const handleAgentChange = (agentId: string) => {
     setSelectedAgentId(agentId);
@@ -68,17 +71,15 @@ export default function PromptLineageViewer() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline text-2xl">Prompt Lineage Viewer</CardTitle>
-        <CardDescription>
-          Visualize the evolution of prompts. Compare versions and revert to stable ancestors.
-        </CardDescription>
+        <CardTitle className="font-headline text-2xl">{t.lineage.title[language]}</CardTitle>
+        <CardDescription>{t.lineage.description[language]}</CardDescription>
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="md:col-span-1 space-y-4">
-            <h3 className="font-semibold">Select Agent</h3>
+            <h3 className="font-semibold">{t.lineage.select_agent_label[language]}</h3>
             <Select onValueChange={handleAgentChange} defaultValue={selectedAgentId || undefined}>
                 <SelectTrigger>
-                    <SelectValue placeholder="Select an agent..." />
+                    <SelectValue placeholder={t.lineage.select_agent_placeholder[language]} />
                 </SelectTrigger>
                 <SelectContent>
                     {agents.map(agent => (
@@ -89,7 +90,7 @@ export default function PromptLineageViewer() {
 
             <Separator />
             
-            <h3 className="font-semibold">Versions</h3>
+            <h3 className="font-semibold">{t.lineage.versions_label[language]}</h3>
             <ScrollArea className="h-96 rounded-md border">
                 <div className="p-4">
                 {promptHistory.length > 0 ? (
@@ -112,35 +113,35 @@ export default function PromptLineageViewer() {
                     ))}
                     </div>
                 ) : (
-                    <p className="text-sm text-muted-foreground p-4 text-center">No history for this agent.</p>
+                    <p className="text-sm text-muted-foreground p-4 text-center">{t.lineage.no_history[language]}</p>
                 )}
                 </div>
             </ScrollArea>
         </div>
 
         <div className="md:col-span-3">
-            <h3 className="font-semibold mb-4">Comparison</h3>
+            <h3 className="font-semibold mb-4">{t.lineage.comparison_label[language]}</h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
                 <Card className="flex flex-col">
                     <CardHeader>
-                        <CardTitle className="text-base">Version 1 {selectedVersion1 && `(${formatDistanceToNow(new Date(selectedVersion1.timestamp), { addSuffix: true })})`}</CardTitle>
+                        <CardTitle className="text-base">{t.lineage.version1_label[language]} {selectedVersion1 && `(${formatDistanceToNow(new Date(selectedVersion1.timestamp), { addSuffix: true })})`}</CardTitle>
                     </CardHeader>
                     <CardContent className="flex-grow">
-                        <Textarea readOnly value={selectedVersion1?.prompt || 'Select a version'} className="h-full bg-background" />
+                        <Textarea readOnly value={selectedVersion1?.prompt || t.lineage.version1_placeholder[language]} className="h-full bg-background" />
                     </CardContent>
                 </Card>
                  <Card className="flex flex-col">
                     <CardHeader>
-                        <CardTitle className="text-base">Version 2 {selectedVersion2 && `(${formatDistanceToNow(new Date(selectedVersion2.timestamp), { addSuffix: true })})`}</CardTitle>
+                        <CardTitle className="text-base">{t.lineage.version2_label[language]} {selectedVersion2 && `(${formatDistanceToNow(new Date(selectedVersion2.timestamp), { addSuffix: true })})`}</CardTitle>
                     </CardHeader>
                     <CardContent className="flex-grow">
-                        <Textarea readOnly value={selectedVersion2?.prompt || 'Select a second version'} className="h-full bg-background" />
+                        <Textarea readOnly value={selectedVersion2?.prompt || t.lineage.version2_placeholder[language]} className="h-full bg-background" />
                     </CardContent>
                 </Card>
             </div>
              {selectedVersion1 && selectedVersion2 && (
                 <div className="mt-4">
-                <h3 className="font-semibold mb-2">Diff View (Version 1 vs Version 2)</h3>
+                <h3 className="font-semibold mb-2">{t.lineage.diff_title[language]}</h3>
                 <Card>
                     <CardContent className="p-4 h-[200px] overflow-y-auto">
                         <DiffView string1={selectedVersion2.prompt} string2={selectedVersion1.prompt} />
@@ -153,3 +154,5 @@ export default function PromptLineageViewer() {
     </Card>
   );
 }
+
+    

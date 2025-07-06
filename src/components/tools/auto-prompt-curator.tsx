@@ -15,6 +15,8 @@ import { Archive, ArchiveX, CheckSquare, Loader2 } from 'lucide-react'
 import { Badge } from "@/components/ui/badge"
 import ModelSelector from "../model-selector"
 import { availableModels } from "@/lib/models"
+import { useLanguage } from "@/context/language-context"
+import { t } from "@/lib/i18n"
 
 const formSchema = z.object({
   promptText: z.string().min(10, { message: "Prompt text must be at least 10 characters." }),
@@ -30,6 +32,7 @@ export default function AutoPromptCurator() {
   const [isLoading, setIsLoading] = useState(false)
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast()
+  const { language } = useLanguage();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -74,8 +77,8 @@ export default function AutoPromptCurator() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline text-2xl">Auto Prompt Curator</CardTitle>
-        <CardDescription>Automatically get recommendations to suppress or archive unhelpful or redundant prompts.</CardDescription>
+        <CardTitle className="font-headline text-2xl">{t.curator.title[language]}</CardTitle>
+        <CardDescription>{t.curator.description[language]}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -88,9 +91,9 @@ export default function AutoPromptCurator() {
                   name="promptText"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Prompt Text</FormLabel>
+                      <FormLabel>{t.curator.prompt_text_label[language]}</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Enter the prompt to evaluate..." {...field} />
+                        <Textarea placeholder={t.curator.prompt_text_placeholder[language]} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -101,7 +104,7 @@ export default function AutoPromptCurator() {
                   name="promptId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Prompt ID</FormLabel>
+                      <FormLabel>{t.curator.prompt_id_label[language]}</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g., prompt-123" {...field} />
                       </FormControl>
@@ -110,35 +113,37 @@ export default function AutoPromptCurator() {
                   )}
                 />
                 <div className="grid grid-cols-2 gap-4">
-                  <FormField control={form.control} name="usageFrequency" render={({ field }) => (<FormItem><FormLabel>Usage Frequency</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField control={form.control} name="successRate" render={({ field }) => (<FormItem><FormLabel>Success Rate (0-1)</FormLabel><FormControl><Input type="number" step="0.1" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField control={form.control} name="averageRating" render={({ field }) => (<FormItem><FormLabel>Avg. Rating (0-5)</FormLabel><FormControl><Input type="number" step="0.1" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField control={form.control} name="similarityToOtherPrompts" render={({ field }) => (<FormItem><FormLabel>Similarity (0-1)</FormLabel><FormControl><Input type="number" step="0.1" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  <FormField control={form.control} name="usageFrequency" render={({ field }) => (<FormItem><FormLabel>{t.curator.usage_label[language]}</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  <FormField control={form.control} name="successRate" render={({ field }) => (<FormItem><FormLabel>{t.curator.success_rate_label[language]}</FormLabel><FormControl><Input type="number" step="0.1" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  <FormField control={form.control} name="averageRating" render={({ field }) => (<FormItem><FormLabel>{t.curator.rating_label[language]}</FormLabel><FormControl><Input type="number" step="0.1" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  <FormField control={form.control} name="similarityToOtherPrompts" render={({ field }) => (<FormItem><FormLabel>{t.curator.similarity_label[language]}</FormLabel><FormControl><Input type="number" step="0.1" {...field} /></FormControl><FormMessage /></FormItem>)} />
                 </div>
                 <Button type="submit" disabled={isLoading} className="w-full">
-                  {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> : "Get Recommendation"}
+                  {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> : t.curator.get_reco_button[language]}
                 </Button>
               </form>
             </Form>
           </div>
           <div className="flex flex-col">
-            <h3 className="text-lg font-semibold mb-4 font-headline">Recommendation</h3>
+            <h3 className="text-lg font-semibold mb-4 font-headline">{t.curator.recommendation_title[language]}</h3>
             {isLoading && (
               <div className="flex flex-col items-center justify-center h-full p-8 border-2 border-dashed rounded-lg">
                 <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-                <p className="text-muted-foreground">Curator is analyzing the data...</p>
+                <p className="text-muted-foreground">{t.curator.loading_text[language]}</p>
               </div>
             )}
             {result && (
               <div className="flex flex-col items-center justify-center h-full p-8 border rounded-lg bg-card animate-fade-in text-center">
                   <ResultIcon />
-                  <Badge variant={result.actionRecommended === 'keep' ? 'default' : 'destructive'} className="my-4 capitalize text-lg py-1 px-4">{result.actionRecommended}</Badge>
+                  <Badge variant={result.actionRecommended === 'keep' ? 'default' : 'destructive'} className="my-4 capitalize text-lg py-1 px-4">
+                    {t.curator.actions[result.actionRecommended][language]}
+                  </Badge>
                   <p className="text-muted-foreground">{result.reason}</p>
               </div>
             )}
             {!isLoading && !result && (
               <div className="flex items-center justify-center h-full p-8 border-2 border-dashed rounded-lg">
-                <p className="text-muted-foreground text-center">Curation recommendation will appear here.</p>
+                <p className="text-muted-foreground text-center">{t.curator.no_results[language]}</p>
               </div>
             )}
           </div>
@@ -147,3 +152,5 @@ export default function AutoPromptCurator() {
     </Card>
   )
 }
+
+    

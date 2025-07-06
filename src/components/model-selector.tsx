@@ -4,6 +4,8 @@ import { availableModels } from "@/lib/models";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "./ui/label";
 import { Bot } from "lucide-react";
+import { useLanguage } from "@/context/language-context";
+import { t } from "@/lib/i18n";
 
 interface ModelSelectorProps {
   selectedModel: string;
@@ -12,16 +14,19 @@ interface ModelSelectorProps {
   className?: string;
 }
 
-export default function ModelSelector({ selectedModel, onModelChange, label="Select AI Model", className }: ModelSelectorProps) {
+export default function ModelSelector({ selectedModel, onModelChange, label, className }: ModelSelectorProps) {
+  const { language } = useLanguage();
+  const displayLabel = label || t.modelSelector.label[language];
+
   return (
     <div className={className}>
       <Label htmlFor="model-selector" className="flex items-center gap-2 mb-2">
         <Bot className="h-4 w-4" />
-        {label}
+        {displayLabel}
       </Label>
       <Select value={selectedModel} onValueChange={onModelChange}>
         <SelectTrigger id="model-selector" className="w-full">
-          <SelectValue placeholder="Choose a model..." />
+          <SelectValue placeholder={t.modelSelector.placeholder[language]} />
         </SelectTrigger>
         <SelectContent>
           {availableModels.map((model) => (
@@ -34,3 +39,5 @@ export default function ModelSelector({ selectedModel, onModelChange, label="Sel
     </div>
   );
 }
+
+    

@@ -15,6 +15,8 @@ import ModelSelector from "../model-selector"
 import { availableModels } from "@/lib/models"
 import { Progress } from "../ui/progress"
 import { Badge } from "../ui/badge"
+import { useLanguage } from "@/context/language-context"
+import { t } from "@/lib/i18n"
 const Diff = require('diff');
 
 const formSchema = z.object({
@@ -42,6 +44,7 @@ export default function DivergenceMetricsTool() {
   const [isLoading, setIsLoading] = useState(false)
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast()
+  const { language } = useLanguage();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -72,8 +75,8 @@ export default function DivergenceMetricsTool() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline text-2xl">Prompt Divergence Metrics</CardTitle>
-        <CardDescription>Calculate the semantic and intentional divergence between two prompt versions.</CardDescription>
+        <CardTitle className="font-headline text-2xl">{t.divergence.title[language]}</CardTitle>
+        <CardDescription>{t.divergence.description[language]}</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -82,65 +85,65 @@ export default function DivergenceMetricsTool() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField control={form.control} name="promptVersionA" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Prompt Version A</FormLabel>
+                    <FormLabel>{t.divergence.prompt_a_label[language]}</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Enter the first prompt version..." {...field} rows={5} />
+                      <Textarea placeholder={t.divergence.prompt_a_placeholder[language]} {...field} rows={5} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
               )} />
               <FormField control={form.control} name="promptVersionB" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Prompt Version B</FormLabel>
+                    <FormLabel>{t.divergence.prompt_b_label[language]}</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Enter the second prompt version..." {...field} rows={5} />
+                      <Textarea placeholder={t.divergence.prompt_b_placeholder[language]} {...field} rows={5} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
               )} />
             </div>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? <><Loader2 className="animate-spin" /> Calculating...</> : <><Scale/> Calculate Divergence</>}
+              {isLoading ? <><Loader2 className="animate-spin" />{t.divergence.calculate_button_loading[language]}</> : <><Scale/>{t.divergence.calculate_button[language]}</>}
             </Button>
           </form>
         </Form>
         
         <div className="mt-8">
-          <h3 className="text-lg font-semibold font-headline mb-4">Analysis Result</h3>
+          <h3 className="text-lg font-semibold font-headline mb-4">{t.divergence.analysis_title[language]}</h3>
            <div className="p-6 border-2 border-dashed rounded-lg bg-card min-h-48 flex flex-col justify-center">
               {isLoading ? (
                 <div className="flex items-center justify-center text-muted-foreground">
                   <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
-                  <p>Analyzing prompts...</p>
+                  <p>{t.divergence.loading_text[language]}</p>
                 </div>
               ) : result ? (
                 <div className="space-y-6 animate-fade-in">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div className="lg:col-span-1 space-y-4">
-                            <h4 className="font-semibold text-center">Divergence Score</h4>
+                            <h4 className="font-semibold text-center">{t.divergence.score_title[language]}</h4>
                             <div className="flex flex-col items-center gap-2">
                                 <p className="text-5xl font-bold text-primary">{result.divergenceScore.toFixed(2)}</p>
                                 <Progress value={result.divergenceScore * 100} className="w-full h-2"/>
-                                <p className="text-xs text-muted-foreground mt-1">0 = Identical, 1 = Unrelated</p>
+                                <p className="text-xs text-muted-foreground mt-1">{t.divergence.score_description[language]}</p>
                             </div>
                         </div>
                         <div className="lg:col-span-2 space-y-4">
                             <div>
-                                <h4 className="font-semibold flex items-center gap-2"><GitBranch /> Dominant Divergence Type</h4>
+                                <h4 className="font-semibold flex items-center gap-2"><GitBranch /> {t.divergence.type_title[language]}</h4>
                                 <Badge variant="secondary" className="mt-1">{result.divergenceType}</Badge>
                             </div>
                             <div>
-                                <h4 className="font-semibold flex items-center gap-2"><UserCheck /> Audience Shift</h4>
+                                <h4 className="font-semibold flex items-center gap-2"><UserCheck /> {t.divergence.audience_title[language]}</h4>
                                 <p className="text-sm text-muted-foreground">{result.audienceShift}</p>
                             </div>
                         </div>
                     </div>
                      <div className="space-y-2">
-                        <h4 className="font-semibold flex items-center gap-2"><Info /> Explanation</h4>
+                        <h4 className="font-semibold flex items-center gap-2"><Info /> {t.divergence.explanation_title[language]}</h4>
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">{result.explanation}</p>
                     </div>
                     <div className="lg:col-span-3">
-                         <h4 className="font-semibold mt-4">Diff View</h4>
+                         <h4 className="font-semibold mt-4">{t.divergence.diff_title[language]}</h4>
                          <Card className="mt-2">
                             <CardContent className="p-4 max-h-60 overflow-y-auto">
                                 <DiffView string1={form.getValues("promptVersionA")} string2={form.getValues("promptVersionB")} />
@@ -149,7 +152,7 @@ export default function DivergenceMetricsTool() {
                     </div>
                 </div>
               ) : (
-                <p className="text-muted-foreground text-center">Divergence analysis will appear here.</p>
+                <p className="text-muted-foreground text-center">{t.divergence.no_results[language]}</p>
               )}
             </div>
         </div>
@@ -157,3 +160,5 @@ export default function DivergenceMetricsTool() {
     </Card>
   )
 }
+
+    

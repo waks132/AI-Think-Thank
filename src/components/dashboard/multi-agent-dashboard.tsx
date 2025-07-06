@@ -5,7 +5,7 @@ import {
   BrainCircuit, FlaskConical, ClipboardCheck, Lightbulb, Scale, FunctionSquare,
   Compass, Shield, Brain, Layers, BookOpen, Search, Drama, Milestone,
   Zap, MessageSquare, Palette, Recycle, Code, Mic, Anchor, GitBranch, Users, Loader2, Sparkles, FileText,
-  ShieldCheck, CheckCircle, XCircle
+  ShieldCheck
 } from 'lucide-react';
 import AgentCard from './agent-card';
 import type { Agent } from '@/lib/types';
@@ -21,6 +21,8 @@ import ModelSelector from '../model-selector';
 import { availableModels } from '@/lib/models';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { Progress } from '../ui/progress';
+import { useLanguage } from '@/context/language-context';
+import { t } from '@/lib/i18n';
 
 const initialAgents: Agent[] = [
   { id: 'kairos-1', role: 'KAIROS-1', specialization: 'Coordination and detection of high-yield action levers', prompt: 'Your role is to coordinate and detect high-yield action levers.', icon: Compass },
@@ -57,6 +59,7 @@ export default function MultiAgentDashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast();
+  const { language } = useLanguage();
 
   const agents = useMemo(() => {
     return storedAgents.map(agent => ({
@@ -126,54 +129,54 @@ export default function MultiAgentDashboard() {
   return (
     <div className="animate-fade-in space-y-8">
       <div>
-        <h1 className="text-3xl font-bold font-headline mb-2">Multi-Agent Dashboard</h1>
-        <p className="text-muted-foreground">Orchestrate your cognitive collective. Define missions and manage your team of AI agents.</p>
+        <h1 className="text-3xl font-bold font-headline mb-2">{t.dashboard.title[language]}</h1>
+        <p className="text-muted-foreground">{t.dashboard.description[language]}</p>
       </div>
 
       <Card className="bg-card/50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 font-headline text-2xl">
             <Users />
-            Mission Hub
+            {t.dashboard.hub_title[language]}
           </CardTitle>
-          <CardDescription>Define a mission, select your agents, and launch the collaboration.</CardDescription>
+          <CardDescription>{t.dashboard.hub_description[language]}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="mission-description">Mission Description</Label>
+            <Label htmlFor="mission-description">{t.dashboard.mission_label[language]}</Label>
             <Textarea 
               id="mission-description"
               value={mission}
               onChange={(e) => setMission(e.target.value)}
-              placeholder="Enter the mission objective for the collective..."
+              placeholder={t.dashboard.mission_placeholder[language]}
               rows={3}
             />
           </div>
           <ModelSelector selectedModel={selectedModel} onModelChange={setSelectedModel} />
           <Button onClick={handleStartMission} disabled={isLoading} className="w-full">
             {isLoading ? (
-              <><Loader2 className="mr-2 animate-spin" /> Orchestrating...</>
+              <><Loader2 className="mr-2 animate-spin" /> {t.dashboard.start_button_loading[language]}</>
             ) : (
-              <><Sparkles className="mr-2" /> Start Mission ({selectedAgentIds.size} agents)</>
+              <><Sparkles className="mr-2" /> {t.dashboard.start_button[language]} ({selectedAgentIds.size} {t.dashboard.agents_selected[language]})</>
             )}
           </Button>
 
           {isLoading && (
             <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed rounded-lg">
                 <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-                <p className="text-muted-foreground">Cognitive collective is deliberating...</p>
+                <p className="text-muted-foreground">{t.dashboard.loading_text[language]}</p>
             </div>
           )}
 
           {collaborationResult && (
             <div className="space-y-4 animate-fade-in pt-4">
               <Separator />
-              <h3 className="font-headline text-xl">Mission Outcome</h3>
+              <h3 className="font-headline text-xl">{t.dashboard.outcome_title[language]}</h3>
                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2"><FileText />Executive Summary</CardTitle>
+                      <CardTitle className="flex items-center gap-2"><FileText />{t.dashboard.summary_title[language]}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <p className="whitespace-pre-wrap">{collaborationResult.executiveSummary}</p>
@@ -181,7 +184,7 @@ export default function MultiAgentDashboard() {
                   </Card>
                    <Card>
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2"><BrainCircuit />Reasoning</CardTitle>
+                      <CardTitle className="flex items-center gap-2"><BrainCircuit />{t.dashboard.reasoning_title[language]}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <p className="whitespace-pre-wrap text-muted-foreground">{collaborationResult.reasoning}</p>
@@ -192,34 +195,34 @@ export default function MultiAgentDashboard() {
                 <div className="lg:col-span-1 space-y-6">
                    <Card>
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-lg"><ShieldCheck />Cognitive Assessment</CardTitle>
-                        <CardDescription>Multi-axis scoring of the collective output.</CardDescription>
+                        <CardTitle className="flex items-center gap-2 text-lg"><ShieldCheck />{t.dashboard.assessment_title[language]}</CardTitle>
+                        <CardDescription>{t.dashboard.assessment_description[language]}</CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4 pt-2">
                         <div className="space-y-1">
                           <div className="flex justify-between items-baseline">
-                            <Label className="text-sm">Clarity & Reasoning</Label>
+                            <Label className="text-sm">{t.dashboard.clarity_label[language]}</Label>
                             <span className="font-bold text-primary">{collaborationResult.validationGrid.clarity.toFixed(2)}</span>
                           </div>
                           <Progress value={collaborationResult.validationGrid.clarity * 100} />
                         </div>
                          <div className="space-y-1">
                            <div className="flex justify-between items-baseline">
-                            <Label className="text-sm">Collective Synthesis</Label>
+                            <Label className="text-sm">{t.dashboard.synthesis_label[language]}</Label>
                             <span className="font-bold text-primary">{collaborationResult.validationGrid.synthesis.toFixed(2)}</span>
                            </div>
                           <Progress value={collaborationResult.validationGrid.synthesis * 100} />
                         </div>
                          <div className="space-y-1">
                           <div className="flex justify-between items-baseline">
-                            <Label className="text-sm">Ethical Robustness</Label>
+                            <Label className="text-sm">{t.dashboard.ethics_label[language]}</Label>
                             <span className="font-bold text-primary">{collaborationResult.validationGrid.ethics.toFixed(2)}</span>
                            </div>
                           <Progress value={collaborationResult.validationGrid.ethics * 100} />
                         </div>
                          <div className="space-y-1">
                           <div className="flex justify-between items-baseline">
-                            <Label className="text-sm">Scalability</Label>
+                            <Label className="text-sm">{t.dashboard.scalability_label[language]}</Label>
                             <span className="font-bold text-primary">{collaborationResult.validationGrid.scalability.toFixed(2)}</span>
                            </div>
                           <Progress value={collaborationResult.validationGrid.scalability * 100} />
@@ -231,7 +234,7 @@ export default function MultiAgentDashboard() {
                         <Accordion type="single" collapsible>
                             <AccordionItem value="item-1">
                                 <AccordionTrigger>
-                                    <div className="flex items-center gap-2 text-lg font-headline"><MessageSquare />View Collaboration Log</div>
+                                    <div className="flex items-center gap-2 text-lg font-headline"><MessageSquare />{t.dashboard.log_title[language]}</div>
                                 </AccordionTrigger>
                                 <AccordionContent>
                                     <div className="space-y-6 max-h-[400px] overflow-y-auto p-4 border rounded-lg bg-background/50">
@@ -245,7 +248,7 @@ export default function MultiAgentDashboard() {
                                                     <div className="flex-1">
                                                         <div className="flex items-baseline justify-between">
                                                             <p className="font-semibold text-primary">{log.agentRole}</p>
-                                                            <span className="text-xs text-muted-foreground font-mono">Turn {log.turn}</span>
+                                                            <span className="text-xs text-muted-foreground font-mono">{t.dashboard.turn[language]} {log.turn}</span>
                                                         </div>
                                                         <p className="text-sm text-foreground/90">{log.contribution}</p>
                                                     </div>
@@ -265,8 +268,8 @@ export default function MultiAgentDashboard() {
       </Card>
       
       <div>
-        <h2 className="text-2xl font-bold font-headline mb-2">Agent Roster</h2>
-        <p className="text-muted-foreground mb-6">Select agents for the mission and edit their core prompts to adapt their behavior.</p>
+        <h2 className="text-2xl font-bold font-headline mb-2">{t.dashboard.roster_title[language]}</h2>
+        <p className="text-muted-foreground mb-6">{t.dashboard.roster_description[language]}</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {agents.map(agent => (
             <AgentCard 
@@ -283,3 +286,5 @@ export default function MultiAgentDashboard() {
     </div>
   );
 }
+
+    

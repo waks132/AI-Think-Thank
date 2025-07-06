@@ -3,13 +3,15 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowRight, Loader2, RefreshCw } from "lucide-react"
-import type { CausalLink, LogEntry, Agent } from "@/lib/types";
+import type { CausalLink, LogEntry } from "@/lib/types";
 import { trackCausalFlow } from "@/ai/flows/causal-flow-tracker-flow";
 import { Button } from "../ui/button";
 import useLocalStorage from "@/hooks/use-local-storage";
 import { useToast } from "@/hooks/use-toast";
 import { availableModels } from "@/lib/models";
 import ModelSelector from "../model-selector";
+import { useLanguage } from "@/context/language-context";
+import { t } from "@/lib/i18n";
 
 const AGENT_DATA: Partial<Record<string, { color: string }>> = {
     'HELIOS': { color: 'bg-purple-500' },
@@ -37,6 +39,7 @@ export default function CausalFlowTracker() {
     const [isLoading, setIsLoading] = useState(false);
     const [selectedModel, setSelectedModel] = useState(availableModels[0]);
     const { toast } = useToast();
+    const { language } = useLanguage();
 
     const analyzeFlow = async () => {
         if (logs.length === 0) {
@@ -69,7 +72,6 @@ export default function CausalFlowTracker() {
     };
     
     useEffect(() => {
-        // Automatically analyze flow on initial load if logs are present
         if(logs.length > 0) {
             analyzeFlow();
         }
@@ -79,24 +81,22 @@ export default function CausalFlowTracker() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline text-2xl">Causal Flow Tracker</CardTitle>
-        <CardDescription>
-          Analysez les logs cognitifs pour visualiser dynamiquement comment les agents s'influencent.
-        </CardDescription>
+        <CardTitle className="font-headline text-2xl">{t.causal.title[language]}</CardTitle>
+        <CardDescription>{t.causal.description[language]}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex flex-col sm:flex-row gap-4">
             <ModelSelector selectedModel={selectedModel} onModelChange={setSelectedModel} className="flex-grow"/>
             <Button onClick={analyzeFlow} disabled={isLoading} className="w-full sm:w-auto">
                 {isLoading ? <Loader2 className="animate-spin" /> : <RefreshCw />}
-                Analyze Flow
+                {t.causal.analyze_button[language]}
             </Button>
         </div>
         <div className="flex justify-center items-center min-h-[400px] w-full border-2 border-dashed rounded-lg p-4">
           {isLoading ? (
             <div className="flex flex-col items-center gap-2 text-muted-foreground">
                 <Loader2 className="h-8 w-8 animate-spin text-primary"/>
-                <p>Analyzing influence patterns...</p>
+                <p>{t.causal.loading_text[language]}</p>
             </div>
           ) : flows.length > 0 ? (
             <div className="w-full max-w-2xl space-y-8">
@@ -113,8 +113,8 @@ export default function CausalFlowTracker() {
             </div>
           ) : (
              <div className="text-center text-muted-foreground">
-                <p>No causal links detected.</p>
-                <p className="text-sm">Click "Analyze Flow" to process the latest logs.</p>
+                <p>{t.causal.no_links[language]}</p>
+                <p className="text-sm">{t.causal.re_analyze[language]}</p>
             </div>
           )}
         </div>
@@ -122,3 +122,5 @@ export default function CausalFlowTracker() {
     </Card>
   )
 }
+
+    

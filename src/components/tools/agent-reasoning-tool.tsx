@@ -17,6 +17,8 @@ import { availableModels } from "@/lib/models"
 import { Badge } from "../ui/badge"
 import { Progress } from "../ui/progress"
 import { Label } from "../ui/label"
+import { useLanguage } from "@/context/language-context"
+import { t } from "@/lib/i18n"
 
 const formSchema = z.object({
   task: z.string().min(10, { message: "Task must be at least 10 characters." }),
@@ -28,6 +30,7 @@ export default function AgentReasoningTool() {
   const [isLoading, setIsLoading] = useState(false)
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast()
+  const { language } = useLanguage();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -58,8 +61,8 @@ export default function AgentReasoningTool() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline text-2xl">Agent Reasoning (Chain of Thought)</CardTitle>
-        <CardDescription>See how an agent thinks step-by-step to arrive at a conclusion.</CardDescription>
+        <CardTitle className="font-headline text-2xl">{t.reasoning.title[language]}</CardTitle>
+        <CardDescription>{t.reasoning.description[language]}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -72,9 +75,9 @@ export default function AgentReasoningTool() {
                   name="task"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Task</FormLabel>
+                      <FormLabel>{t.reasoning.task_label[language]}</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Enter the agent's task..." {...field} rows={3} />
+                        <Textarea placeholder={t.reasoning.task_placeholder[language]} {...field} rows={3} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -85,9 +88,9 @@ export default function AgentReasoningTool() {
                   name="context"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Context</FormLabel>
+                      <FormLabel>{t.reasoning.context_label[language]}</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Provide context for the task..." {...field} rows={4}/>
+                        <Textarea placeholder={t.reasoning.context_placeholder[language]} {...field} rows={4}/>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -95,20 +98,20 @@ export default function AgentReasoningTool() {
                 />
                 <Button type="submit" disabled={isLoading} className="w-full">
                   {isLoading ? (
-                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Thinking...</>
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t.reasoning.generate_button_loading[language]}</>
                   ) : (
-                    <><Lightbulb className="mr-2 h-4 w-4" /> Generate Reasoning</>
+                    <><Lightbulb className="mr-2 h-4 w-4" /> {t.reasoning.generate_button[language]}</>
                   )}
                 </Button>
               </form>
             </Form>
           </div>
           <div className="flex flex-col">
-            <h3 className="text-lg font-semibold mb-4 font-headline">Agent's Thought Process</h3>
+            <h3 className="text-lg font-semibold mb-4 font-headline">{t.reasoning.thought_process_title[language]}</h3>
             {isLoading && (
               <div className="flex flex-col items-center justify-center h-full p-8 border-2 border-dashed rounded-lg">
                 <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-                <p className="text-muted-foreground">Analyzing task...</p>
+                <p className="text-muted-foreground">{t.reasoning.loading_text[language]}</p>
               </div>
             )}
             {result && (
@@ -116,7 +119,7 @@ export default function AgentReasoningTool() {
                 <div>
                     <h4 className="font-semibold flex items-center mb-4 text-primary">
                         <Workflow className="mr-2 h-5 w-5"/>
-                        Reasoning Steps
+                        {t.reasoning.steps_title[language]}
                     </h4>
                     <div className="space-y-4">
                       {result.thoughtProcess.map(step => (
@@ -128,7 +131,7 @@ export default function AgentReasoningTool() {
                           <div className="flex-1">
                             <Badge variant="secondary" className="mb-1">{step.cognitive_function}</Badge>
                             <p className="text-muted-foreground text-sm mb-2">{step.reasoning}</p>
-                            <Label className="text-xs">Importance</Label>
+                            <Label className="text-xs">{t.reasoning.importance_label[language]}</Label>
                             <Progress value={step.importance * 100} className="h-2" />
                           </div>
                         </div>
@@ -139,7 +142,7 @@ export default function AgentReasoningTool() {
                 <div>
                     <h4 className="font-semibold flex items-center mb-2 text-secondary">
                         <CheckCircle2 className="mr-2 h-5 w-5"/>
-                        Conclusion
+                        {t.reasoning.conclusion_title[language]}
                     </h4>
                     <p className="whitespace-pre-wrap font-medium">{result.conclusion}</p>
                 </div>
@@ -147,7 +150,7 @@ export default function AgentReasoningTool() {
                  <div>
                     <h4 className="font-semibold flex items-center mb-2 text-amber-500">
                         <RefreshCw className="mr-2 h-5 w-5"/>
-                        Reflexive Review
+                        {t.reasoning.review_title[language]}
                     </h4>
                     <p className="whitespace-pre-wrap font-medium text-muted-foreground italic">"{result.reflexiveReview}"</p>
                 </div>
@@ -155,7 +158,7 @@ export default function AgentReasoningTool() {
             )}
             {!isLoading && !result && (
               <div className="flex items-center justify-center h-full p-8 border-2 border-dashed rounded-lg">
-                <p className="text-muted-foreground text-center">The agent's reasoning will appear here.</p>
+                <p className="text-muted-foreground text-center">{t.reasoning.no_results[language]}</p>
               </div>
             )}
           </div>
@@ -164,3 +167,5 @@ export default function AgentReasoningTool() {
     </Card>
   )
 }
+
+    

@@ -16,6 +16,8 @@ import { Progress } from "@/components/ui/progress"
 import { Label } from "@/components/ui/label"
 import ModelSelector from "../model-selector"
 import { availableModels } from "@/lib/models"
+import { useLanguage } from "@/context/language-context"
+import { t } from "@/lib/i18n"
 
 const formSchema = z.object({
   originalPrompt: z.string().min(10, { message: "Original prompt must be at least 10 characters." }),
@@ -28,6 +30,7 @@ export default function AdaptivePromptOrchestrator() {
   const [isLoading, setIsLoading] = useState(false)
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast()
+  const { language } = useLanguage();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -58,8 +61,8 @@ export default function AdaptivePromptOrchestrator() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline text-2xl">Adaptive Prompt Orchestrator</CardTitle>
-        <CardDescription>Adaptively rewrite prompts using the PersonaForge Σ-Dual engine.</CardDescription>
+        <CardTitle className="font-headline text-2xl">{t.rewriter.title[language]}</CardTitle>
+        <CardDescription>{t.rewriter.description[language]}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -72,9 +75,9 @@ export default function AdaptivePromptOrchestrator() {
                   name="originalPrompt"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Original Prompt</FormLabel>
+                      <FormLabel>{t.rewriter.original_prompt_label[language]}</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Enter the prompt that needs improvement..." {...field} rows={6} />
+                        <Textarea placeholder={t.rewriter.original_prompt_placeholder[language]} {...field} rows={6} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -85,9 +88,9 @@ export default function AdaptivePromptOrchestrator() {
                   name="agentPerformance"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Agent Performance Lacunae</FormLabel>
+                      <FormLabel>{t.rewriter.performance_label[language]}</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Describe the agent's performance issues, e.g., 'Lacks factual accuracy on historical dates' or 'Output is too redundant'." {...field} rows={6} />
+                        <Textarea placeholder={t.rewriter.performance_placeholder[language]} {...field} rows={6} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -98,7 +101,7 @@ export default function AdaptivePromptOrchestrator() {
                   name="metricsDivergence"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Metrics Divergence (Optional)</FormLabel>
+                      <FormLabel>{t.rewriter.divergence_label[language]}</FormLabel>
                       <FormControl>
                         <Input type="number" step="0.01" placeholder="e.g., 0.42" {...field} />
                       </FormControl>
@@ -110,12 +113,12 @@ export default function AdaptivePromptOrchestrator() {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Rewriting...
+                      {t.rewriter.rewrite_button_loading[language]}
                     </>
                   ) : (
                     <>
                       <WandSparkles className="mr-2 h-4 w-4" />
-                      Rewrite Prompt
+                      {t.rewriter.rewrite_button[language]}
                     </>
                   )}
                 </Button>
@@ -124,11 +127,11 @@ export default function AdaptivePromptOrchestrator() {
           </div>
           
           <div className="flex flex-col">
-            <h3 className="text-lg font-semibold mb-4 font-headline">Result</h3>
+            <h3 className="text-lg font-semibold mb-4 font-headline">{t.rewriter.result_title[language]}</h3>
             {isLoading && (
               <div className="flex flex-col items-center justify-center h-full p-8 border-2 border-dashed rounded-lg">
                 <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-                <p className="text-muted-foreground">PersonaForge Σ-Dual is thinking...</p>
+                <p className="text-muted-foreground">{t.rewriter.loading_text[language]}</p>
               </div>
             )}
             {result && (
@@ -137,7 +140,7 @@ export default function AdaptivePromptOrchestrator() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <WandSparkles className="text-primary h-5 w-5" />
-                      Rewritten Prompt
+                      {t.rewriter.rewritten_prompt_title[language]}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -148,19 +151,19 @@ export default function AdaptivePromptOrchestrator() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                        <Sigma className="text-secondary h-5 w-5" />
-                       Analysis & Metrics
+                       {t.rewriter.analysis_title[language]}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <Label htmlFor="psi-score">Ψ (Psi) Score</Label>
+                      <Label htmlFor="psi-score">{t.rewriter.psi_score_label[language]}</Label>
                       <div className="flex items-center gap-4 mt-1">
                         <Progress value={result.psiScore * 100} id="psi-score" className="flex-1" />
                         <span className="font-bold text-lg text-primary">{result.psiScore.toFixed(2)}</span>
                       </div>
                     </div>
                     <div>
-                      <Label>Traceability Note</Label>
+                      <Label>{t.rewriter.traceability_label[language]}</Label>
                       <p className="text-xs text-muted-foreground mt-1 italic">{result.traceabilityNote}</p>
                     </div>
                   </CardContent>
@@ -169,7 +172,7 @@ export default function AdaptivePromptOrchestrator() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                        <Lightbulb className="text-amber-500 h-5 w-5" />
-                       Reasoning
+                       {t.rewriter.reasoning_title[language]}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -180,7 +183,7 @@ export default function AdaptivePromptOrchestrator() {
             )}
             {!isLoading && !result && (
               <div className="flex items-center justify-center h-full p-8 border-2 border-dashed rounded-lg">
-                <p className="text-muted-foreground text-center">The rewritten prompt and reasoning will appear here.</p>
+                <p className="text-muted-foreground text-center">{t.rewriter.no_results[language]}</p>
               </div>
             )}
           </div>
@@ -189,3 +192,5 @@ export default function AdaptivePromptOrchestrator() {
     </Card>
   )
 }
+
+    

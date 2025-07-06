@@ -14,6 +14,8 @@ import { Checkbox } from '../ui/checkbox';
 import { cn } from '@/lib/utils';
 import { adaptivePromptRewriter } from '@/ai/flows/adaptive-prompt-rewriter';
 import { Badge } from '../ui/badge';
+import { useLanguage } from '@/context/language-context';
+import { t } from '@/lib/i18n';
 
 interface AgentCardProps {
   agent: Agent;
@@ -29,6 +31,7 @@ export default function AgentCard({ agent, onPromptChange, isSelected, onSelecti
   const [isRefining, setIsRefining] = useState(false);
   const [lastPsiScore, setLastPsiScore] = useState<number | null>(null);
   const { toast } = useToast();
+  const { language } = useLanguage();
   const Icon = agent.icon;
 
   const handleSave = () => {
@@ -41,8 +44,8 @@ export default function AgentCard({ agent, onPromptChange, isSelected, onSelecti
     setPromptHistory(prevHistory => [newVersion, ...prevHistory].slice(0, 20)); // Keep last 20 versions
     setLastPsiScore(null); // Reset score on manual save
     toast({
-      title: 'Prompt Saved',
-      description: `Prompt for ${agent.role} has been updated.`,
+      title: t.agentCard.toast_save_title[language],
+      description: t.agentCard.toast_save_description[language].replace('{agentRole}', agent.role),
     });
   };
 
@@ -71,16 +74,16 @@ export default function AgentCard({ agent, onPromptChange, isSelected, onSelecti
         setPromptHistory(prevHistory => [newVersion, ...prevHistory].slice(0, 20));
         
         toast({
-          title: 'Prompt Refined & Saved',
-          description: `New Psi Score: ${(psiScore * 100).toFixed(0)}/100`,
+          title: t.agentCard.toast_refine_title[language],
+          description: `${t.agentCard.toast_refine_description[language]}: ${(psiScore * 100).toFixed(0)}/100`,
         });
       }
     } catch (error) {
       console.error("Error refining prompt:", error);
       toast({
         variant: "destructive",
-        title: "Refinement Failed",
-        description: "Could not refine the prompt. Please try again.",
+        title: t.agentCard.toast_refine_fail_title[language],
+        description: t.agentCard.toast_refine_fail_description[language],
       });
     } finally {
       setIsRefining(false);
@@ -107,33 +110,35 @@ export default function AgentCard({ agent, onPromptChange, isSelected, onSelecti
           <CardDescription>{agent.specialization}</CardDescription>
           {lastPsiScore !== null && (
             <Badge variant="secondary" className="mt-2 animate-fade-in">
-              Psi Score: {(lastPsiScore * 100).toFixed(0)}
+              {t.agentCard.psi_score[language]}: {(lastPsiScore * 100).toFixed(0)}
             </Badge>
           )}
         </div>
       </CardHeader>
       <CardContent className="flex-grow">
         <div className="grid w-full gap-1.5 h-full">
-          <Label htmlFor={`prompt-${agent.id}`}>Prompt</Label>
+          <Label htmlFor={`prompt-${agent.id}`}>{t.agentCard.prompt_label[language]}</Label>
           <Textarea
             id={`prompt-${agent.id}`}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             className="min-h-[150px] flex-grow"
-            placeholder={`Enter prompt for ${agent.role}...`}
+            placeholder={`${t.agentCard.placeholder[language]} ${agent.role}...`}
           />
         </div>
       </CardContent>
       <CardFooter className="flex justify-end gap-2">
         <Button variant="outline" size="sm" onClick={handleRefine} disabled={isRefining}>
           {isRefining ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <WandSparkles className="mr-2 h-4 w-4" />}
-          Refine
+          {t.agentCard.refine_button[language]}
         </Button>
         <Button size="sm" onClick={handleSave}>
           <Save className="mr-2 h-4 w-4" />
-          Save
+          {t.agentCard.save_button[language]}
         </Button>
       </CardFooter>
     </Card>
   );
 }
+
+    

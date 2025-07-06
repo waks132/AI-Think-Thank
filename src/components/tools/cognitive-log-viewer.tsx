@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import useLocalStorage from '@/hooks/use-local-storage';
 import type { LogEntry } from '@/lib/types';
 import { Compass, Shield, ClipboardCheck, BrainCircuit, Lightbulb, GitBranch, Anchor } from 'lucide-react';
+import { useLanguage } from '@/context/language-context';
+import { t } from '@/lib/i18n';
 
 const initialLogs: LogEntry[] = [
   {
@@ -67,6 +69,7 @@ const agentIcons: { [key: string]: React.ElementType } = {
 
 export default function CognitiveLogViewer() {
   const [logs, setLogs] = useLocalStorage<LogEntry[]>('cognitive-logs', []);
+  const { language } = useLanguage();
   
   useEffect(() => {
     // On first load, if logs are empty, populate with initial data.
@@ -79,10 +82,8 @@ export default function CognitiveLogViewer() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline text-2xl">Annotated Cognitive Log Viewer</CardTitle>
-        <CardDescription>
-          View journaled conversations with automatic annotations.
-        </CardDescription>
+        <CardTitle className="font-headline text-2xl">{t.logs.title[language]}</CardTitle>
+        <CardDescription>{t.logs.description[language]}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-6 max-h-[600px] overflow-y-auto p-4 border rounded-lg bg-background/50">
@@ -112,7 +113,7 @@ export default function CognitiveLogViewer() {
           })}
            {logs.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
-              <p>No log entries found.</p>
+              <p>{t.logs.no_entries[language]}</p>
             </div>
            )}
         </div>
@@ -120,3 +121,5 @@ export default function CognitiveLogViewer() {
     </Card>
   );
 }
+
+    
