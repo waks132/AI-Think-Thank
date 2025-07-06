@@ -4,38 +4,38 @@ import { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import useLocalStorage from '@/hooks/use-local-storage';
 import type { LogEntry } from '@/lib/types';
-import { BrainCircuit, Lightbulb, ClipboardCheck } from 'lucide-react';
+import { Compass, Shield, ClipboardCheck, BrainCircuit } from 'lucide-react';
 
 const initialLogs: LogEntry[] = [
   {
     id: 'log1',
-    agentId: 'analyst',
-    agentRole: 'Analyst',
-    message: 'Initial data suggests a 15% drop in user engagement for the new feature.',
+    agentId: 'kairos-1',
+    agentRole: 'KAIROS-1',
+    message: 'Initial objective set: Model the emergence of collective intelligence in a decentralized network.',
     timestamp: new Date(Date.now() - 3600000).toISOString(),
   },
   {
     id: 'log2',
-    agentId: 'creative',
-    agentRole: 'Creative',
-    message: 'What if we gamify the feature with a points system to boost engagement?',
-    annotation: 'New hypothesis introduced',
+    agentId: 'obsidienne',
+    agentRole: 'OBSIDIANNE',
+    message: 'The term "intelligence" itself is a loaded assumption. Are we measuring task completion efficiency or genuine synergistic insight? The distinction is critical.',
+    annotation: 'OBSIDIANNE questions premise',
     timestamp: new Date(Date.now() - 3000000).toISOString(),
   },
   {
     id: 'log3',
-    agentId: 'fact_checker',
-    agentRole: 'Fact-Checker',
-    message: 'Correction: The engagement drop is actually 12%, not 15%, based on the finalized dataset.',
-    annotation: 'Agent Fact-Checker corrected Agent Analyst',
+    agentId: 'veritas',
+    agentRole: 'VERITAS',
+    message: 'Correction: The initial prompt for the simulation nodes lacked a mechanism for resource conflict, making true "collective" problem-solving impossible. The logic is flawed.',
+    annotation: 'VERITAS corrected KAIROS-1',
     timestamp: new Date(Date.now() - 1800000).toISOString(),
   },
 ];
 
 const agentIcons: { [key: string]: React.ElementType } = {
-  Analyst: BrainCircuit,
-  Creative: Lightbulb,
-  'Fact-Checker': ClipboardCheck,
+  'KAIROS-1': Compass,
+  'OBSIDIANNE': Shield,
+  'VERITAS': ClipboardCheck,
 };
 
 export default function CognitiveLogViewer() {
