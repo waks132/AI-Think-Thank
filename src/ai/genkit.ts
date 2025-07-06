@@ -3,8 +3,8 @@ import {googleAI} from '@genkit-ai/googleai';
 import {googleCloud} from '@genkit-ai/google-cloud';
 
 const plugins: GenkitPlugin[] = [
-  googleAI(),
-  googleCloud(),
+  googleAI,
+  googleCloud,
 ];
 
 export const ai = genkit({
