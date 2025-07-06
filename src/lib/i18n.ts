@@ -349,5 +349,7 @@ export const t = {
     fail_title: { fr: 'Échec de la Génération', en: 'Generation Failed' },
     fail_description: { fr: 'Impossible de générer le rapport. Veuillez réessayer.', en: 'Could not generate the report. Please try again.' },
     generated_report: { fr: 'Rapport Généré', en: 'Generated Report' },
+    web_search_used: { fr: 'Recherche Web Utilisée', en: 'Web Search Used' },
+    sources_title: { fr: 'Sources Web', en: 'Web Sources' },
   },
 };
