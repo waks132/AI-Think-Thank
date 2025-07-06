@@ -22,6 +22,7 @@ export const t = {
     logs: { fr: 'Logs Cognitifs', en: 'Cognitive Logs' },
     heatmap: { fr: 'Heatmap Cognitive', en: 'Cognitive Heatmap' },
     causal_flow: { fr: 'Flux Causal', en: 'Causal Flow' },
+    report: { fr: 'Générateur de Rapport', en: 'Report Generator' },
   },
   modelSelector: {
     label: {
@@ -335,5 +336,17 @@ export const t = {
     toast_fail_title: { fr: 'Échec de l\'Analyse', en: 'Analysis Failed' },
     toast_fail_description: { fr: 'Impossible de déterminer le flux causal des logs.', en: 'Could not determine causal flow from logs.' },
     turn: { fr: 'au tour', en: 'at turn' },
+  },
+  report: {
+    title: { fr: 'Générateur de Rapport de Mission', en: 'Mission Report Generator' },
+    description: { fr: 'Génère un rapport professionnel et détaillé basé sur la dernière mission, enrichi par des recherches web.', en: 'Generates a professional, detailed report based on the last mission, enriched with web research.' },
+    generate_button: { fr: 'Générer le Rapport', en: 'Generate Report' },
+    download_button: { fr: 'Télécharger le Rapport (.md)', en: 'Download Report (.md)' },
+    loading_text: { fr: 'Rédaction du rapport en cours...', en: 'Writing report...' },
+    no_report: { fr: 'Le rapport généré apparaîtra ici. Lancez une mission puis cliquez sur "Générer".', en: 'The generated report will appear here. Run a mission then click "Generate".' },
+    no_data_title: { fr: 'Aucune Donnée de Mission', en: 'No Mission Data' },
+    no_data_description: { fr: 'Veuillez d\'abord lancer une mission depuis le Dashboard.', en: 'Please run a mission from the Dashboard first.' },
+    fail_title: { fr: 'Échec de la Génération', en: 'Generation Failed' },
+    fail_description: { fr: 'Impossible de générer le rapport. Veuillez réessayer.', en: 'Could not generate the report. Please try again.' },
   },
 };

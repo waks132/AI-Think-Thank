@@ -1,0 +1,78 @@
+'use server';
+/**
+ * @fileOverview An AI flow to generate a professional report from mission outputs.
+ *
+ * - generateReport - A function that generates a report using web search.
+ * - GenerateReportInput - The input type for the function.
+ * - GenerateReportOutput - The return type for the function.
+ */
+
+import {ai} from '@/ai/genkit';
+import {z} from 'genkit';
+import {googleSearch} from '@genkit-ai/google-cloud';
+
+const GenerateReportInputSchema = z.object({
+  executiveSummary: z.string().describe('The executive summary of the mission.'),
+  collaborationLog: z.string().describe('A JSON string of the collaboration log.'),
+  language: z.enum(['fr', 'en']).describe('The language for the response.'),
+  model: z.string().optional().describe('The AI model to use for the generation.'),
+});
+export type GenerateReportInput = z.infer<typeof GenerateReportInputSchema>;
+
+const GenerateReportOutputSchema = z.object({
+  reportMarkdown: z.string().describe('The final report in Markdown format.'),
+});
+export type GenerateReportOutput = z.infer<typeof GenerateReportOutputSchema>;
+
+export async function generateReport(input: GenerateReportInput): Promise<GenerateReportOutput> {
+  return generateReportFlow(input);
+}
+
+const reportPrompt = ai.definePrompt({
+  name: 'reportGeneratorPrompt',
+  input: {schema: GenerateReportInputSchema},
+  output: {schema: GenerateReportOutputSchema},
+  tools: [googleSearch],
+  prompt: `You are a professional analyst and report writer. Your task is to synthesize the provided mission outputs into a comprehensive, well-structured, and professional report.
+
+**Mission Outputs:**
+
+*   **Executive Summary:**
+    {{{executiveSummary}}}
+
+*   **Collaboration Log:**
+    {{{collaborationLog}}}
+
+**Instructions:**
+
+1.  **Analyze and Synthesize:** Thoroughly analyze the executive summary and the collaboration log to understand the key themes, challenges, proposed solutions, and points of contention.
+2.  **Enrich with Research:** Use the provided web search tool to find external data, statistics, relevant case studies, and expert opinions to support and expand upon the points raised in the mission. **You MUST cite your sources.** Add a "Sources" section at the end of the report.
+3.  **Structure the Report:** Organize the content into a professional report format. Use Markdown for formatting. Include the following sections:
+    *   **Title**
+    *   **Executive Summary** (a refined version of the input)
+    *   **Introduction/Problem Statement**
+    *   **Analysis of Key Themes & Debates** (drawn from the logs)
+    *   **Proposed Solutions & Frameworks**
+    *   **Supporting Research & External Data** (with citations)
+    *   **Conclusion & Strategic Recommendations**
+    *   **Sources**
+4.  **Professional Tone:** Write in a clear, concise, and professional tone.
+5.  **Language:** Your entire response must be in this language: {{{language}}}.
+
+Produce the final report in the specified JSON format, with the entire report content as a single Markdown string in the \`reportMarkdown\` field.`,
+});
+
+const generateReportFlow = ai.defineFlow(
+  {
+    name: 'generateReportFlow',
+    inputSchema: GenerateReportInputSchema,
+    outputSchema: GenerateReportOutputSchema,
+  },
+  async (input) => {
+    const {output} = await reportPrompt(input, {
+        model: input.model,
+        config: { maxOutputTokens: 8192 }
+    });
+    return output!;
+  }
+);
