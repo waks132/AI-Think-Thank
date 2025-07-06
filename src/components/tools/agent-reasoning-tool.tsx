@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -35,10 +35,17 @@ export default function AgentReasoningTool() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      task: "Plan a three-day trip to Mars for a new colonist.",
-      context: "The colonist is a botanist. The budget is limited. The focus is on acclimatization and initial research setup.",
+      task: t.reasoning.default_task[language],
+      context: t.reasoning.default_context[language],
     },
   })
+
+  useEffect(() => {
+    form.reset({
+      task: t.reasoning.default_task[language],
+      context: t.reasoning.default_context[language],
+    });
+  }, [language, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true)

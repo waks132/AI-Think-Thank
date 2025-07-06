@@ -273,6 +273,14 @@ export const t = {
     task_placeholder: { fr: 'Entrez la tâche de l\'agent...', en: 'Enter the agent\'s task...' },
     context_label: { fr: 'Contexte', en: 'Context' },
     context_placeholder: { fr: 'Fournissez un contexte pour la tâche...', en: 'Provide context for the task...' },
+    default_task: { 
+      fr: 'Planifier un voyage de trois jours sur Mars pour un nouveau colon.',
+      en: 'Plan a three-day trip to Mars for a new colonist.'
+    },
+    default_context: {
+        fr: 'Le colon est un botaniste. Le budget est limité. L\'accent est mis sur l\'acclimatation et la mise en place de la recherche initiale.',
+        en: 'The colonist is a botanist. The budget is limited. The focus is on acclimatization and initial research setup.'
+    },
     generate_button: { fr: 'Générer le Raisonnement', en: 'Generate Reasoning' },
     generate_button_loading: { fr: 'Réflexion...', en: 'Thinking...' },
     thought_process_title: { fr: 'Processus de Pensée de l\'Agent', en: 'Agent\'s Thought Process' },
