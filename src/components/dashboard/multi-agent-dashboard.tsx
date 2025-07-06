@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useMemo, useEffect } from 'react';
-import { Users, Loader2, Sparkles, FileText, BrainCircuit, ShieldCheck, MessageSquare } from 'lucide-react';
+import { Users, Loader2, Sparkles, FileText, BrainCircuit, ShieldCheck, MessageSquare, WandSparkles } from 'lucide-react';
 import AgentCard from './agent-card';
 import type { Agent, LogEntry } from '@/lib/types';
 import useLocalStorage from '@/hooks/use-local-storage';
 import { runAgentCollaboration, type AgentCollaborationOutput } from '@/ai/flows/agent-collaboration-flow';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '../ui/card';
+import { autoAgentSelector } from '@/ai/flows/auto-agent-selector';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Textarea } from '../ui/textarea';
 import { Button } from '../ui/button';
 import { Label } from '../ui/label';
@@ -34,8 +35,9 @@ export default function MultiAgentDashboard() {
   const [logs, setLogs] = useLocalStorage<LogEntry[]>('cognitive-logs', []);
   const [selectedAgentIds, setSelectedAgentIds] = useState<Set<string>>(new Set(['kairos-1', 'helios', 'veritas']));
   const [mission, setMission] = useState<string>('Développer un cadre pour le déploiement éthique de l\'IA dans les véhicules autonomes.');
-  const [collaborationResult, setCollaborationResult] = useState<AgentCollaborationOutput | null>(null);
+  const [collaborationResult, setCollaborationResult] = useLocalStorage<AgentCollaborationOutput | null>("collaboration-result", null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuggesting, setIsSuggesting] = useState(false);
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast();
 
@@ -43,7 +45,7 @@ export default function MultiAgentDashboard() {
     const allDashboardPersonas = personaList.filter(p => p.id !== 'disruptor');
     const storedAgentMap = new Map(storedAgents.map(a => [a.id, a]));
 
-    return allDashboardPersonas.map(persona => {
+    const currentAgents = allDashboardPersonas.map(persona => {
       const storedAgent = storedAgentMap.get(persona.id);
       return {
         id: persona.id,
@@ -52,8 +54,27 @@ export default function MultiAgentDashboard() {
         prompt: storedAgent ? storedAgent.prompt : persona.values[language],
         icon: persona.icon,
       };
-    }).sort((a, b) => a.id.localeCompare(b.id));
-  }, [storedAgents, language]);
+    });
+
+    const newStoredAgents = currentAgents.map(agent => {
+        const persona = personaList.find(p => p.id === agent.id);
+        if (!persona) return null;
+        return {
+            id: agent.id,
+            role: persona.name.en, // Stored role/specialization doesn't matter
+            specialization: persona.specialization.en,
+            prompt: agent.prompt,
+            icon: agent.icon,
+        }
+    }).filter(Boolean) as Agent[];
+    
+    // This effect ensures newly added personas in code get added to local storage
+    if (hasMounted && newStoredAgents.length > storedAgents.length) {
+        setStoredAgents(newStoredAgents);
+    }
+
+    return currentAgents.sort((a, b) => a.id.localeCompare(b.id));
+  }, [storedAgents, language, hasMounted, setStoredAgents]);
   
   const agentMap = useMemo(() => new Map(agents.map(a => [a.role, a])), [agents]);
   const agentIconMap = useMemo(() => {
@@ -140,7 +161,7 @@ export default function MultiAgentDashboard() {
           timestamp: new Date().toISOString(),
         }));
         
-        setLogs(prevLogs => [...prevLogs, ...newLogEntries]);
+        setLogs(prevLogs => [...newLogEntries, ...prevLogs]);
         
         toast({
           title: t.dashboard.toast_log_title[language],
@@ -159,6 +180,42 @@ export default function MultiAgentDashboard() {
       setIsLoading(false);
     }
   };
+
+  const handleSuggestTeam = async () => {
+      setIsSuggesting(true);
+      try {
+        const availableAgentsForFlow = agents.map(a => ({
+          id: a.id,
+          role: a.role,
+          specialization: a.specialization,
+        }));
+
+        const result = await autoAgentSelector({
+          mission,
+          agents: availableAgentsForFlow,
+          model: selectedModel,
+          language,
+        });
+
+        if (result && result.recommendedAgentIds) {
+          setSelectedAgentIds(new Set(result.recommendedAgentIds));
+          toast({
+            title: t.dashboard.toast_suggest_title[language],
+            description: `${t.dashboard.toast_suggest_description[language]} ${result.reasoning}`,
+            duration: 9000,
+          });
+        }
+      } catch (error) {
+        console.error("Error suggesting team:", error);
+        toast({
+          variant: "destructive",
+          title: "Suggestion Failed",
+          description: "Could not get an AI team suggestion. Please try again.",
+        });
+      } finally {
+        setIsSuggesting(false);
+      }
+    };
 
   return (
     <div className="animate-fade-in space-y-8">
@@ -187,13 +244,22 @@ export default function MultiAgentDashboard() {
             />
           </div>
           <ModelSelector selectedModel={selectedModel} onModelChange={setSelectedModel} />
-          <Button onClick={handleStartMission} disabled={isLoading} className="w-full">
-            {isLoading ? (
-              <><Loader2 className="mr-2 animate-spin" /> {t.dashboard.start_button_loading[language]}</>
-            ) : (
-              <><Sparkles className="mr-2" /> {t.dashboard.start_button[language]} ({hasMounted ? selectedAgentIds.size : 0} {t.dashboard.agents_selected[language]})</>
-            )}
-          </Button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Button onClick={handleSuggestTeam} disabled={isLoading || isSuggesting} variant="outline">
+                {isSuggesting ? (
+                  <><Loader2 className="mr-2 animate-spin" /> {t.dashboard.suggest_team_loading[language]}</>
+                ) : (
+                  <><WandSparkles className="mr-2" /> {t.dashboard.suggest_team_button[language]}</>
+                )}
+              </Button>
+              <Button onClick={handleStartMission} disabled={isLoading || isSuggesting}>
+                {isLoading ? (
+                  <><Loader2 className="mr-2 animate-spin" /> {t.dashboard.start_button_loading[language]}</>
+                ) : (
+                  <><Sparkles className="mr-2" /> {t.dashboard.start_button[language]} ({hasMounted ? selectedAgentIds.size : 0} {t.dashboard.agents_selected[language]})</>
+                )}
+              </Button>
+            </div>
 
           {isLoading && (
             <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed rounded-lg">

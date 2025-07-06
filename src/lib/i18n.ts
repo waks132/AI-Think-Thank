@@ -132,6 +132,10 @@ export const t = {
     toast_log_description: { fr: 'La collaboration a été ajoutée au visualiseur de logs.', en: 'The collaboration has been added to the log viewer.' },
     toast_fail_title: { fr: 'Échec de la Collaboration', en: 'Collaboration Failed' },
     toast_fail_description: { fr: 'La mission n\'a pas pu être terminée. Veuillez réessayer.', en: 'The mission could not be completed. Please try again.' },
+    suggest_team_button: { fr: 'Suggestion IA', en: 'AI Suggestion' },
+    suggest_team_loading: { fr: 'Sélection IA...', en: 'AI Selecting...' },
+    toast_suggest_title: { fr: 'Équipe Suggérée par l\'IA', en: 'AI Suggested Team' },
+    toast_suggest_description: { fr: 'Voici le raisonnement pour la sélection de l\'équipe :', en: 'Here is the reasoning for the team selection:' },
   },
   agentCard: {
     psi_score: { fr: 'Score Psi', en: 'Psi Score' },
