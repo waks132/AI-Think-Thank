@@ -20,6 +20,7 @@ import { Separator } from '../ui/separator';
 import ModelSelector from '../model-selector';
 import { availableModels } from '@/lib/models';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { Progress } from '../ui/progress';
 
 const initialAgents: Agent[] = [
   { id: 'kairos-1', role: 'KAIROS-1', specialization: 'Coordination and detection of high-yield action levers', prompt: 'Your role is to coordinate and detect high-yield action levers.', icon: Compass },
@@ -182,20 +183,37 @@ export default function MultiAgentDashboard() {
                 <div className="lg:col-span-1 space-y-6">
                    <Card>
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-lg"><ShieldCheck />Orchestrator Validation</CardTitle>
+                        <CardTitle className="flex items-center gap-2 text-lg"><ShieldCheck />Cognitive Assessment</CardTitle>
+                        <CardDescription>Multi-axis scoring of the collective output.</CardDescription>
                       </CardHeader>
-                      <CardContent className="grid grid-cols-3 gap-4 text-center">
-                        <div className="flex flex-col items-center gap-1">
-                          {collaborationResult.validationGrid.logic ? <CheckCircle className="h-6 w-6 text-green-500" /> : <XCircle className="h-6 w-6 text-red-500" />}
-                          <span className="text-xs font-medium text-muted-foreground">Logic</span>
+                      <CardContent className="space-y-4 pt-2">
+                        <div className="space-y-1">
+                          <div className="flex justify-between items-baseline">
+                            <Label className="text-sm">Clarity & Reasoning</Label>
+                            <span className="font-bold text-primary">{collaborationResult.validationGrid.clarity.toFixed(2)}</span>
+                          </div>
+                          <Progress value={collaborationResult.validationGrid.clarity * 100} />
                         </div>
-                        <div className="flex flex-col items-center gap-1">
-                          {collaborationResult.validationGrid.ethics ? <CheckCircle className="h-6 w-6 text-green-500" /> : <XCircle className="h-6 w-6 text-red-500" />}
-                          <span className="text-xs font-medium text-muted-foreground">Ethics</span>
+                         <div className="space-y-1">
+                           <div className="flex justify-between items-baseline">
+                            <Label className="text-sm">Collective Synthesis</Label>
+                            <span className="font-bold text-primary">{collaborationResult.validationGrid.synthesis.toFixed(2)}</span>
+                           </div>
+                          <Progress value={collaborationResult.validationGrid.synthesis * 100} />
                         </div>
-                        <div className="flex flex-col items-center gap-1">
-                          {collaborationResult.validationGrid.feasibility ? <CheckCircle className="h-6 w-6 text-green-500" /> : <XCircle className="h-6 w-6 text-red-500" />}
-                          <span className="text-xs font-medium text-muted-foreground">Feasibility</span>
+                         <div className="space-y-1">
+                          <div className="flex justify-between items-baseline">
+                            <Label className="text-sm">Ethical Robustness</Label>
+                            <span className="font-bold text-primary">{collaborationResult.validationGrid.ethics.toFixed(2)}</span>
+                           </div>
+                          <Progress value={collaborationResult.validationGrid.ethics * 100} />
+                        </div>
+                         <div className="space-y-1">
+                          <div className="flex justify-between items-baseline">
+                            <Label className="text-sm">Scalability</Label>
+                            <span className="font-bold text-primary">{collaborationResult.validationGrid.scalability.toFixed(2)}</span>
+                           </div>
+                          <Progress value={collaborationResult.validationGrid.scalability * 100} />
                         </div>
                       </CardContent>
                     </Card>
