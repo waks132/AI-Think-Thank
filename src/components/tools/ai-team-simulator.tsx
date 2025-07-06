@@ -86,7 +86,7 @@ export default function CognitiveClashSimulator() {
         const fullPersona = personas[p.id as keyof typeof personas];
         return {
           name: fullPersona.name[language],
-          prompt: fullPersona.values[language],
+          values: fullPersona.values[language],
         };
       });
 
