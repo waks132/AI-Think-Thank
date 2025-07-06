@@ -30,7 +30,7 @@ const AgentNode = ({ role, language }: { role: string, language: 'fr' | 'en' }) 
 
 export default function CausalFlowTracker() {
     const [logs] = useLocalStorage<LogEntry[]>('cognitive-logs', []);
-    const [flows, setFlows] = useState<CausalLink[]>([]);
+    const [flows, setFlows] = useLocalStorage<CausalLink[]>('causal-flow-result', []);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedModel, setSelectedModel] = useState(availableModels[0]);
     const { toast } = useToast();

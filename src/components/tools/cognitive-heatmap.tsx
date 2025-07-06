@@ -12,6 +12,7 @@ import ModelSelector from "../model-selector"
 import { availableModels } from "@/lib/models"
 import { useLanguage } from "@/context/language-context"
 import { t } from "@/lib/i18n"
+import useLocalStorage from "@/hooks/use-local-storage"
 
 const initialText = "The primary mission objective is to establish a self-sustaining hydroponics farm on Mars. Key challenges include radiation shielding, water reclamation, and adapting Earth-based plants to the Martian environment. Our strategy prioritizes a modular, scalable architecture, allowing for incremental expansion. The initial phase will focus on robust life support and energy systems, followed by the deployment of the agricultural modules. This approach mitigates risk and ensures core systems are operational before expanding."
 
@@ -49,7 +50,7 @@ const HeatmapTextView = ({ text, heatmap }: { text: string, heatmap: HeatmapWord
 
 export default function CognitiveHeatmap() {
   const [text, setText] = useState(initialText);
-  const [heatmap, setHeatmap] = useState<HeatmapWord[]>([]);
+  const [heatmap, setHeatmap] = useLocalStorage<HeatmapWord[]>("cognitive-heatmap-result", []);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast();
@@ -109,5 +110,3 @@ export default function CognitiveHeatmap() {
     </Card>
   )
 }
-
-    

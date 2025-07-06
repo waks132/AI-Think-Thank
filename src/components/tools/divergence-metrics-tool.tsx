@@ -17,6 +17,7 @@ import { Progress } from "../ui/progress"
 import { Badge } from "../ui/badge"
 import { useLanguage } from "@/context/language-context"
 import { t } from "@/lib/i18n"
+import useLocalStorage from "@/hooks/use-local-storage"
 const Diff = require('diff');
 
 const formSchema = z.object({
@@ -40,7 +41,7 @@ const DiffView = ({ string1, string2 }: { string1: string; string2: string }) =>
 
 
 export default function DivergenceMetricsTool() {
-  const [result, setResult] = useState<CalculatePromptDivergenceOutput | null>(null)
+  const [result, setResult] = useLocalStorage<CalculatePromptDivergenceOutput | null>("divergence-metrics-result", null)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast()

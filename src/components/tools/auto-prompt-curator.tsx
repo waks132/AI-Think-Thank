@@ -20,6 +20,7 @@ import { t } from "@/lib/i18n"
 import { personaList } from "@/lib/personas"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { Label } from "../ui/label"
+import useLocalStorage from "@/hooks/use-local-storage"
 
 const formSchema = z.object({
   promptText: z.string().min(10, { message: "Prompt text must be at least 10 characters." }),
@@ -31,7 +32,7 @@ const formSchema = z.object({
 })
 
 export default function AutoPromptCurator() {
-  const [result, setResult] = useState<AutoCurationOutput | null>(null)
+  const [result, setResult] = useLocalStorage<AutoCurationOutput | null>("auto-curator-result", null)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const [selectedAgentId, setSelectedAgentId] = useState<string>(personaList[0].id);

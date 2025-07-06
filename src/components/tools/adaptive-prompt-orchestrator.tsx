@@ -18,6 +18,7 @@ import ModelSelector from "../model-selector"
 import { availableModels } from "@/lib/models"
 import { useLanguage } from "@/context/language-context"
 import { t } from "@/lib/i18n"
+import useLocalStorage from "@/hooks/use-local-storage"
 
 const formSchema = z.object({
   originalPrompt: z.string().min(10, { message: "Original prompt must be at least 10 characters." }),
@@ -26,7 +27,7 @@ const formSchema = z.object({
 })
 
 export default function AdaptivePromptOrchestrator() {
-  const [result, setResult] = useState<AdaptivePromptRewriterOutput | null>(null)
+  const [result, setResult] = useLocalStorage<AdaptivePromptRewriterOutput | null>("adaptive-prompt-result", null)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast()

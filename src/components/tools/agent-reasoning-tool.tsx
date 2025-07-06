@@ -19,6 +19,7 @@ import { Progress } from "../ui/progress"
 import { Label } from "../ui/label"
 import { useLanguage } from "@/context/language-context"
 import { t } from "@/lib/i18n"
+import useLocalStorage from "@/hooks/use-local-storage"
 
 const formSchema = z.object({
   task: z.string().min(10, { message: "Task must be at least 10 characters." }),
@@ -26,7 +27,7 @@ const formSchema = z.object({
 })
 
 export default function AgentReasoningTool() {
-  const [result, setResult] = useState<AgentReasoningOutput | null>(null)
+  const [result, setResult] = useLocalStorage<AgentReasoningOutput | null>("agent-reasoning-result", null)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast()

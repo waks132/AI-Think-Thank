@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from "react"
@@ -29,7 +28,8 @@ import { useLanguage } from "@/context/language-context"
 import { t } from "@/lib/i18n"
 import { personaList, personas } from "@/lib/personas"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
-import { Label } from "@/components/ui/label"
+import { Label } from "../ui/label"
+import useLocalStorage from "@/hooks/use-local-storage"
 
 
 const perspectiveSchema = z.object({
@@ -48,8 +48,8 @@ const perspectiveColors = [
 ];
 
 export default function CognitiveClashSimulator() {
-  const [result, setResult] = useState<CognitiveClashSimulatorOutput | null>(null)
-  const [critiqueResult, setCritiqueResult] = useState<StrategicSynthesisCritiqueOutput | null>(null)
+  const [result, setResult] = useLocalStorage<CognitiveClashSimulatorOutput | null>("clash-simulator-result", null)
+  const [critiqueResult, setCritiqueResult] = useLocalStorage<StrategicSynthesisCritiqueOutput | null>("clash-critique-result", null)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast()
@@ -443,4 +443,3 @@ const CritiqueSection = ({ icon: Icon, title, items, color }: { icon: React.Elem
     </ul>
   </div>
 );
-
