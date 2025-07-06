@@ -3,9 +3,9 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Loader2, FileText, Download } from "lucide-react"
+import { Loader2, FileText, Download, Globe } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { generateReport } from "@/ai/flows/report-generator-flow"
+import { generateReport, type GenerateReportOutput } from "@/ai/flows/report-generator-flow"
 import ModelSelector from "../model-selector"
 import { availableModels } from "@/lib/models"
 import { useLanguage } from "@/context/language-context"
@@ -13,10 +13,12 @@ import { t } from "@/lib/i18n"
 import useLocalStorage from "@/hooks/use-local-storage"
 import type { AgentCollaborationOutput } from "@/ai/flows/agent-collaboration-flow"
 import { Textarea } from "../ui/textarea"
+import { Badge } from "../ui/badge"
 
 export default function ReportGenerator() {
   const [collaborationResult] = useLocalStorage<AgentCollaborationOutput | null>("collaboration-result", null)
-  const [report, setReport] = useState<string | null>(null);
+  const [mission] = useLocalStorage<string>('mission-text', '');
+  const [report, setReport] = useState<GenerateReportOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast();
@@ -35,13 +37,14 @@ export default function ReportGenerator() {
     setIsLoading(true);
     setReport(null);
     try {
-      const result = await generateReport({ 
+      const result = await generateReport({
+          mission: mission,
           executiveSummary: collaborationResult.executiveSummary,
           collaborationLog: JSON.stringify(collaborationResult.collaborationLog),
           model: selectedModel,
           language,
        });
-      setReport(result.reportMarkdown);
+      setReport(result);
     } catch (error) {
         console.error("Error generating report:", error);
         toast({
@@ -55,8 +58,8 @@ export default function ReportGenerator() {
   }
 
   const handleDownload = () => {
-    if (!report) return;
-    const blob = new Blob([report], { type: 'text/markdown;charset=utf-8;' });
+    if (!report?.reportMarkdown) return;
+    const blob = new Blob([report.reportMarkdown], { type: 'text/markdown;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -90,13 +93,21 @@ export default function ReportGenerator() {
              <div className="space-y-4">
                 <Textarea 
                     readOnly
-                    value={report}
+                    value={report.reportMarkdown}
                     className="h-[500px] font-mono text-xs bg-card"
                 />
-                <Button onClick={handleDownload} className="w-full">
-                    <Download className="mr-2"/>
-                    {t.report.download_button[language]}
-                </Button>
+                <div className="flex justify-between items-center gap-4">
+                  {report.sources && report.sources.length > 0 && (
+                    <Badge variant="secondary">
+                      <Globe className="mr-2 h-3 w-3" />
+                      {report.sources.length} {t.report.sources_label[language]}
+                    </Badge>
+                  )}
+                  <Button onClick={handleDownload} className="flex-grow">
+                      <Download className="mr-2"/>
+                      {t.report.download_button[language]}
+                  </Button>
+                </div>
             </div>
            ) : (
              <div className="flex items-center justify-center h-full text-muted-foreground text-center">
