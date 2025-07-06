@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { 
   BrainCircuit, FlaskConical, ClipboardCheck, Lightbulb, Scale, FunctionSquare,
   Compass, Shield, Brain, Layers, BookOpen, Search, Drama, Milestone,
@@ -46,9 +46,11 @@ const initialAgents: Agent[] = [
   { id: 'sigil', role: 'SIGIL', specialization: 'Formalizes in diagrams, formats, standards', prompt: 'Your role is to formalize concepts into diagrams, formats, and standards.', icon: Code },
 ];
 
+const initialAgentsMap = new Map(initialAgents.map(agent => [agent.id, agent.icon]));
+
 
 export default function MultiAgentDashboard() {
-  const [agents, setAgents] = useLocalStorage<Agent[]>('agents', initialAgents);
+  const [storedAgents, setStoredAgents] = useLocalStorage<Agent[]>('agents', initialAgents);
   const [selectedAgentIds, setSelectedAgentIds] = useState<Set<string>>(new Set(['kairos-1', 'helios', 'veritas']));
   const [mission, setMission] = useState<string>('Develop a framework for ethical AI deployment in autonomous vehicles.');
   const [collaborationResult, setCollaborationResult] = useState<AgentCollaborationOutput | null>(null);
@@ -56,10 +58,17 @@ export default function MultiAgentDashboard() {
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast();
 
+  const agents = useMemo(() => {
+    return storedAgents.map(agent => ({
+      ...agent,
+      icon: initialAgentsMap.get(agent.id) || BrainCircuit
+    }));
+  }, [storedAgents]);
+
   const agentIconMap = new Map(agents.map(agent => [agent.role, agent.icon]));
 
   const handlePromptChange = (agentId: string, newPrompt: string) => {
-    setAgents(prevAgents =>
+    setStoredAgents(prevAgents =>
       prevAgents.map(agent =>
         agent.id === agentId ? { ...agent, prompt: newPrompt } : agent
       )

@@ -29,6 +29,7 @@ export default function AgentCard({ agent, onPromptChange, isSelected, onSelecti
   const [isRefining, setIsRefining] = useState(false);
   const [lastPsiScore, setLastPsiScore] = useState<number | null>(null);
   const { toast } = useToast();
+  const Icon = agent.icon;
 
   const handleSave = () => {
     onPromptChange(agent.id, prompt);
@@ -92,7 +93,7 @@ export default function AgentCard({ agent, onPromptChange, isSelected, onSelecti
       <CardHeader className="flex flex-row items-start gap-4">
         <div className="flex flex-col items-center gap-4">
           <div className="p-3 bg-accent rounded-lg">
-            <agent.icon className="h-6 w-6 text-accent-foreground" />
+            <Icon className="h-6 w-6 text-accent-foreground" />
           </div>
           <Checkbox 
             id={`select-${agent.id}`}
