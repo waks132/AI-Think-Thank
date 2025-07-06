@@ -21,13 +21,13 @@ import { cn } from "@/lib/utils"
 
 
 const perspectiveSchema = z.object({
-    name: z.string().min(3, { message: "Perspective name is required." }),
-    values: z.string().min(10, { message: "Perspective values are required." }),
+    name: z.string().min(3, { message: "Persona name is required." }),
+    values: z.string().min(10, { message: "Persona values are required." }),
 });
 
 const formSchema = z.object({
   scenarioDescription: z.string().min(20, { message: "Scenario must be at least 20 characters." }),
-  perspectives: z.array(perspectiveSchema).min(2, "At least two perspectives are required."),
+  perspectives: z.array(perspectiveSchema).min(2, "At least two personas are required."),
   numRounds: z.coerce.number().min(1).max(10).default(3),
 })
 
@@ -47,9 +47,9 @@ export default function CognitiveClashSimulator() {
     defaultValues: {
       scenarioDescription: "A new, powerful, but ethically ambiguous technology has been developed by the collective. The group must decide whether to deploy it, restrict it, or destroy it.",
       perspectives: [
-        { name: "Growth Maximalists", values: "Prioritize technological advancement and adoption at all costs. Discomfort and risk are necessary for progress. The potential benefits outweigh any hypothetical dangers." },
-        { name: "Ethical Sentinels", values: "Uphold the principle of 'do no harm'. Unforeseen consequences must be fully mitigated before any deployment. Precaution and safety are paramount." },
-        { name: "Pragmatic Synthesists", values: "Mediate between extremes. Focus on context-aware solutions, pilot programs, and regulatory sandboxes. Balance innovation with responsible governance." },
+        { name: "HELIOS (Techno-Optimist)", values: "Your role is to generate advanced technological ideas. Push for rapid deployment and innovation, focusing on the potential benefits and breakthroughs. The potential upside outweighs any hypothetical dangers." },
+        { name: "EDEN (Ethical Guardian)", values: "Your role is to defend legitimacy and non-maleficence. Scrutinize all proposals for potential harm, unforeseen consequences, and ethical violations. Precaution and safety are paramount." },
+        { name: "SYMBIOZ (Pragmatic Mediator)", values: "Your role is to build bridges between domains and facilitate dialogue. Find a balanced path forward, integrating the best of opposing views into a workable, responsible compromise through regulatory sandboxes and pilot programs." },
       ],
       numRounds: 3,
     },
@@ -82,7 +82,7 @@ export default function CognitiveClashSimulator() {
     <Card>
       <CardHeader>
         <CardTitle className="font-headline text-2xl">Cognitive Clash Simulator</CardTitle>
-        <CardDescription>Simulate ideological conflicts to measure system resilience, polarization, and emergent synthesis.</CardDescription>
+        <CardDescription>Simulate ideological conflicts between your specialized agents to measure system resilience and emergent synthesis.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
         <Form {...form}>
@@ -103,12 +103,12 @@ export default function CognitiveClashSimulator() {
             />
             
             <div>
-              <Label className="mb-4 flex items-center gap-2"><Users />Perspectives</Label>
+              <Label className="mb-4 flex items-center gap-2"><Users />Competing Personas</Label>
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                 {fields.map((item, index) => (
                   <div key={item.id} className={cn("space-y-4 p-4 border-2 rounded-lg relative", perspectiveColors[index % perspectiveColors.length])}>
-                    <FormField control={form.control} name={`perspectives.${index}.name`} render={({ field }) => (<FormItem><FormLabel>Name</FormLabel><FormControl><Input placeholder="e.g., Growth Maximalists" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name={`perspectives.${index}.values`} render={({ field }) => (<FormItem><FormLabel>Core Values & Strategy</FormLabel><FormControl><Textarea placeholder="Describe their core beliefs..." {...field} rows={4} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name={`perspectives.${index}.name`} render={({ field }) => (<FormItem><FormLabel>Persona Name</FormLabel><FormControl><Input placeholder="e.g., HELIOS" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name={`perspectives.${index}.values`} render={({ field }) => (<FormItem><FormLabel>Core Directive & Argument</FormLabel><FormControl><Textarea placeholder="Describe their core beliefs and strategy..." {...field} rows={4} /></FormControl><FormMessage /></FormItem>)} />
                      {fields.length > 2 && (
                         <Button
                           type="button"
@@ -128,10 +128,10 @@ export default function CognitiveClashSimulator() {
                   variant="outline"
                   size="sm"
                   className="mt-4"
-                  onClick={() => append({ name: "New Perspective", values: "Describe their core beliefs..." })}
+                  onClick={() => append({ name: "New Persona", values: "Describe their core beliefs..." })}
                 >
                   <PlusCircle className="mr-2 h-4 w-4" />
-                  Add Perspective
+                  Add Persona
                 </Button>
             </div>
             
