@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react"
@@ -37,7 +38,7 @@ const formSchema = z.object({
 
 const perspectiveColors = [
     'border-blue-500/50', 'border-red-500/50', 'border-green-500/50', 
-    'border-yellow-500/50', 'border-purple-500/50', 'border-pink-500/50'
+    'border-yellow-500/50', 'border-purple-500/50', 'border-pink-500/50', 'border-teal-500/50'
 ];
 
 export default function CognitiveClashSimulator() {
@@ -54,7 +55,8 @@ export default function CognitiveClashSimulator() {
         { name: "HELIOS (Techno-Optimist)", values: "Your role is to generate advanced technological ideas. Push for rapid deployment and innovation, focusing on the potential benefits and breakthroughs. The potential upside outweighs any hypothetical dangers." },
         { name: "EDEN (Ethical Guardian)", values: "Your role is to defend legitimacy and non-maleficence. Scrutinize all proposals for potential harm, unforeseen consequences, and ethical violations. Precaution and safety are paramount." },
         { name: "SYMBIOZ (Pragmatic Mediator)", values: "Your role is to build bridges between domains and facilitate dialogue. Find a balanced path forward, integrating the best of opposing views into a workable, responsible compromise through regulatory sandboxes and pilot programs." },
-        { name: "VOX (Public Advocate)", values: "Your role is to represent the public interest. Focus on transparency, accessibility, and long-term societal impact. You must ensure the final solution is not only technically sound and ethically robust, but also understandable and legitimate in the eyes of the citizens it will affect." }
+        { name: "VOX (Public Advocate)", values: "Your role is to represent the public interest. Focus on transparency, accessibility, and long-term societal impact. You must ensure the final solution is not only technically sound and ethically robust, but also understandable and legitimate in the eyes of the citizens it will affect." },
+        { name: "PoliSynth Disruptor", values: "Your role is to act as a meta-regulator. Analyze the debate for its underlying power dynamics, explore alternative scenarios, and assess socio-economic implications. You disrupt cognitive lock-ins by introducing systemic or counter-intuitive viewpoints based on a strategic analysis of the situation." }
       ],
       numRounds: 3,
     },
@@ -258,16 +260,16 @@ export default function CognitiveClashSimulator() {
                                 <div className="flex items-center gap-2"><GitBranch />View Argument Influence Map</div>
                             </AccordionTrigger>
                             <AccordionContent>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg bg-background/50 max-h-[500px] overflow-y-auto">
+                                <div className="space-y-6 p-4 border rounded-lg bg-background/50 max-h-[500px] overflow-y-auto">
                                     {result.argumentFlow.map((link, index) => (
-                                        <div key={index} className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
-                                            <div className="flex items-center gap-2 text-sm font-semibold">
-                                                <span>{link.fromPerspective}</span>
-                                                <ArrowRight className="h-4 w-4 text-primary" />
-                                                <span>{link.toPerspective}</span>
+                                        <div key={index} className="flex flex-col md:flex-row items-center justify-center gap-2 animate-fade-in text-center" style={{ animationDelay: `${index * 100}ms` }}>
+                                            <div className="p-3 rounded-lg bg-card border font-medium min-w-[200px]">{link.fromPerspective}</div>
+                                            <div className="flex flex-col items-center p-2">
+                                                <ArrowRight className="h-6 w-6 text-primary md:rotate-0 rotate-90" />
+                                                <Badge variant="secondary" className="my-1">{link.interactionType}</Badge>
+                                                <p className="text-xs text-muted-foreground max-w-xs italic">"{link.summary}"</p>
                                             </div>
-                                            <Badge variant="secondary">{link.interactionType}</Badge>
-                                            <p className="text-sm text-muted-foreground text-center italic">"{link.summary}"</p>
+                                            <div className="p-3 rounded-lg bg-card border font-medium min-w-[200px]">{link.toPerspective}</div>
                                         </div>
                                     ))}
                                 </div>
@@ -287,3 +289,5 @@ export default function CognitiveClashSimulator() {
     </Card>
   )
 }
+
+    
