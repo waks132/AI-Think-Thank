@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Header from "@/components/header"
 import MultiAgentDashboard from "@/components/dashboard/multi-agent-dashboard"
-import AiTeamSimulator from "@/components/tools/ai-team-simulator"
+import CognitiveClashSimulator from "@/components/tools/ai-team-simulator"
 import AdaptivePromptOrchestrator from "@/components/tools/adaptive-prompt-orchestrator"
 import AutoPromptCurator from "@/components/tools/auto-prompt-curator"
 import DivergenceMetricsTool from "@/components/tools/divergence-metrics-tool"
@@ -29,7 +29,7 @@ export default function Home() {
           </TabsContent>
           
           <TabsContent value="simulations" className="mt-6">
-            <AiTeamSimulator />
+            <CognitiveClashSimulator />
           </TabsContent>
 
           <TabsContent value="prompt_tools" className="mt-6">
