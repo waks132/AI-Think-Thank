@@ -19,7 +19,7 @@ const AutoCurationInputSchema = z.object({
   successRate: z
     .number()
     .describe(
-      'The rate at which the prompt has led to successful outcomes (0 to 1).' /* Updated description */
+      'The rate at which the prompt has led to successful outcomes (0 to 1).'
     ),
   averageRating: z
     .number()
@@ -29,8 +29,9 @@ const AutoCurationInputSchema = z.object({
     .number()
     .optional()
     .describe(
-      'A score indicating how similar this prompt is to other prompts (0 to 1).' /* Updated description */
+      'A score indicating how similar this prompt is to other prompts (0 to 1).'
     ),
+    model: z.string().optional().describe('The AI model to use for the generation.'),
 });
 export type AutoCurationInput = z.infer<typeof AutoCurationInputSchema>;
 
@@ -42,7 +43,7 @@ const AutoCurationOutputSchema = z.object({
     ),
   reason: z
     .string()
-    .describe('The reasoning behind the recommended action.' /* Updated description */),
+    .describe('The reasoning behind the recommended action.'),
 });
 export type AutoCurationOutput = z.infer<typeof AutoCurationOutputSchema>;
 
@@ -89,8 +90,9 @@ const autoCurationFlow = ai.defineFlow(
     inputSchema: AutoCurationInputSchema,
     outputSchema: AutoCurationOutputSchema,
   },
-  async input => {
-    const {output} = await autoCurationPrompt(input);
+  async (input) => {
+    const model = input.model ? ai.getGenerator(input.model) : undefined;
+    const {output} = await autoCurationPrompt(input, {model});
     return output!;
   }
 );

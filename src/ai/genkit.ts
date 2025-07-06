@@ -1,7 +1,16 @@
-import {genkit} from 'genkit';
+import {genkit, GenkitPlugin} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
 
+const plugins: GenkitPlugin[] = [googleAI()];
+
 export const ai = genkit({
-  plugins: [googleAI()],
+  plugins,
+  // Set a default model for the entire application.
+  // This can be overridden in individual generate calls.
   model: 'googleai/gemini-2.0-flash',
 });
+
+// List of available models for the UI
+export const availableModels = [
+  'googleai/gemini-2.0-flash',
+];

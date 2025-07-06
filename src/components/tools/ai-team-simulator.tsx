@@ -15,6 +15,8 @@ import { Zap, Loader2, BarChart2, GitMerge, Scale, Milestone, Columns } from 'lu
 import { Progress } from "@/components/ui/progress"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Label } from "../ui/label"
+import ModelSelector from "../model-selector"
+import { availableModels } from "@/ai/genkit"
 
 
 const formSchema = z.object({
@@ -29,6 +31,7 @@ const formSchema = z.object({
 export default function CognitiveClashSimulator() {
   const [result, setResult] = useState<CognitiveClashSimulatorOutput | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast()
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -57,7 +60,8 @@ export default function CognitiveClashSimulator() {
             name: values.perspectiveBName,
             values: values.perspectiveBValues
         },
-        numRounds: values.numRounds
+        numRounds: values.numRounds,
+        model: selectedModel,
       })
       setResult(output)
     } catch (error) {
@@ -81,6 +85,7 @@ export default function CognitiveClashSimulator() {
       <CardContent className="space-y-8">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <ModelSelector selectedModel={selectedModel} onModelChange={setSelectedModel} />
             <FormField
               control={form.control}
               name="scenarioDescription"

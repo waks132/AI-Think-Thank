@@ -14,6 +14,8 @@ import { useToast } from "@/hooks/use-toast"
 import { WandSparkles, Loader2, Lightbulb, Sigma } from 'lucide-react'
 import { Progress } from "@/components/ui/progress"
 import { Label } from "@/components/ui/label"
+import ModelSelector from "../model-selector"
+import { availableModels } from "@/ai/genkit"
 
 const formSchema = z.object({
   originalPrompt: z.string().min(10, { message: "Original prompt must be at least 10 characters." }),
@@ -24,6 +26,7 @@ const formSchema = z.object({
 export default function AdaptivePromptOrchestrator() {
   const [result, setResult] = useState<AdaptivePromptRewriterOutput | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast()
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -38,7 +41,7 @@ export default function AdaptivePromptOrchestrator() {
     setIsLoading(true)
     setResult(null)
     try {
-      const output = await adaptivePromptRewriter(values)
+      const output = await adaptivePromptRewriter({...values, model: selectedModel})
       setResult(output)
     } catch (error) {
       console.error("Error rewriting prompt:", error)
@@ -63,6 +66,7 @@ export default function AdaptivePromptOrchestrator() {
           <div>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <ModelSelector selectedModel={selectedModel} onModelChange={setSelectedModel} />
                 <FormField
                   control={form.control}
                   name="originalPrompt"

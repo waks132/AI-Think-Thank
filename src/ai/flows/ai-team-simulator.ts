@@ -25,6 +25,7 @@ const CognitiveClashSimulatorInputSchema = z.object({
     .number()
     .describe('The number of simulation rounds to run.')
     .default(3),
+  model: z.string().optional().describe('The AI model to use for the generation.'),
 });
 export type CognitiveClashSimulatorInput = z.infer<typeof CognitiveClashSimulatorInputSchema>;
 
@@ -81,8 +82,9 @@ const cognitiveClashSimulatorFlow = ai.defineFlow(
     inputSchema: CognitiveClashSimulatorInputSchema,
     outputSchema: CognitiveClashSimulatorOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
+  async (input) => {
+    const model = input.model ? ai.getGenerator(input.model) : undefined;
+    const {output} = await prompt(input, {model});
     return output!;
   }
 );

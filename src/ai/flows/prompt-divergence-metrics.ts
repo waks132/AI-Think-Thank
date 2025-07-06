@@ -1,8 +1,8 @@
 'use server';
 /**
- * @fileOverview Calculates divergence metrics (KL divergence) between versions of prompts.
+ * @fileOverview Calculates divergence metrics between versions of prompts using an AI model.
  *
- * - calculatePromptDivergence - A function that calculates the KL divergence between two prompts.
+ * - calculatePromptDivergence - A function that calculates the divergence between two prompts.
  * - CalculatePromptDivergenceInput - The input type for the calculatePromptDivergence function.
  * - CalculatePromptDivergenceOutput - The return type for the calculatePromptDivergence function.
  */
@@ -11,15 +11,17 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const CalculatePromptDivergenceInputSchema = z.object({
-  promptVersionA: z.string().describe('The first prompt version.'),
-  promptVersionB: z.string().describe('The second prompt version.'),
+  promptVersionA: z.string().describe('The first prompt version (the original).'),
+  promptVersionB: z.string().describe('The second prompt version (the new one).'),
+  model: z.string().optional().describe('The AI model to use for the generation.'),
 });
 export type CalculatePromptDivergenceInput = z.infer<
   typeof CalculatePromptDivergenceInputSchema
 >;
 
 const CalculatePromptDivergenceOutputSchema = z.object({
-  klDivergence: z.number().describe('The KL divergence between the two prompts.'),
+  divergenceScore: z.number().min(0).max(1).describe('A normalized score from 0.0 to 1.0 representing the semantic and intentional divergence between the two prompts. 0.0 means identical, 1.0 means completely different.'),
+  explanation: z.string().describe('A detailed explanation of the divergence, covering changes in lexicon, semantics, intent, and complexity.'),
 });
 export type CalculatePromptDivergenceOutput = z.infer<
   typeof CalculatePromptDivergenceOutputSchema
@@ -35,12 +37,22 @@ const prompt = ai.definePrompt({
   name: 'calculatePromptDivergencePrompt',
   input: {schema: CalculatePromptDivergenceInputSchema},
   output: {schema: CalculatePromptDivergenceOutputSchema},
-  prompt: `Calculate the Kullback-Leibler (KL) divergence between two prompt versions. KL divergence measures the difference between two probability distributions. In this context, it quantifies how much the output distribution of prompt version B diverges from prompt version A.
+  prompt: `You are an expert in computational linguistics and prompt engineering. Your task is to analyze two versions of a prompt and calculate their semantic and intentional divergence.
 
-Prompt Version A: {{{promptVersionA}}}
-Prompt Version B: {{{promptVersionB}}}
+Analyze the following two prompt versions:
+- **Prompt A (Original):** {{{promptVersionA}}}
+- **Prompt B (New):** {{{promptVersionB}}}
 
-Return the KL divergence value. A higher value indicates greater divergence.`,
+Your analysis should result in two things:
+1.  **divergenceScore**: A single, normalized score from 0.0 (identical) to 1.0 (completely unrelated). This score should be a holistic measure, considering factors like:
+    *   **Lexical changes:** The difference in words used.
+    *   **Semantic shift:** How much the core meaning or subject has changed.
+    *   **Intentional shift:** Changes in the prompt's goal, target audience, or desired output format/style (e.g., from technical to pedagogical).
+    *   **Complexity change:** The difference in the cognitive load required to understand or execute the prompt.
+2.  **explanation**: A concise but detailed explanation of your reasoning for the score, touching upon the factors listed above.
+
+Produce your analysis in the specified JSON format.
+`,
 });
 
 const calculatePromptDivergenceFlow = ai.defineFlow(
@@ -49,19 +61,9 @@ const calculatePromptDivergenceFlow = ai.defineFlow(
     inputSchema: CalculatePromptDivergenceInputSchema,
     outputSchema: CalculatePromptDivergenceOutputSchema,
   },
-  async input => {
-    // Mock implementation: In a real scenario, you would analyze the outputs of the prompts to generate probability distributions and calculate KL divergence.
-    // This implementation just returns a random number for demonstration purposes.
-    // REMOVE THIS AND IMPLEMENT ACTUAL KL DIVERGENCE CALCULATION
-
-    // 1. Get outputs from prompt versions A and B using ai.generate or similar
-    // 2. Analyze the outputs to create probability distributions (e.g., word frequencies)
-    // 3. Use a library like stats-js to calculate KL divergence
-
-    const klDivergenceValue = Math.random();
-
-    return {
-      klDivergence: klDivergenceValue,
-    };
+  async (input) => {
+    const model = input.model ? ai.getGenerator(input.model) : undefined;
+    const {output} = await prompt(input, {model});
+    return output!;
   }
 );

@@ -1,33 +1,34 @@
 "use client"
 
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Textarea } from "../ui/textarea"
+import { Button } from "../ui/button"
+import { Loader2, Thermometer } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { generateCognitiveHeatmap } from "@/ai/flows/cognitive-heatmap-flow"
+import type { HeatmapWord } from "@/lib/types"
+import ModelSelector from "../model-selector"
+import { availableModels } from "@/ai/genkit"
 
-const text = "The primary mission objective is to establish a self-sustaining hydroponics farm on Mars. Key challenges include radiation shielding, water reclamation, and adapting Earth-based plants to the Martian environment. Our strategy prioritizes a modular, scalable architecture, allowing for incremental expansion. The initial phase will focus on robust life support and energy systems, followed by the deployment of the agricultural modules. This approach mitigates risk and ensures core systems are operational before expanding."
+const initialText = "The primary mission objective is to establish a self-sustaining hydroponics farm on Mars. Key challenges include radiation shielding, water reclamation, and adapting Earth-based plants to the Martian environment. Our strategy prioritizes a modular, scalable architecture, allowing for incremental expansion. The initial phase will focus on robust life support and energy systems, followed by the deployment of the agricultural modules. This approach mitigates risk and ensures core systems are operational before expanding."
 
-const wordWeights: { [key: string]: number } = {
-  mission: 0.8,
-  hydroponics: 1.0,
-  Mars: 0.9,
-  radiation: 0.7,
-  water: 0.8,
-  strategy: 0.9,
-  scalable: 0.85,
-  energy: 0.95,
-  risk: 0.75,
-  agricultural: 1.0
-}
-
-const HeatmapText = () => {
+const HeatmapTextView = ({ text, heatmap }: { text: string, heatmap: HeatmapWord[] }) => {
   const words = text.split(/(\s+)/); // Split by space, keeping spaces
+  const wordWeights: { [key: string]: number } = heatmap.reduce((acc, curr) => {
+    acc[curr.word.toLowerCase()] = curr.weight;
+    return acc;
+  }, {} as { [key: string]: number });
+
   return (
     <p className="text-lg leading-relaxed">
       {words.map((word, index) => {
         const cleanWord = word.replace(/[.,]/g, '').toLowerCase();
         const weight = wordWeights[cleanWord] || 0;
-        const opacity = Math.max(weight, 0.1);
-        const color = weight > 0.85 ? 'bg-primary/30' : 'bg-secondary/30';
 
-        if (weight > 0) {
+        if (weight > 0.1) {
+          const opacity = Math.max(weight, 0.2);
+          const color = weight > 0.8 ? 'bg-primary/40' : 'bg-secondary/30';
           return (
             <span
               key={index}
@@ -45,17 +46,63 @@ const HeatmapText = () => {
 }
 
 export default function CognitiveHeatmap() {
+  const [text, setText] = useState(initialText);
+  const [heatmap, setHeatmap] = useState<HeatmapWord[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedModel, setSelectedModel] = useState(availableModels[0]);
+  const { toast } = useToast();
+
+  const handleAnalyze = async () => {
+    setIsLoading(true);
+    setHeatmap([]);
+    try {
+      const result = await generateCognitiveHeatmap({ text, model: selectedModel });
+      setHeatmap(result.heatmap);
+    } catch (error) {
+        console.error("Error generating heatmap:", error);
+        toast({
+            variant: "destructive",
+            title: "Analysis Failed",
+            description: "Could not generate cognitive heatmap.",
+        });
+    } finally {
+        setIsLoading(false);
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="font-headline text-2xl">Cognitive Heatmap</CardTitle>
         <CardDescription>
-          A visual representation of semantic activation zones in a text. (This is a static simulation).
+          Enter text to dynamically generate a visual representation of its semantic activation zones.
         </CardDescription>
       </CardHeader>
-      <CardContent className="p-8 bg-card rounded-b-lg">
-        <div className="p-6 border rounded-lg shadow-inner bg-background/50">
-           <HeatmapText />
+      <CardContent className="space-y-4">
+        <ModelSelector selectedModel={selectedModel} onModelChange={setSelectedModel}/>
+        <Textarea 
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Enter text to analyze..."
+            rows={8}
+        />
+        <Button onClick={handleAnalyze} disabled={isLoading || !text}>
+            {isLoading ? <Loader2 className="animate-spin"/> : <Thermometer />}
+            Analyze Text
+        </Button>
+        <div className="p-6 border rounded-lg shadow-inner bg-background/50 min-h-[200px]">
+           {isLoading ? (
+             <div className="flex items-center justify-center h-full text-muted-foreground">
+                <Loader2 className="h-8 w-8 animate-spin text-primary mr-2"/>
+                Analyzing semantic weights...
+             </div>
+           ) : heatmap.length > 0 ? (
+             <HeatmapTextView text={text} heatmap={heatmap} />
+           ) : (
+             <div className="flex items-center justify-center h-full text-muted-foreground">
+                <p>Analysis results will appear here.</p>
+             </div>
+           )}
         </div>
       </CardContent>
     </Card>

@@ -10,8 +10,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { Lightbulb, Loader2, CheckCircle2 } from 'lucide-react'
+import { Lightbulb, Loader2, CheckCircle2, ChevronRight, Workflow } from 'lucide-react'
 import { Separator } from "@/components/ui/separator"
+import ModelSelector from "../model-selector"
+import { availableModels } from "@/ai/genkit"
+import { Badge } from "../ui/badge"
 
 const formSchema = z.object({
   task: z.string().min(10, { message: "Task must be at least 10 characters." }),
@@ -21,6 +24,7 @@ const formSchema = z.object({
 export default function AgentReasoningTool() {
   const [result, setResult] = useState<AgentReasoningOutput | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast()
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -35,7 +39,7 @@ export default function AgentReasoningTool() {
     setIsLoading(true)
     setResult(null)
     try {
-      const output = await agentReasoning(values)
+      const output = await agentReasoning({...values, model: selectedModel})
       setResult(output)
     } catch (error) {
       console.error("Error getting reasoning:", error)
@@ -60,6 +64,7 @@ export default function AgentReasoningTool() {
           <div>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <ModelSelector selectedModel={selectedModel} onModelChange={setSelectedModel} />
                 <FormField
                   control={form.control}
                   name="task"
@@ -105,13 +110,26 @@ export default function AgentReasoningTool() {
               </div>
             )}
             {result && (
-              <div className="space-y-4 animate-fade-in bg-card p-4 rounded-lg border">
+              <div className="space-y-6 animate-fade-in bg-card p-4 rounded-lg border">
                 <div>
-                    <h4 className="font-semibold flex items-center mb-2 text-primary">
-                        <Lightbulb className="mr-2 h-5 w-5"/>
+                    <h4 className="font-semibold flex items-center mb-4 text-primary">
+                        <Workflow className="mr-2 h-5 w-5"/>
                         Reasoning Steps
                     </h4>
-                    <p className="whitespace-pre-wrap text-muted-foreground text-sm">{result.reasoning}</p>
+                    <div className="space-y-4">
+                      {result.thoughtProcess.map(step => (
+                        <div key={step.step} className="flex gap-4">
+                          <div className="flex flex-col items-center">
+                            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground font-bold">{step.step}</div>
+                            {result.thoughtProcess.length > step.step && <div className="w-px h-full bg-border" />}
+                          </div>
+                          <div>
+                            <Badge variant="secondary" className="mb-1">{step.cognitive_function}</Badge>
+                            <p className="text-muted-foreground text-sm">{step.reasoning}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                 </div>
                 <Separator />
                 <div>

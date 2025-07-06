@@ -9,7 +9,7 @@ export interface Agent {
 }
 
 export interface PromptVersion {
-  id: string;
+  id:string;
   prompt: string;
   timestamp: string;
 }
@@ -21,4 +21,15 @@ export interface LogEntry {
   message: string;
   annotation?: string;
   timestamp: string;
+}
+
+export interface HeatmapWord {
+    word: string;
+    weight: number;
+}
+
+export interface CausalLink {
+    from: string;
+    to: string;
+    reason: string;
 }

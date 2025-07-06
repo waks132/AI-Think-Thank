@@ -1,4 +1,4 @@
-// 'use server';
+'use server';
 /**
  * @fileOverview Implements Chain of Thought prompting for agent reasoning.
  *
@@ -7,23 +7,26 @@
  * - AgentReasoningOutput - The return type for the agentReasoning function.
  */
 
-'use server';
-
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const AgentReasoningInputSchema = z.object({
   task: z.string().describe('The task for the agent to perform.'),
   context: z.string().describe('The context in which the task should be performed.'),
+  model: z.string().optional().describe('The AI model to use for the generation.'),
 });
-
 export type AgentReasoningInput = z.infer<typeof AgentReasoningInputSchema>;
 
-const AgentReasoningOutputSchema = z.object({
-  reasoning: z.string().describe('The step-by-step reasoning of the agent.'),
-  conclusion: z.string().describe('The final conclusion of the agent based on its reasoning.'),
+const ReasoningStepSchema = z.object({
+  step: z.number().describe('The step number in the reasoning process.'),
+  cognitive_function: z.string().describe("The type of cognitive function being performed (e.g., 'Context Identification', 'Strategic Breakdown', 'Constraint Integration', 'Optimization', 'Synthesis')."),
+  reasoning: z.string().describe('The detailed reasoning for this specific step.'),
 });
 
+const AgentReasoningOutputSchema = z.object({
+  thoughtProcess: z.array(ReasoningStepSchema).describe("The agent's structured, step-by-step thought process."),
+  conclusion: z.string().describe('The final conclusion or plan of action based on the reasoning process.'),
+});
 export type AgentReasoningOutput = z.infer<typeof AgentReasoningOutputSchema>;
 
 export async function agentReasoning(input: AgentReasoningInput): Promise<AgentReasoningOutput> {
@@ -34,13 +37,14 @@ const agentReasoningPrompt = ai.definePrompt({
   name: 'agentReasoningPrompt',
   input: {schema: AgentReasoningInputSchema},
   output: {schema: AgentReasoningOutputSchema},
-  prompt: `Let's think step by step. You are an AI agent tasked with the following:
+  prompt: `You are a logical reasoning AI. Your task is to solve the given task within the provided context by thinking step-by-step.
 
 Task: {{{task}}}
-
 Context: {{{context}}}
 
-First, explain your reasoning step by step. Finally, state your conclusion. Conclude your answer with "Final Answer:" followed by your conclusion to the task. Let's begin!
+Break down your thought process into a structured array of steps. For each step, identify the primary "cognitive_function" you are using from this list: ['Context Identification', 'Strategic Breakdown', 'Constraint Integration', 'Hypothesis Generation', 'Optimization', 'Causal Analysis', 'Synthesis']. Then, provide the detailed reasoning for that step.
+
+After detailing all the steps in 'thoughtProcess', provide a final 'conclusion'.
 `,
 });
 
@@ -50,8 +54,9 @@ const agentReasoningFlow = ai.defineFlow(
     inputSchema: AgentReasoningInputSchema,
     outputSchema: AgentReasoningOutputSchema,
   },
-  async input => {
-    const {output} = await agentReasoningPrompt(input);
+  async (input) => {
+    const model = input.model ? ai.getGenerator(input.model) : undefined;
+    const {output} = await agentReasoningPrompt(input, {model});
     return output!;
   }
 );

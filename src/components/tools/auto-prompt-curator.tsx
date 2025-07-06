@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { Archive, ArchiveX, CheckSquare, Loader2 } from 'lucide-react'
 import { Badge } from "@/components/ui/badge"
+import ModelSelector from "../model-selector"
+import { availableModels } from "@/ai/genkit"
 
 const formSchema = z.object({
   promptText: z.string().min(10, { message: "Prompt text must be at least 10 characters." }),
@@ -26,6 +28,7 @@ const formSchema = z.object({
 export default function AutoPromptCurator() {
   const [result, setResult] = useState<AutoCurationOutput | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast()
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -44,7 +47,7 @@ export default function AutoPromptCurator() {
     setIsLoading(true)
     setResult(null)
     try {
-      const output = await autoCuration(values)
+      const output = await autoCuration({...values, model: selectedModel})
       setResult(output)
     } catch (error) {
       console.error("Error during auto-curation:", error)
@@ -79,6 +82,7 @@ export default function AutoPromptCurator() {
           <div>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <ModelSelector selectedModel={selectedModel} onModelChange={setSelectedModel} />
                 <FormField
                   control={form.control}
                   name="promptText"
