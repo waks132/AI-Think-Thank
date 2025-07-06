@@ -8,7 +8,6 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {googleSearch} from '@genkit-ai/google-cloud';
 import {z} from 'genkit';
 
 const GenerateReportInputSchema = z.object({
@@ -29,7 +28,6 @@ export type GenerateReportInput = z.infer<typeof GenerateReportInputSchema>;
 
 const GenerateReportOutputSchema = z.object({
   reportMarkdown: z.string().describe('The final report in Markdown format.'),
-  webSources: z.array(z.string()).describe('An array of URLs for the web sources cited in the report.'),
 });
 export type GenerateReportOutput = z.infer<typeof GenerateReportOutputSchema>;
 
@@ -43,7 +41,6 @@ const reportPrompt = ai.definePrompt({
   name: 'reportGeneratorPrompt',
   input: {schema: GenerateReportInputSchema},
   output: {schema: GenerateReportOutputSchema},
-  tools: [googleSearch],
   prompt: `You are a world-class strategic analyst with expertise in critical systems thinking. Your task is to produce an insightful, balanced, and actionable strategic report that goes significantly beyond the information provided.
 
 **Input Materials:**
@@ -64,8 +61,7 @@ const reportPrompt = ai.definePrompt({
    - Identify 3-5 concrete strengths with specific examples from the collaboration. For each, explain its importance and potential long-term impact. Highlight innovative approaches.
 
 4. **Critical Gaps Assessment (35% of report):**
-   - **MANDATORY RESEARCH:** You MUST perform at least 3 web searches to enrich your analysis. For each subsection below, search for at least one relevant external source. Without these searches, your analysis is incomplete.
-   - **Regulatory Context:** Identify existing frameworks (e.g., GDPR, automotive safety standards) applicable to this problem. **Perform a specific web search on this topic.**
+   - **Regulatory Context:** Identify existing frameworks (e.g., GDPR, automotive safety standards) applicable to this problem based on general knowledge.
    - **Socio-economic Dimension:** Analyze distributional effects, employment impacts, and access inequalities.
    - **Governance Structures:** Examine decision rights, accountability, and power dynamics.
    - **Ethical Tensions:** Identify potential conflicts between stakeholder interests.
@@ -75,7 +71,7 @@ const reportPrompt = ai.definePrompt({
 5. **Solution Critique (20% of report):**
    - For each major proposed solution, apply this framework:
      * Conceptual integrity: Is it logically sound?
-     * Evidential basis: What empirical support exists? (Use web search)
+     * Evidential basis: What support exists within the provided context?
      * Implementation viability: What practical challenges might arise?
      * Unintended consequences: What second-order effects might emerge?
 
@@ -85,11 +81,11 @@ const reportPrompt = ai.definePrompt({
 **Output Format & Citation Requirements:**
 - Structure as a professional markdown document with clear hierarchical headings.
 - Bold key concepts and findings.
-- **Cite Sources:** You must populate the \`webSources\` array with the URLs of all web searches conducted.
+- You must generate your analysis based *only* on the provided input materials. Do not use external knowledge or web searches.
 
 Your entire response must be in {{{language}}}.
 
-Remember: Your value comes not from summarizing, but from critical thinking and providing strategic direction informed by broader, external expertise.`,
+Remember: Your value comes not from summarizing, but from critical thinking and providing strategic direction.`,
 });
 
 const generateReportFlow = ai.defineFlow(

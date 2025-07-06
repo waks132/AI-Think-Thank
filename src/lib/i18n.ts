@@ -348,10 +348,6 @@ export const t = {
     no_data_description: { fr: 'Veuillez d\'abord lancer une mission depuis le Dashboard.', en: 'Please run a mission from the Dashboard first.' },
     fail_title: { fr: 'Échec de la Génération', en: 'Generation Failed' },
     fail_description: { fr: 'Impossible de générer le rapport. Veuillez réessayer.', en: 'Could not generate the report. Please try again.' },
-    sources_label: { fr: 'Sources Consultées', en: 'Sources Consulted' },
     generated_report: { fr: 'Rapport Généré', en: 'Generated Report' },
-    web_search: { fr: 'Recherche Web', en: 'Web Search' },
-    used: { fr: 'Utilisée', en: 'Used' },
-    not_used: { fr: 'Non utilisée', en: 'Not Used' },
   },
 };
