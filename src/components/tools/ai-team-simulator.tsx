@@ -6,6 +6,7 @@ import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { cognitiveClashSimulator, type CognitiveClashSimulatorOutput } from "@/ai/flows/ai-team-simulator"
+import { strategicSynthesisCritique, type StrategicSynthesisCritiqueOutput } from "@/ai/flows/strategic-synthesis-critique"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
@@ -15,7 +16,7 @@ import { useToast } from "@/hooks/use-toast"
 import { 
   Zap, Loader2, BarChart2, GitMerge, Scale, Milestone, Users, PlusCircle, XCircle, BotMessageSquare,
   BrainCircuit, ShieldAlert, FlaskConical, ArrowRight, GitBranch, LightbulbOff, SearchSlash, MessageSquareWarning,
-  UserX, Library
+  UserX, Library, ShieldQuestion, Check, AlertTriangle, Route, Hammer, Lightbulb
 } from 'lucide-react'
 import { Progress } from "@/components/ui/progress"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
@@ -48,6 +49,7 @@ const perspectiveColors = [
 
 export default function CognitiveClashSimulator() {
   const [result, setResult] = useState<CognitiveClashSimulatorOutput | null>(null)
+  const [critiqueResult, setCritiqueResult] = useState<StrategicSynthesisCritiqueOutput | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast()
@@ -78,12 +80,13 @@ export default function CognitiveClashSimulator() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true)
     setResult(null)
+    setCritiqueResult(null);
     try {
       const selectedPersonas = values.perspectives.map(p => {
         const fullPersona = personas[p.id as keyof typeof personas];
         return {
           name: fullPersona.name[language],
-          values: fullPersona.values[language],
+          prompt: fullPersona.values[language],
         };
       });
 
@@ -97,6 +100,17 @@ export default function CognitiveClashSimulator() {
 
       const output = await cognitiveClashSimulator(flowInput);
       setResult(output);
+
+      if (output.emergentSynthesis) {
+        const critique = await strategicSynthesisCritique({
+          synthesisText: output.emergentSynthesis,
+          scenario: values.scenarioDescription,
+          model: selectedModel,
+          language,
+        });
+        setCritiqueResult(critique);
+      }
+
     } catch (error) {
       console.error("Error running simulation:", error)
       toast({
@@ -388,6 +402,22 @@ export default function CognitiveClashSimulator() {
                             </AccordionContent>
                         </AccordionItem>
                     )}
+                    {critiqueResult && (
+                      <AccordionItem value="critique">
+                          <AccordionTrigger>
+                              <div className="flex items-center gap-2"><ShieldQuestion />{t.simulator.critique_title[language]}</div>
+                          </AccordionTrigger>
+                          <AccordionContent>
+                              <div className="space-y-6 p-4 border rounded-lg bg-background/50 max-h-[600px] overflow-y-auto">
+                                  <CritiqueSection icon={Check} title={t.simulator.critique_strengths[language]} items={critiqueResult.strengths} color="text-green-500" />
+                                  <CritiqueSection icon={AlertTriangle} title={t.simulator.critique_weaknesses[language]} items={critiqueResult.weaknesses} color="text-amber-500" />
+                                  <CritiqueSection icon={Route} title={t.simulator.critique_challenges[language]} items={critiqueResult.implementationChallenges} color="text-red-500" />
+                                  <CritiqueSection icon={Hammer} title={t.simulator.critique_consequences[language]} items={critiqueResult.unintendedConsequences} color="text-purple-500" />
+                                  <CritiqueSection icon={Lightbulb} title={t.simulator.critique_recommendations[language]} items={critiqueResult.recommendations} color="text-blue-500" />
+                              </div>
+                          </AccordionContent>
+                      </AccordionItem>
+                    )}
                 </Accordion>
             </div>
           )}
@@ -401,3 +431,16 @@ export default function CognitiveClashSimulator() {
     </Card>
   )
 }
+
+const CritiqueSection = ({ icon: Icon, title, items, color }: { icon: React.ElementType, title: string, items: string[], color: string }) => (
+  <div>
+    <h4 className={cn("font-semibold flex items-center gap-2 mb-3", color)}>
+      <Icon className="h-5 w-5" />
+      {title}
+    </h4>
+    <ul className="list-disc list-inside space-y-2 text-muted-foreground text-sm">
+      {items.map((item, index) => <li key={index}>{item}</li>)}
+    </ul>
+  </div>
+);
+

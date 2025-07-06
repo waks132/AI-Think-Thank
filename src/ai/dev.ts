@@ -9,3 +9,4 @@ import '@/ai/flows/adaptive-prompt-rewriter.ts';
 import '@/ai/flows/cognitive-heatmap-flow.ts';
 import '@/ai/flows/causal-flow-tracker-flow.ts';
 import '@/ai/flows/agent-collaboration-flow.ts';
+import '@/ai/flows/strategic-synthesis-critique.ts';
