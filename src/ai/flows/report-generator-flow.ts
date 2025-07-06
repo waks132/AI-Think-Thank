@@ -76,7 +76,15 @@ const reportPrompt = ai.definePrompt({
      * Unintended consequences: What second-order effects might emerge?
 
 6. **Strategic Recommendations (20% of report):**
-   - Develop 4-7 actionable recommendations addressing identified gaps. They must be specific, measurable, complementary, and balanced.
+   - Develop 4-7 actionable recommendations addressing identified gaps.
+   - For each recommendation:
+     * Provide a clear, specific action statement
+     * Include 2-3 quantitative KPIs to measure success (e.g., "Reduction of X% in incidents by 202X")
+     * Indicate timeframe: short-term (1-2 years), medium-term (3-5 years), or long-term (5+ years)
+     * Include brief risk analysis: main risk, probability (Low/Medium/High), impact (Low/Medium/High), and mitigation strategy
+
+7. **Concrete Examples:**
+   - For each key point (strength, gap, or recommendation), include at least one concrete, specific example. These examples must be realistic and detailed, illustrating your point effectively.
 
 **Output Format & Citation Requirements:**
 - Structure as a professional markdown document with clear hierarchical headings.
