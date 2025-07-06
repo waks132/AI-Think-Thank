@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react"
@@ -89,7 +90,7 @@ export default function CognitiveClashSimulator() {
       const flowInput = {
         scenarioDescription: values.scenarioDescription,
         numRounds: values.numRounds,
-        perspectives: selectedPersonas.map(p => ({ name: p.name, prompt: p.values })),
+        perspectives: selectedPersonas,
         model: selectedModel
       };
 
@@ -399,3 +400,5 @@ export default function CognitiveClashSimulator() {
     </Card>
   )
 }
+
+    
