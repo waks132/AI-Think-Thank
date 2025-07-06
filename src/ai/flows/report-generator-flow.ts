@@ -2,14 +2,13 @@
 /**
  * @fileOverview An AI flow to generate a professional report from mission outputs.
  *
- * - generateReport - A function that generates a report using web search.
+ * - generateReport - A function that generates a report.
  * - GenerateReportInput - The input type for the function.
  * - GenerateReportOutput - The return type for the function.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import {googleSearch} from '@genkit-ai/google-cloud';
 
 const GenerateReportInputSchema = z.object({
   mission: z.string().describe('The original mission statement.'),
@@ -22,7 +21,6 @@ export type GenerateReportInput = z.infer<typeof GenerateReportInputSchema>;
 
 const GenerateReportOutputSchema = z.object({
   reportMarkdown: z.string().describe('The final report in Markdown format.'),
-  sources: z.array(z.string()).describe('A list of web sources consulted to generate the report.'),
 });
 export type GenerateReportOutput = z.infer<typeof GenerateReportOutputSchema>;
 
@@ -32,10 +30,9 @@ export async function generateReport(input: GenerateReportInput): Promise<Genera
 
 const reportPrompt = ai.definePrompt({
   name: 'reportGeneratorPrompt',
-  tools: [googleSearch],
   input: {schema: GenerateReportInputSchema},
   output: {schema: GenerateReportOutputSchema},
-  prompt: `You are a world-class strategic analyst tasked with producing a critical and insightful report. Your goal is NOT to simply summarize the provided information, but to analyze it, critique it, and enrich it with external knowledge.
+  prompt: `You are a world-class strategic analyst tasked with producing a critical and insightful report. Your goal is NOT to simply summarize the provided information, but to analyze it, critique it, and synthesize it based on the given context.
 
 **Mission Context:**
 - **Original Mission:** {{{mission}}}
@@ -48,7 +45,7 @@ const reportPrompt = ai.definePrompt({
 
 2.  **Identify Strengths:** Begin by acknowledging the key strengths and valid points raised in the collaboration.
 
-3.  **Expose Blind Spots (Angles Morts):** This is the most critical part. Your value comes from identifying what the team missed. Use the **googleSearch tool** to find external data, expert opinions, and alternative perspectives. Your analysis MUST cover the following blind spots:
+3.  **Expose Blind Spots (Angles Morts):** Based *only* on the provided context, identify what the team might have missed. Your analysis MUST cover potential blind spots such as:
     *   **Socio-economic impacts:** Who loses? What jobs are affected? Does this create inequality?
     *   **Governance and Power:** Who governs this new system? How are decisions made? What are the risks of power concentration?
     *   **Conflicts of Interest:** What are the potential conflicts between commercial goals and ethical imperatives?
@@ -66,8 +63,6 @@ const reportPrompt = ai.definePrompt({
     *   Analyse Critique des Propositions
     *   Recommandations Complémentaires
     *   Conclusion
-
-7.  **Cite Your Sources:** In the \`sources\` array, you MUST list the URLs of all the web pages you consulted using the googleSearch tool. If you did not use the tool, return an empty array.
 
 Your entire response must be in this language: {{{language}}}.
 `,

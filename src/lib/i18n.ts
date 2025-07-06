@@ -339,7 +339,7 @@ export const t = {
   },
   report: {
     title: { fr: 'Générateur de Rapport de Mission', en: 'Mission Report Generator' },
-    description: { fr: 'Génère un rapport professionnel et détaillé basé sur la dernière mission, enrichi par des recherches web.', en: 'Generates a professional, detailed report based on the last mission, enriched with web research.' },
+    description: { fr: 'Génère un rapport professionnel et détaillé basé sur la dernière mission.', en: 'Generates a professional, detailed report based on the last mission.' },
     generate_button: { fr: 'Générer le Rapport', en: 'Generate Report' },
     download_button: { fr: 'Télécharger le Rapport (.md)', en: 'Download Report (.md)' },
     loading_text: { fr: 'Rédaction du rapport en cours...', en: 'Writing report...' },

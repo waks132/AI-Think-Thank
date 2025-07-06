@@ -1,11 +1,9 @@
 'use server';
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
-import {googleCloud} from '@genkit-ai/google-cloud';
 
 const plugins = [
   googleAI(),
-  googleCloud(),
 ];
 
 export const ai = genkit({

@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Loader2, FileText, Download, Globe } from "lucide-react"
+import { Loader2, FileText, Download } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { generateReport, type GenerateReportOutput } from "@/ai/flows/report-generator-flow"
 import ModelSelector from "../model-selector"
@@ -13,7 +13,6 @@ import { t } from "@/lib/i18n"
 import useLocalStorage from "@/hooks/use-local-storage"
 import type { AgentCollaborationOutput } from "@/ai/flows/agent-collaboration-flow"
 import { Textarea } from "../ui/textarea"
-import { Badge } from "../ui/badge"
 
 export default function ReportGenerator() {
   const [collaborationResult] = useLocalStorage<AgentCollaborationOutput | null>("collaboration-result", null)
@@ -96,14 +95,8 @@ export default function ReportGenerator() {
                     value={report.reportMarkdown}
                     className="h-[500px] font-mono text-xs bg-card"
                 />
-                <div className="flex justify-between items-center gap-4">
-                  {report.sources && report.sources.length > 0 && (
-                    <Badge variant="secondary">
-                      <Globe className="mr-2 h-3 w-3" />
-                      {report.sources.length} {t.report.sources_label[language]}
-                    </Badge>
-                  )}
-                  <Button onClick={handleDownload} className="flex-grow">
+                <div className="flex justify-end items-center gap-4">
+                  <Button onClick={handleDownload} className="w-full">
                       <Download className="mr-2"/>
                       {t.report.download_button[language]}
                   </Button>
