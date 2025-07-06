@@ -19,13 +19,15 @@ export type AgentReasoningInput = z.infer<typeof AgentReasoningInputSchema>;
 
 const ReasoningStepSchema = z.object({
   step: z.number().describe('The step number in the reasoning process.'),
-  cognitive_function: z.string().describe("The type of cognitive function being performed (e.g., 'Context Identification', 'Strategic Breakdown', 'Constraint Integration', 'Optimization', 'Synthesis')."),
+  cognitive_function: z.string().describe("The type of cognitive function being performed (e.g., 'Observation', 'Inference', 'Planification', 'Anticipation', 'Optimization', 'Synthesis')."),
   reasoning: z.string().describe('The detailed reasoning for this specific step.'),
+  importance: z.number().min(0).max(1).describe("The cognitive weight/importance of this step on the final solution (0.0 to 1.0).")
 });
 
 const AgentReasoningOutputSchema = z.object({
   thoughtProcess: z.array(ReasoningStepSchema).describe("The agent's structured, step-by-step thought process."),
   conclusion: z.string().describe('The final conclusion or plan of action based on the reasoning process.'),
+  reflexiveReview: z.string().describe("A final reflexive review of the generated plan, questioning its own assumptions or suggesting alternatives. For example: 'Could the soil analysis have occurred earlier to inform the growth chamber setup?'")
 });
 export type AgentReasoningOutput = z.infer<typeof AgentReasoningOutputSchema>;
 
@@ -42,9 +44,14 @@ const agentReasoningPrompt = ai.definePrompt({
 Task: {{{task}}}
 Context: {{{context}}}
 
-Break down your thought process into a structured array of steps. For each step, identify the primary "cognitive_function" you are using from this list: ['Context Identification', 'Strategic Breakdown', 'Constraint Integration', 'Hypothesis Generation', 'Optimization', 'Causal Analysis', 'Synthesis']. Then, provide the detailed reasoning for that step.
+Break down your thought process into a structured array of steps. For each step:
+1.  Identify the primary "cognitive_function" you are using from this list: ['Observation', 'Inference', 'Planification', 'Anticipation', 'Constraint Integration', 'Optimization', 'Synthesis'].
+2.  Provide the detailed 'reasoning' for that step.
+3.  Assign an 'importance' score (0.0 to 1.0) representing the cognitive weight of this step on the final solution.
 
-After detailing all the steps in 'thoughtProcess', provide a final 'conclusion'.
+After detailing all the steps in 'thoughtProcess':
+1.  Provide a final 'conclusion'.
+2.  Provide a 'reflexiveReview' of your own plan, asking a critical question about a potential weakness or alternative approach.
 `,
 });
 

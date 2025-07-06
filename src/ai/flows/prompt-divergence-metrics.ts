@@ -22,6 +22,8 @@ export type CalculatePromptDivergenceInput = z.infer<
 const CalculatePromptDivergenceOutputSchema = z.object({
   divergenceScore: z.number().min(0).max(1).describe('A normalized score from 0.0 to 1.0 representing the semantic and intentional divergence between the two prompts. 0.0 means identical, 1.0 means completely different.'),
   explanation: z.string().describe('A detailed explanation of the divergence, covering changes in lexicon, semantics, intent, and complexity.'),
+  divergenceType: z.enum(['Lexical', 'Semantic', 'Intentional', 'Stylistic', 'Mixed']).describe("The dominant type of divergence identified."),
+  audienceShift: z.string().describe("A description of the detected shift in the target audience between the two prompts. For example, 'Shifted from a general audience to a technical expert.' or 'No significant audience shift detected.'"),
 });
 export type CalculatePromptDivergenceOutput = z.infer<
   typeof CalculatePromptDivergenceOutputSchema
@@ -43,13 +45,11 @@ Analyze the following two prompt versions:
 - **Prompt A (Original):** {{{promptVersionA}}}
 - **Prompt B (New):** {{{promptVersionB}}}
 
-Your analysis should result in two things:
-1.  **divergenceScore**: A single, normalized score from 0.0 (identical) to 1.0 (completely unrelated). This score should be a holistic measure, considering factors like:
-    *   **Lexical changes:** The difference in words used.
-    *   **Semantic shift:** How much the core meaning or subject has changed.
-    *   **Intentional shift:** Changes in the prompt's goal, target audience, or desired output format/style (e.g., from technical to pedagogical).
-    *   **Complexity change:** The difference in the cognitive load required to understand or execute the prompt.
-2.  **explanation**: A concise but detailed explanation of your reasoning for the score, touching upon the factors listed above.
+Your analysis should result in four things:
+1.  **divergenceScore**: A single, normalized score from 0.0 (identical) to 1.0 (completely unrelated). This score should be a holistic measure, considering all factors.
+2.  **explanation**: A concise but detailed explanation of your reasoning for the score, touching upon factors like lexical, semantic, and intentional shifts.
+3.  **divergenceType**: The dominant type of divergence. Choose one from: ['Lexical', 'Semantic', 'Intentional', 'Stylistic', 'Mixed'].
+4.  **audienceShift**: A brief description of any detected change in the target audience.
 
 Produce your analysis in the specified JSON format.
 `,

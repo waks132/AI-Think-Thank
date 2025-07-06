@@ -10,10 +10,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { Scale, Loader2, Info } from 'lucide-react'
+import { Scale, Loader2, Info, UserCheck, GitBranch } from 'lucide-react'
 import ModelSelector from "../model-selector"
 import { availableModels } from "@/lib/models"
 import { Progress } from "../ui/progress"
+import { Badge } from "../ui/badge"
 const Diff = require('diff');
 
 const formSchema = z.object({
@@ -113,16 +114,28 @@ export default function DivergenceMetricsTool() {
                   <p>Analyzing prompts...</p>
                 </div>
               ) : result ? (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
-                    <div className="lg:col-span-1 space-y-4">
-                        <h4 className="font-semibold text-center">Divergence Score</h4>
-                        <div className="flex flex-col items-center gap-2">
-                            <p className="text-5xl font-bold text-primary">{result.divergenceScore.toFixed(2)}</p>
-                            <Progress value={result.divergenceScore * 100} className="w-full h-2"/>
-                            <p className="text-xs text-muted-foreground mt-1">0 = Identical, 1 = Unrelated</p>
+                <div className="space-y-6 animate-fade-in">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-1 space-y-4">
+                            <h4 className="font-semibold text-center">Divergence Score</h4>
+                            <div className="flex flex-col items-center gap-2">
+                                <p className="text-5xl font-bold text-primary">{result.divergenceScore.toFixed(2)}</p>
+                                <Progress value={result.divergenceScore * 100} className="w-full h-2"/>
+                                <p className="text-xs text-muted-foreground mt-1">0 = Identical, 1 = Unrelated</p>
+                            </div>
+                        </div>
+                        <div className="lg:col-span-2 space-y-4">
+                            <div>
+                                <h4 className="font-semibold flex items-center gap-2"><GitBranch /> Dominant Divergence Type</h4>
+                                <Badge variant="secondary" className="mt-1">{result.divergenceType}</Badge>
+                            </div>
+                            <div>
+                                <h4 className="font-semibold flex items-center gap-2"><UserCheck /> Audience Shift</h4>
+                                <p className="text-sm text-muted-foreground">{result.audienceShift}</p>
+                            </div>
                         </div>
                     </div>
-                    <div className="lg:col-span-2 space-y-2">
+                     <div className="space-y-2">
                         <h4 className="font-semibold flex items-center gap-2"><Info /> Explanation</h4>
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">{result.explanation}</p>
                     </div>

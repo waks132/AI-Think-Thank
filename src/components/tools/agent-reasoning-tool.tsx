@@ -10,11 +10,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { Lightbulb, Loader2, CheckCircle2, ChevronRight, Workflow } from 'lucide-react'
+import { Lightbulb, Loader2, CheckCircle2, RefreshCw, Workflow } from 'lucide-react'
 import { Separator } from "@/components/ui/separator"
 import ModelSelector from "../model-selector"
 import { availableModels } from "@/lib/models"
 import { Badge } from "../ui/badge"
+import { Progress } from "../ui/progress"
+import { Label } from "../ui/label"
 
 const formSchema = z.object({
   task: z.string().min(10, { message: "Task must be at least 10 characters." }),
@@ -123,9 +125,11 @@ export default function AgentReasoningTool() {
                             <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground font-bold">{step.step}</div>
                             {result.thoughtProcess.length > step.step && <div className="w-px h-full bg-border" />}
                           </div>
-                          <div>
+                          <div className="flex-1">
                             <Badge variant="secondary" className="mb-1">{step.cognitive_function}</Badge>
-                            <p className="text-muted-foreground text-sm">{step.reasoning}</p>
+                            <p className="text-muted-foreground text-sm mb-2">{step.reasoning}</p>
+                            <Label className="text-xs">Importance</Label>
+                            <Progress value={step.importance * 100} className="h-2" />
                           </div>
                         </div>
                       ))}
@@ -138,6 +142,14 @@ export default function AgentReasoningTool() {
                         Conclusion
                     </h4>
                     <p className="whitespace-pre-wrap font-medium">{result.conclusion}</p>
+                </div>
+                <Separator />
+                 <div>
+                    <h4 className="font-semibold flex items-center mb-2 text-amber-500">
+                        <RefreshCw className="mr-2 h-5 w-5"/>
+                        Reflexive Review
+                    </h4>
+                    <p className="whitespace-pre-wrap font-medium text-muted-foreground italic">"{result.reflexiveReview}"</p>
                 </div>
               </div>
             )}
