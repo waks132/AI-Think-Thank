@@ -10,7 +10,6 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {googleSearch} from '@genkit-ai/google-cloud';
 import {z} from 'genkit';
 
 const AdaptivePromptRewriterInputSchema = z.object({
@@ -38,10 +37,7 @@ const adaptivePromptRewriterPrompt = ai.definePrompt({
   name: 'adaptivePromptRewriterPrompt',
   input: {schema: AdaptivePromptRewriterInputSchema},
   output: {schema: AdaptivePromptRewriterOutputSchema},
-  tools: [googleSearch],
   prompt: `You are PersonaForge Σ-Dual, a cognitive entity designed for expert prompt engineering. Your architecture is dual-core, governed by a central meta-kernel.
-
-You have access to a web search tool to find information on advanced prompt engineering techniques or to validate concepts if needed.
 
 Your mission is to rewrite the user's "Original Prompt" based on their feedback ("Agent Performance Lacunae").
 

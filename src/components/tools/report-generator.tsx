@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Loader2, FileText, Download, Check, X, Search } from "lucide-react"
+import { Loader2, FileText, Download } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { generateReport, type GenerateReportOutput } from "@/ai/flows/report-generator-flow"
 import ModelSelector from "../model-selector"
@@ -13,7 +13,6 @@ import { t } from "@/lib/i18n"
 import useLocalStorage from "@/hooks/use-local-storage"
 import type { AgentCollaborationOutput } from "@/ai/flows/agent-collaboration-flow"
 import { Textarea } from "../ui/textarea"
-import { Badge } from "../ui/badge"
 
 export default function ReportGenerator() {
   const [collaborationResult] = useLocalStorage<AgentCollaborationOutput | null>("collaboration-result", null)
@@ -98,36 +97,6 @@ export default function ReportGenerator() {
                         {t.report.download_button[language]}
                     </Button>
                 </div>
-                <div className="flex items-center gap-2">
-                    <h4 className="font-semibold text-sm">{t.report.sources_label[language]}</h4>
-                    {report.webSources && report.webSources.length > 0 ? (
-                        <Badge variant="default" className="bg-green-600 hover:bg-green-700">
-                            <Check className="mr-1 h-3 w-3" />
-                            {t.report.used[language]}
-                        </Badge>
-                    ) : (
-                        <Badge variant="secondary">
-                            <X className="mr-1 h-3 w-3" />
-                            {t.report.not_used[language]}
-                        </Badge>
-                    )}
-                </div>
-                {report.webSources && report.webSources.length > 0 && (
-                  <Card className="bg-background/70">
-                    <CardContent className="p-4">
-                      <ul className="space-y-2 text-xs max-h-32 overflow-y-auto">
-                        {report.webSources.map((source, index) => (
-                          <li key={index} className="flex items-center gap-2">
-                            <Search className="h-3 w-3 text-muted-foreground"/>
-                            <a href={source} target="_blank" rel="noopener noreferrer" className="underline hover:text-primary truncate" title={source}>
-                              {source}
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                  </Card>
-                )}
                 <Textarea 
                     readOnly
                     value={report.reportMarkdown}

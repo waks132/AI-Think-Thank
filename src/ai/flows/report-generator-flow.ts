@@ -8,7 +8,6 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {googleSearch} from '@genkit-ai/google-cloud';
 import {z} from 'genkit';
 
 const GenerateReportInputSchema = z.object({
@@ -22,7 +21,6 @@ export type GenerateReportInput = z.infer<typeof GenerateReportInputSchema>;
 
 const GenerateReportOutputSchema = z.object({
   reportMarkdown: z.string().describe('The final report in Markdown format.'),
-  webSources: z.array(z.string()).optional().describe("A list of URLs for web sources consulted to generate the report."),
 });
 export type GenerateReportOutput = z.infer<typeof GenerateReportOutputSchema>;
 
@@ -34,8 +32,7 @@ const reportPrompt = ai.definePrompt({
   name: 'reportGeneratorPrompt',
   input: {schema: GenerateReportInputSchema},
   output: {schema: GenerateReportOutputSchema},
-  tools: [googleSearch],
-  prompt: `You are a world-class strategic analyst tasked with producing a critical and insightful report. Your goal is NOT to simply summarize the provided information, but to analyze it, critique it, and synthesize it based on the given context. To support your analysis and add depth, use the web search tool to find up-to-date information, external reports, or differing viewpoints on the topics discussed.
+  prompt: `You are a world-class strategic analyst tasked with producing a critical and insightful report. Your goal is NOT to simply summarize the provided information, but to analyze it, critique it, and synthesize it based on the given context.
 
 **Mission Context:**
 - **Original Mission:** {{{mission}}}
@@ -66,8 +63,6 @@ const reportPrompt = ai.definePrompt({
     *   Analyse Critique des Propositions
     *   Recommandations Complémentaires
     *   Conclusion
-
-7.  **Cite Sources:** If you use the web search tool, you MUST populate the \`webSources\` array with the URLs of the most relevant sources you consulted.
 
 Your entire response must be in this language: {{{language}}}.
 `,

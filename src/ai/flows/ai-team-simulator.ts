@@ -9,7 +9,6 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {googleSearch} from '@genkit-ai/google-cloud';
 import {z} from 'genkit';
 
 const PerspectiveSchema = z.object({
@@ -80,11 +79,9 @@ const prompt = ai.definePrompt({
   name: 'cognitiveClashSimulatorPrompt',
   input: {schema: CognitiveClashSimulatorInputSchema},
   output: {schema: CognitiveClashSimulatorOutputSchema},
-  tools: [googleSearch],
   prompt: `You are a sophisticated simulator of cognitive and ideological dynamics. Your task is to simulate a "Cognitive Clash" between multiple opposing perspectives based on a given scenario.
 
 **Scenario:** {{{scenarioDescription}}}
-The perspectives can use the web search tool to find data, news, or arguments to support their positions during the debate.
 
 **The Clashing Perspectives:**
 {{#each perspectives}}

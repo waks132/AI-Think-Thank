@@ -8,7 +8,6 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {googleSearch} from '@genkit-ai/google-cloud';
 import {z} from 'genkit';
 
 const AgentCollaborationInputSchema = z.object({
@@ -49,13 +48,10 @@ const collaborationPrompt = ai.definePrompt({
   name: 'agentCollaborationPrompt',
   input: {schema: AgentCollaborationInputSchema},
   output: {schema: AgentCollaborationOutputSchema},
-  tools: [googleSearch],
   prompt: `You are a master orchestrator of a cognitive collective of AI agents. Your task is to facilitate a collaboration between a selection of specialized agents to accomplish a given mission.
 
 **Mission:**
 "{{{mission}}}"
-
-If the mission requires external, up-to-date information, the agents can and should use the provided web search tool to find it.
 
 **Participating Agents:**
 You will simulate a discussion between the following agents, ensuring each contributes according to their defined role and prompt:

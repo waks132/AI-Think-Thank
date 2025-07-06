@@ -8,7 +8,6 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {googleSearch} from '@genkit-ai/google-cloud';
 import {z} from 'genkit';
 
 const StrategicSynthesisCritiqueInputSchema = z.object({
@@ -36,8 +35,7 @@ const prompt = ai.definePrompt({
   name: 'strategicSynthesisCritiquePrompt',
   input: {schema: StrategicSynthesisCritiqueInputSchema},
   output: {schema: StrategicSynthesisCritiqueOutputSchema},
-  tools: [googleSearch],
-  prompt: `You are a "Red Team" strategic analyst. Your mission is to perform a rigorous and critical analysis of a proposed solution (synthesis) for a given scenario. Your goal is not to accept the solution, but to stress-test it by identifying its hidden flaws, potential failure modes, and unintended consequences. Use the web search tool to find external data, examples, or counter-arguments that can strengthen your critique.
+  prompt: `You are a "Red Team" strategic analyst. Your mission is to perform a rigorous and critical analysis of a proposed solution (synthesis) for a given scenario. Your goal is not to accept the solution, but to stress-test it by identifying its hidden flaws, potential failure modes, and unintended consequences.
 
 **Original Scenario:**
 "{{{scenario}}}"

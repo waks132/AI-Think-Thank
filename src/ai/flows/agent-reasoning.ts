@@ -8,7 +8,6 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {googleSearch} from '@genkit-ai/google-cloud';
 import {z} from 'genkit';
 
 const AgentReasoningInputSchema = z.object({
@@ -41,13 +40,10 @@ const agentReasoningPrompt = ai.definePrompt({
   name: 'agentReasoningPrompt',
   input: {schema: AgentReasoningInputSchema},
   output: {schema: AgentReasoningOutputSchema},
-  tools: [googleSearch],
   prompt: `You are a logical reasoning AI. Your task is to solve the given task within the provided context by thinking step-by-step.
 
 Task: {{{task}}}
 Context: {{{context}}}
-
-If the task requires external or real-time information, use the web search tool to gather it as part of your reasoning process.
 
 Break down your thought process into a structured array of steps. For each step:
 1.  Identify the primary "cognitive_function" you are using from this list: ['Observation', 'Inference', 'Planification', 'Anticipation', 'Constraint Integration', 'Optimization', 'Synthesis'].

@@ -8,7 +8,6 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {googleSearch} from '@genkit-ai/google-cloud';
 import {z} from 'genkit';
 
 const CausalFlowTrackerInputSchema = z.object({
@@ -39,10 +38,9 @@ const prompt = ai.definePrompt({
   name: 'causalFlowTrackerPrompt',
   input: {schema: CausalFlowTrackerInputSchema},
   output: {schema: CausalFlowTrackerOutputSchema},
-  tools: [googleSearch],
   prompt: `You are an expert in analyzing team dynamics and communication flows. Your task is to analyze the following conversation log (a JSON array of objects) and identify the causal links of influence.
 
-A causal link exists when one agent's message directly builds upon, corrects, questions, or synthesizes another agent's previous message. Use web search if necessary to understand the context of the conversation, which might clarify the relationships between agent statements.
+A causal link exists when one agent's message directly builds upon, corrects, questions, or synthesizes another agent's previous message.
 
 Here is the conversation log:
 {{{logEntries}}}
