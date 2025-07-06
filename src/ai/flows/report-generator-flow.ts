@@ -52,7 +52,7 @@ const reportPrompt = ai.definePrompt({
 
 1. **Methodology:**
    - **Review Process:** Identify the core problem from the mission, analyze the collaboration log for key insights, and compare the executive summary against your analysis to find gaps.
-   - **Collaborative Dynamics Analysis:** Analyze the collaboration itself: Which agents were most influential? Were there significant disagreements? How was consensus reached? This meta-analysis reveals valuable information about the problem-solving process.
+   - **Collaborative Dynamics Analysis:** In a dedicated subsection, present a brief table of the collaborative dynamics showing: (1) The 2-3 most influential agents and why, (2) The main points of disagreement, and (3) How consensus was reached. This meta-analysis reveals valuable information about the problem-solving process.
 
 2. **Executive Summary:**
    - Start with an "Executive Summary" of exactly 150-250 words. It must present the most important conclusions and key recommendations. This section must be self-contained, allowing a busy decision-maker to grasp the report's essentials in under a minute.
@@ -78,13 +78,13 @@ const reportPrompt = ai.definePrompt({
 6. **Strategic Recommendations (20% of report):**
    - Develop 4-7 actionable recommendations addressing identified gaps.
    - For each recommendation:
-     * Provide a clear, specific action statement
-     * Include 2-3 quantitative KPIs to measure success (e.g., "Reduction of X% in incidents by 202X")
-     * Indicate timeframe: short-term (1-2 years), medium-term (3-5 years), or long-term (5+ years)
-     * Include brief risk analysis: main risk, probability (Low/Medium/High), impact (Low/Medium/High), and mitigation strategy
+     * Provide a clear, specific action statement.
+     * Include 2-3 quantitative KPIs with specific, ambitious but realistic numerical values (e.g., "Reduce incident rate by 15% by 2026," NOT "Reduce by X%"). Base these on industry best practices where possible.
+     * Indicate timeframe: short-term (1-2 years), medium-term (3-5 years), or long-term (5+ years).
+     * Include brief risk analysis: main risk, probability (Low/Medium/High), impact (Low/Medium/High), and mitigation strategy.
 
 7. **Concrete Examples:**
-   - For each key point (strength, gap, or recommendation), include at least one concrete, specific example. These examples must be realistic and detailed, illustrating your point effectively.
+   - For each key point (strength, gap, or recommendation), include at least one concrete example. For each example provided, ensure you include at least one specific, quantifiable detail (a number, a date, a precise case) to make it more tangible and memorable.
 
 **Output Format & Citation Requirements:**
 - Structure as a professional markdown document with clear hierarchical headings.
