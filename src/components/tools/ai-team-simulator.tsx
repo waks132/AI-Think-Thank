@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -30,6 +30,7 @@ import { personaList, personas } from "@/lib/personas"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { Label } from "../ui/label"
 import useLocalStorage from "@/hooks/use-local-storage"
+import type { Agent } from "@/lib/types"
 
 
 const perspectiveSchema = z.object({
@@ -54,6 +55,8 @@ export default function CognitiveClashSimulator() {
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast()
   const { language } = useLanguage();
+  const [storedAgents] = useLocalStorage<Agent[]>('agents', []);
+  const storedAgentMap = useMemo(() => new Map(storedAgents.map(a => [a.id, a])), [storedAgents]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -84,9 +87,10 @@ export default function CognitiveClashSimulator() {
     try {
       const selectedPersonas = values.perspectives.map(p => {
         const fullPersona = personas[p.id as keyof typeof personas];
+        const storedAgent = storedAgentMap.get(p.id);
         return {
           name: fullPersona.name[language],
-          values: fullPersona.values[language],
+          values: storedAgent ? storedAgent.prompt : fullPersona.values[language],
         };
       });
 

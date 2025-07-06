@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -21,6 +21,7 @@ import { personaList } from "@/lib/personas"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { Label } from "../ui/label"
 import useLocalStorage from "@/hooks/use-local-storage"
+import type { Agent } from "@/lib/types"
 
 const formSchema = z.object({
   promptText: z.string().min(10, { message: "Prompt text must be at least 10 characters." }),
@@ -38,6 +39,8 @@ export default function AutoPromptCurator() {
   const [selectedAgentId, setSelectedAgentId] = useState<string>(personaList[0].id);
   const { toast } = useToast()
   const { language } = useLanguage();
+  const [storedAgents] = useLocalStorage<Agent[]>('agents', []);
+  const storedAgentMap = useMemo(() => new Map(storedAgents.map(a => [a.id, a])), [storedAgents]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -54,7 +57,8 @@ export default function AutoPromptCurator() {
   useEffect(() => {
     const selectedPersona = personaList.find(p => p.id === selectedAgentId);
     if (selectedPersona) {
-      form.setValue('promptText', selectedPersona.values[language]);
+      const storedAgent = storedAgentMap.get(selectedAgentId);
+      form.setValue('promptText', storedAgent ? storedAgent.prompt : selectedPersona.values[language]);
       form.setValue('promptId', selectedPersona.id);
       // Simulate plausible metrics to make the tool feel connected
       form.setValue('usageFrequency', Math.floor(Math.random() * 200) + 5);
@@ -62,7 +66,7 @@ export default function AutoPromptCurator() {
       form.setValue('averageRating', Math.round((Math.random() * 3 + 2) * 10) / 10); // 2-5
       form.setValue('similarityToOtherPrompts', Math.round((Math.random() * 0.5) * 100) / 100); // 0-50%
     }
-  }, [selectedAgentId, language, form]);
+  }, [selectedAgentId, language, form, storedAgentMap]);
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
