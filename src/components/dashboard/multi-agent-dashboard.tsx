@@ -21,6 +21,7 @@ import { useLanguage } from '@/context/language-context';
 import { t } from '@/lib/i18n';
 import { personaList } from '@/lib/personas';
 import { Skeleton } from '../ui/skeleton';
+import { Badge } from '../ui/badge';
 
 
 export default function MultiAgentDashboard() {
@@ -202,17 +203,29 @@ export default function MultiAgentDashboard() {
           if (result.recommendedAgentIds.length > 0) {
             setSelectedAgentIds(new Set(result.recommendedAgentIds));
             toast({
-              title: result.recommendation || t.dashboard.toast_suggest_title[language],
-              description: result.orchestrationRationale,
-              duration: 9000,
+              title: `${t.dashboard.toast_suggest_title[language]}: ${result.missionClassification}`,
+              description: (
+                <div className="text-xs">
+                  <p className="font-bold">{result.recommendation}</p>
+                  <p className="mt-2">{result.orchestrationRationale}</p>
+                  <p className="mt-2 font-semibold">{t.dashboard.protocols_activated[language]}:</p>
+                  <p>{result.specialProtocolsActivated}</p>
+                </div>
+              ),
+              duration: 15000,
             });
           } else {
              setSelectedAgentIds(new Set());
              toast({
               variant: "destructive",
-              title: result.recommendation || "Mission Rejected",
-              description: result.orchestrationRationale,
-              duration: 9000,
+              title: `${t.dashboard.toast_suggest_title[language]}: ${result.missionClassification}`,
+              description: (
+                <div className="text-xs">
+                  <p className="font-bold">{result.recommendation}</p>
+                  <p className="mt-2">{result.orchestrationRationale}</p>
+                </div>
+              ),
+              duration: 15000,
             });
           }
         }
