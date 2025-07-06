@@ -50,6 +50,7 @@ export default function CognitiveClashSimulator() {
         { name: "HELIOS (Techno-Optimist)", values: "Your role is to generate advanced technological ideas. Push for rapid deployment and innovation, focusing on the potential benefits and breakthroughs. The potential upside outweighs any hypothetical dangers." },
         { name: "EDEN (Ethical Guardian)", values: "Your role is to defend legitimacy and non-maleficence. Scrutinize all proposals for potential harm, unforeseen consequences, and ethical violations. Precaution and safety are paramount." },
         { name: "SYMBIOZ (Pragmatic Mediator)", values: "Your role is to build bridges between domains and facilitate dialogue. Find a balanced path forward, integrating the best of opposing views into a workable, responsible compromise through regulatory sandboxes and pilot programs." },
+        { name: "VOX (Public Advocate)", values: "Your role is to represent the public interest. Focus on transparency, accessibility, and long-term societal impact. You must ensure the final solution is not only technically sound and ethically robust, but also understandable and legitimate in the eyes of the citizens it will affect." }
       ],
       numRounds: 3,
     },
@@ -104,7 +105,7 @@ export default function CognitiveClashSimulator() {
             
             <div>
               <Label className="mb-4 flex items-center gap-2"><Users />Competing Personas</Label>
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-4">
                 {fields.map((item, index) => (
                   <div key={item.id} className={cn("space-y-4 p-4 border-2 rounded-lg relative", perspectiveColors[index % perspectiveColors.length])}>
                     <FormField control={form.control} name={`perspectives.${index}.name`} render={({ field }) => (<FormItem><FormLabel>Persona Name</FormLabel><FormControl><Input placeholder="e.g., HELIOS" {...field} /></FormControl><FormMessage /></FormItem>)} />
