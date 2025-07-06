@@ -21,7 +21,7 @@ import { personaList } from "@/lib/personas"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { Label } from "../ui/label"
 import useLocalStorage from "@/hooks/use-local-storage"
-import type { Agent } from "@/lib/types"
+import type { Agent, LogEntry } from "@/lib/types"
 
 const formSchema = z.object({
   promptText: z.string().min(10, { message: "Prompt text must be at least 10 characters." }),
@@ -40,6 +40,7 @@ export default function AutoPromptCurator() {
   const { toast } = useToast()
   const { language } = useLanguage();
   const [storedAgents] = useLocalStorage<Agent[]>('agents', []);
+  const [logs] = useLocalStorage<LogEntry[]>('cognitive-logs', []);
   const storedAgentMap = useMemo(() => new Map(storedAgents.map(a => [a.id, a])), [storedAgents]);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -58,15 +59,29 @@ export default function AutoPromptCurator() {
     const selectedPersona = personaList.find(p => p.id === selectedAgentId);
     if (selectedPersona) {
       const storedAgent = storedAgentMap.get(selectedAgentId);
-      form.setValue('promptText', storedAgent ? storedAgent.prompt : selectedPersona.values[language]);
+      const agentPrompt = storedAgent ? storedAgent.prompt : selectedPersona.values[language];
+      
+      form.setValue('promptText', agentPrompt);
       form.setValue('promptId', selectedPersona.id);
-      // Simulate plausible metrics to make the tool feel connected
-      form.setValue('usageFrequency', Math.floor(Math.random() * 200) + 5);
-      form.setValue('successRate', Math.round((Math.random() * 0.6 + 0.3) * 100) / 100); // 30%-90%
-      form.setValue('averageRating', Math.round((Math.random() * 3 + 2) * 10) / 10); // 2-5
-      form.setValue('similarityToOtherPrompts', Math.round((Math.random() * 0.5) * 100) / 100); // 0-50%
+
+      // Calculate usage from real logs
+      const usageFrequency = logs.filter(log => log.agentId === selectedAgentId).length;
+      form.setValue('usageFrequency', usageFrequency);
+
+      // Simulate other metrics based on usage to feel more connected
+      const hasBeenUsed = usageFrequency > 0;
+      // If used, simulate a higher success rate (50-90%). If unused, simulate a lower one (0-40%).
+      const successRate = hasBeenUsed ? Math.round((Math.random() * 0.4 + 0.5) * 100) / 100 : Math.round((Math.random() * 0.4) * 100) / 100;
+      // If used, simulate a higher average rating (3-5 stars). If unused, lower (1-3 stars).
+      const averageRating = hasBeenUsed ? Math.round((Math.random() * 2 + 3) * 10) / 10 : Math.round((Math.random() * 2 + 1) * 10) / 10;
+      
+      form.setValue('successRate', successRate);
+      form.setValue('averageRating', averageRating);
+      
+      // Similarity is independent of usage, so keep original simulation
+      form.setValue('similarityToOtherPrompts', Math.round((Math.random() * 0.5) * 100) / 100);
     }
-  }, [selectedAgentId, language, form, storedAgentMap]);
+  }, [selectedAgentId, language, form, storedAgentMap, logs]);
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
