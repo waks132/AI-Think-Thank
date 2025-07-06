@@ -48,8 +48,7 @@ const prompt = ai.definePrompt({
   name: 'aiTeamSimulatorPrompt',
   input: {schema: AiTeamSimulatorInputSchema},
   output: {schema: AiTeamSimulatorOutputSchema},
-  prompt: `You are an AI simulation facilitator. You will run a simulation of two AI teams (Team A and Team B) competing to resolve a given scenario. Each team has a specific resolution strategy. The simulation will run for a specified number of rounds.  For each round, generate a response from each team, and then determine the outcome of the round.  Record the response from each team and the outcome of each round in the simulationResults array.  \n\nScenario Description: {{{scenarioDescription}}}\nTeam A Strategy: {{{teamAStrategy}}}\nTeam B Strategy: {{{teamBStrategy}}}\nNumber of Rounds: {{{numRounds}}}\n\nOutput in JSON format:
-```,
+  prompt: `You are an AI simulation facilitator. You will run a simulation of two AI teams (Team A and Team B) competing to resolve a given scenario. Each team has a specific resolution strategy. The simulation will run for a specified number of rounds.  For each round, generate a response from each team, and then determine the outcome of the round.  Record the response from each team and the outcome of each round in the simulationResults array.  \n\nScenario Description: {{{scenarioDescription}}}\nTeam A Strategy: {{{teamAStrategy}}}\nTeam B Strategy: {{{teamBStrategy}}}\nNumber of Rounds: {{{numRounds}}}\n\nOutput in JSON format.`,
 });
 
 const aiTeamSimulatorFlow = ai.defineFlow(
