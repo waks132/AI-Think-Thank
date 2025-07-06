@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useForm } from "react-hook-form"
+import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { cognitiveClashSimulator, type CognitiveClashSimulatorOutput } from "@/ai/flows/ai-team-simulator"
@@ -11,22 +11,30 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
-import { Zap, Loader2, BarChart2, GitMerge, Scale, Milestone, Columns } from 'lucide-react'
+import { Zap, Loader2, BarChart2, GitMerge, Scale, Milestone, Users, PlusCircle, XCircle, BotMessageSquare } from 'lucide-react'
 import { Progress } from "@/components/ui/progress"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Label } from "../ui/label"
 import ModelSelector from "../model-selector"
 import { availableModels } from "@/lib/models"
+import { cn } from "@/lib/utils"
 
+
+const perspectiveSchema = z.object({
+    name: z.string().min(3, { message: "Perspective name is required." }),
+    values: z.string().min(10, { message: "Perspective values are required." }),
+});
 
 const formSchema = z.object({
   scenarioDescription: z.string().min(20, { message: "Scenario must be at least 20 characters." }),
-  perspectiveAName: z.string().min(3, { message: "Perspective name is required." }),
-  perspectiveAValues: z.string().min(10, { message: "Perspective values are required." }),
-  perspectiveBName: z.string().min(3, { message: "Perspective name is required." }),
-  perspectiveBValues: z.string().min(10, { message: "Perspective values are required." }),
+  perspectives: z.array(perspectiveSchema).min(2, "At least two perspectives are required."),
   numRounds: z.coerce.number().min(1).max(10).default(3),
 })
+
+const perspectiveColors = [
+    'border-blue-500/50', 'border-red-500/50', 'border-green-500/50', 
+    'border-yellow-500/50', 'border-purple-500/50', 'border-pink-500/50'
+];
 
 export default function CognitiveClashSimulator() {
   const [result, setResult] = useState<CognitiveClashSimulatorOutput | null>(null)
@@ -38,31 +46,25 @@ export default function CognitiveClashSimulator() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       scenarioDescription: "A new, powerful, but ethically ambiguous technology has been developed by the collective. The group must decide whether to deploy it, restrict it, or destroy it.",
-      perspectiveAName: "Growth Maximalists",
-      perspectiveAValues: "Prioritize technological advancement and adoption at all costs. Discomfort and risk are necessary for progress. The potential benefits outweigh any hypothetical dangers.",
-      perspectiveBName: "Ethical Sentinels",
-      perspectiveBValues: "Uphold the principle of 'do no harm'. Unforeseen consequences must be fully mitigated before any deployment. Precaution and safety are paramount.",
+      perspectives: [
+        { name: "Growth Maximalists", values: "Prioritize technological advancement and adoption at all costs. Discomfort and risk are necessary for progress. The potential benefits outweigh any hypothetical dangers." },
+        { name: "Ethical Sentinels", values: "Uphold the principle of 'do no harm'. Unforeseen consequences must be fully mitigated before any deployment. Precaution and safety are paramount." },
+        { name: "Pragmatic Synthesists", values: "Mediate between extremes. Focus on context-aware solutions, pilot programs, and regulatory sandboxes. Balance innovation with responsible governance." },
+      ],
       numRounds: 3,
     },
   })
+  
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "perspectives",
+  });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true)
     setResult(null)
     try {
-      const output = await cognitiveClashSimulator({
-        scenarioDescription: values.scenarioDescription,
-        perspectiveA: {
-            name: values.perspectiveAName,
-            values: values.perspectiveAValues
-        },
-        perspectiveB: {
-            name: values.perspectiveBName,
-            values: values.perspectiveBValues
-        },
-        numRounds: values.numRounds,
-        model: selectedModel,
-      })
+      const output = await cognitiveClashSimulator({...values, model: selectedModel})
       setResult(output)
     } catch (error) {
       console.error("Error running simulation:", error)
@@ -99,18 +101,40 @@ export default function CognitiveClashSimulator() {
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4 p-4 border rounded-lg">
-                <h4 className="font-semibold">Perspective A</h4>
-                 <FormField control={form.control} name="perspectiveAName" render={({ field }) => (<FormItem><FormLabel>Name</FormLabel><FormControl><Input placeholder="e.g., Growth Maximalists" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                 <FormField control={form.control} name="perspectiveAValues" render={({ field }) => (<FormItem><FormLabel>Core Values & Strategy</FormLabel><FormControl><Textarea placeholder="Describe their core beliefs..." {...field} rows={4} /></FormControl><FormMessage /></FormItem>)} />
+            
+            <div>
+              <Label className="mb-4 flex items-center gap-2"><Users />Perspectives</Label>
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                {fields.map((item, index) => (
+                  <div key={item.id} className={cn("space-y-4 p-4 border-2 rounded-lg relative", perspectiveColors[index % perspectiveColors.length])}>
+                    <FormField control={form.control} name={`perspectives.${index}.name`} render={({ field }) => (<FormItem><FormLabel>Name</FormLabel><FormControl><Input placeholder="e.g., Growth Maximalists" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name={`perspectives.${index}.values`} render={({ field }) => (<FormItem><FormLabel>Core Values & Strategy</FormLabel><FormControl><Textarea placeholder="Describe their core beliefs..." {...field} rows={4} /></FormControl><FormMessage /></FormItem>)} />
+                     {fields.length > 2 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute top-2 right-2 h-6 w-6"
+                          onClick={() => remove(index)}
+                        >
+                          <XCircle className="h-5 w-5 text-muted-foreground" />
+                        </Button>
+                      )}
+                  </div>
+                ))}
               </div>
-               <div className="space-y-4 p-4 border rounded-lg">
-                <h4 className="font-semibold">Perspective B</h4>
-                 <FormField control={form.control} name="perspectiveBName" render={({ field }) => (<FormItem><FormLabel>Name</FormLabel><FormControl><Input placeholder="e.g., Ethical Sentinels" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                 <FormField control={form.control} name="perspectiveBValues" render={({ field }) => (<FormItem><FormLabel>Core Values & Strategy</FormLabel><FormControl><Textarea placeholder="Describe their core beliefs..." {...field} rows={4} /></FormControl><FormMessage /></FormItem>)} />
-              </div>
+               <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-4"
+                  onClick={() => append({ name: "New Perspective", values: "Describe their core beliefs..." })}
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Perspective
+                </Button>
             </div>
+            
              <FormField
                 control={form.control}
                 name="numRounds"
@@ -173,29 +197,24 @@ export default function CognitiveClashSimulator() {
                  <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="item-1">
                         <AccordionTrigger>
-                            <div className="flex items-center gap-2"><Columns />View Round-by-Round Details</div>
+                            <div className="flex items-center gap-2"><BotMessageSquare />View Simulation Log</div>
                         </AccordionTrigger>
                         <AccordionContent>
-                        <div className="space-y-4 p-2">
-                            {result.roundDetails.map((round) => (
-                            <div key={round.round} className="p-4 border rounded-lg">
-                                <h4 className="font-bold text-primary mb-2">Round {round.round}</h4>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <Label>Perspective A Action</Label>
-                                        <p className="text-sm text-muted-foreground">{round.perspectiveA_action}</p>
+                        <div className="space-y-6 max-h-[500px] overflow-y-auto p-4 border rounded-lg bg-background/50">
+                            {result.simulationLog.map((turn, index) => {
+                                const perspectiveIndex = form.getValues('perspectives').findIndex(p => p.name === turn.perspectiveName);
+                                return (
+                                    <div key={turn.turn} className="flex items-start gap-4 animate-fade-in">
+                                        <div className={cn("flex-1 p-4 rounded-lg border-2", perspectiveColors[perspectiveIndex % perspectiveColors.length] || 'border-gray-500/50')}>
+                                            <div className="flex items-baseline justify-between">
+                                                <p className="font-semibold text-primary">{turn.perspectiveName}</p>
+                                                <span className="text-xs text-muted-foreground font-mono">Turn {turn.turn}</span>
+                                            </div>
+                                            <p className="text-sm text-foreground/90 mt-2">{turn.argument}</p>
+                                        </div>
                                     </div>
-                                     <div>
-                                        <Label>Perspective B Action</Label>
-                                        <p className="text-sm text-muted-foreground">{round.perspectiveB_action}</p>
-                                    </div>
-                                </div>
-                                 <div className="mt-3">
-                                    <Label>Round Outcome</Label>
-                                    <p className="text-sm font-medium">{round.roundOutcome}</p>
-                                </div>
-                            </div>
-                            ))}
+                                );
+                            })}
                         </div>
                         </AccordionContent>
                     </AccordionItem>
