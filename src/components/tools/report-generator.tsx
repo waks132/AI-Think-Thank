@@ -69,6 +69,8 @@ export default function ReportGenerator() {
     document.body.removeChild(link);
   };
 
+  const webSearchUsed = report?.webSources && report.webSources.length > 0;
+
   return (
     <Card>
       <CardHeader>
@@ -94,9 +96,9 @@ export default function ReportGenerator() {
                 <div className="flex flex-wrap justify-between items-center gap-2">
                     <h3 className="font-semibold">{t.report.generated_report[language]}</h3>
                     <div className="flex items-center gap-2">
-                        <Badge variant={report.webSources && report.webSources.length > 0 ? "default" : "secondary"}>
+                        <Badge variant={webSearchUsed ? "default" : "secondary"}>
                             <Search className="mr-2 h-3 w-3" />
-                            {t.report.web_search[language]} - {report.webSources && report.webSources.length > 0 ? t.report.used[language] : t.report.not_used[language]}
+                            {t.report.web_search[language]} - {webSearchUsed ? t.report.used[language] : t.report.not_used[language]}
                         </Badge>
                         <Button onClick={handleDownload} variant="outline" size="sm">
                             <Download className="mr-2"/>
@@ -109,7 +111,7 @@ export default function ReportGenerator() {
                     value={report.reportMarkdown}
                     className="h-[500px] font-mono text-xs bg-card"
                 />
-                {report.webSources && report.webSources.length > 0 && (
+                {webSearchUsed && (
                   <div className="mt-4">
                     <h4 className="font-semibold mb-2">{t.report.sources_label[language]}</h4>
                     <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1 bg-card p-4 rounded-lg border">

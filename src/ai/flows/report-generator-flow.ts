@@ -8,7 +8,6 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {googleSearch} from '@genkit-ai/google-cloud';
 import {z} from 'genkit';
 
 const GenerateReportInputSchema = z.object({
@@ -22,7 +21,7 @@ export type GenerateReportInput = z.infer<typeof GenerateReportInputSchema>;
 
 const GenerateReportOutputSchema = z.object({
   reportMarkdown: z.string().describe('The final report in Markdown format.'),
-  webSources: z.array(z.string().url()).describe("A list of URLs for the web sources cited in the report."),
+  webSources: z.array(z.string().url()).optional().describe("A list of URLs for the web sources cited in the report."),
 });
 export type GenerateReportOutput = z.infer<typeof GenerateReportOutputSchema>;
 
@@ -34,8 +33,7 @@ const reportPrompt = ai.definePrompt({
   name: 'reportGeneratorPrompt',
   input: {schema: GenerateReportInputSchema},
   output: {schema: GenerateReportOutputSchema},
-  tools: [googleSearch],
-  prompt: `You are a world-class strategic analyst with expertise in critical systems thinking. Your task is to produce an insightful, balanced, and actionable strategic report that goes significantly beyond the information provided.
+  prompt: `You are a world-class strategic analyst with expertise in critical systems thinking. Your task is to produce an insightful, balanced, and actionable strategic report based *only* on the information provided. Do not use external tools or web search.
 
 **Input Materials:**
 - **Original Mission:** {{{mission}}}
@@ -55,20 +53,17 @@ const reportPrompt = ai.definePrompt({
    - Highlight any particularly innovative approaches or methodologies
 
 3. **Critical Gaps Assessment (35% of report):**
-   - **Socio-economic dimension:** Analyze distributional effects, employment impacts, access inequalities
-   - **Governance structures:** Examine decision rights, accountability mechanisms, power dynamics
-   - **Ethical tensions:** Identify potential conflicts between stakeholder interests (commercial/social/regulatory)
-   - **Cultural/international applicability:** Assess how solutions might function across different contexts
-   - **Implementation challenges:** Evaluate technical feasibility, resource requirements, and adoption barriers
-   
-   For each gap, conduct a targeted web search for relevant data, expert opinions, or case studies.
+   - Based *only on the provided log*, identify potential gaps in the reasoning:
+   - **Socio-economic dimension:** Are there unaddressed distributional effects, employment impacts, access inequalities?
+   - **Governance structures:** Are decision rights, accountability mechanisms, power dynamics clear?
+   - **Ethical tensions:** Are there potential conflicts between stakeholder interests?
+   - **Implementation challenges:** What are the implied technical feasibility, resource requirements, and adoption barriers?
 
 4. **Solution Critique (20% of report):**
-   - For each major proposed solution, apply this framework:
-     * Conceptual integrity: Is it internally coherent and logically sound?
-     * Evidential basis: What empirical support exists? (Use web search)
-     * Implementation viability: What practical challenges might arise?
-     * Unintended consequences: What second-order effects might emerge?
+   - For each major proposed solution in the executive summary, apply this framework:
+     * Conceptual integrity: Is it internally coherent and logically sound based on the log?
+     * Evidential basis: What support exists within the provided materials?
+     * Unintended consequences: What second-order effects might emerge based on the discussion?
 
 5. **Strategic Recommendations (20% of report):**
    - Develop 4-7 actionable recommendations that specifically address identified gaps
@@ -85,15 +80,11 @@ const reportPrompt = ai.definePrompt({
 - Bold key concepts and findings
 - Include a brief methodology section explaining your analytical approach
 - Format must be responsive (readable on mobile and desktop)
-
-**Citation Requirements:**
-- Conduct at least 3-5 web searches to enrich your analysis with external perspectives
-- For each search, cite the source URL in the webSources array
-- When incorporating insights from web sources, briefly note the source within the text
+- The 'webSources' field in your output must be an empty array.
 
 Your entire response must be in {{{language}}}.
 
-Remember: Your value comes not from summarizing existing content, but from applying critical thinking to identify what was missed and providing strategic direction informed by broader expertise.`
+Remember: Your value comes not from summarizing existing content, but from applying critical thinking to identify what was missed and providing strategic direction based *solely* on the provided context.`
 });
 
 const generateReportFlow = ai.defineFlow(
