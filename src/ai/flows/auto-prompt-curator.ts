@@ -91,8 +91,7 @@ const autoCurationFlow = ai.defineFlow(
     outputSchema: AutoCurationOutputSchema,
   },
   async (input) => {
-    const model = input.model ? ai.getGenerator(input.model) : undefined;
-    const {output} = await autoCurationPrompt(input, {model});
+    const {output} = await autoCurationPrompt(input, {model: input.model});
     return output!;
   }
 );

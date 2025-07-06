@@ -62,8 +62,7 @@ const calculatePromptDivergenceFlow = ai.defineFlow(
     outputSchema: CalculatePromptDivergenceOutputSchema,
   },
   async (input) => {
-    const model = input.model ? ai.getGenerator(input.model) : undefined;
-    const {output} = await prompt(input, {model});
+    const {output} = await prompt(input, {model: input.model});
     return output!;
   }
 );

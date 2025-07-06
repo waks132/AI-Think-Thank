@@ -72,8 +72,7 @@ const adaptivePromptRewriterFlow = ai.defineFlow(
     outputSchema: AdaptivePromptRewriterOutputSchema,
   },
   async (input) => {
-    const model = input.model ? ai.getGenerator(input.model) : undefined;
-    const {output} = await adaptivePromptRewriterPrompt(input, {model});
+    const {output} = await adaptivePromptRewriterPrompt(input, {model: input.model});
     return output!;
   }
 );

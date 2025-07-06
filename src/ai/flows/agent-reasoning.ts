@@ -55,8 +55,7 @@ const agentReasoningFlow = ai.defineFlow(
     outputSchema: AgentReasoningOutputSchema,
   },
   async (input) => {
-    const model = input.model ? ai.getGenerator(input.model) : undefined;
-    const {output} = await agentReasoningPrompt(input, {model});
+    const {output} = await agentReasoningPrompt(input, {model: input.model});
     return output!;
   }
 );
