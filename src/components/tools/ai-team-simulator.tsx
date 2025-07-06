@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { 
   Zap, Loader2, BarChart2, GitMerge, Scale, Milestone, Users, PlusCircle, XCircle, BotMessageSquare,
-  BrainCircuit, ShieldAlert, FlaskConical, ArrowRight, GitBranch
+  BrainCircuit, ShieldAlert, FlaskConical, ArrowRight, GitBranch, LightbulbOff, SearchSlash, MessageSquareWarning
 } from 'lucide-react'
 import { Progress } from "@/components/ui/progress"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
@@ -276,6 +276,41 @@ export default function CognitiveClashSimulator() {
                             </AccordionContent>
                         </AccordionItem>
                     )}
+                    {result.assumptionAnalysis && result.assumptionAnalysis.length > 0 && (
+                        <AccordionItem value="assumptions">
+                            <AccordionTrigger>
+                                <div className="flex items-center gap-2"><LightbulbOff />Analyse des Hypothèses Implicites</div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                                <div className="space-y-6 p-4 border rounded-lg bg-background/50 max-h-[500px] overflow-y-auto">
+                                    {result.assumptionAnalysis.map((item, index) => (
+                                        <div key={index} className="p-4 rounded-lg border bg-card animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
+                                            <div className="flex items-center justify-between mb-3">
+                                                <Badge variant="destructive">{item.agentRole}</Badge>
+                                                <span className="text-xs text-muted-foreground font-mono">Extrait du Tour {item.turn}</span>
+                                            </div>
+                                            <div className="space-y-3">
+                                                <div className="flex items-start gap-3">
+                                                    <SearchSlash className="h-4 w-4 text-amber-500 mt-1 flex-shrink-0" />
+                                                    <div>
+                                                        <span className="font-semibold text-foreground/80">Hypothèse Implicite</span>
+                                                        <p className="text-foreground/90 italic">"{item.assumption}"</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-start gap-3">
+                                                    <MessageSquareWarning className="h-4 w-4 text-red-500 mt-1 flex-shrink-0" />
+                                                    <div>
+                                                        <span className="font-semibold text-foreground/80">Critique du "Disruptor"</span>
+                                                        <p className="text-foreground/90">{item.critique}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+                    )}
                 </Accordion>
             </div>
           )}
@@ -289,5 +324,3 @@ export default function CognitiveClashSimulator() {
     </Card>
   )
 }
-
-    
