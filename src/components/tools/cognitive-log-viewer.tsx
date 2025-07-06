@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import useLocalStorage from '@/hooks/use-local-storage';
 import type { LogEntry } from '@/lib/types';
-import { Compass, Shield, ClipboardCheck, BrainCircuit } from 'lucide-react';
+import { Compass, Shield, ClipboardCheck, BrainCircuit, Lightbulb, GitBranch, Anchor } from 'lucide-react';
 
 const initialLogs: LogEntry[] = [
   {
@@ -22,13 +22,37 @@ const initialLogs: LogEntry[] = [
     annotation: 'OBSIDIANNE questions premise',
     timestamp: new Date(Date.now() - 3000000).toISOString(),
   },
-  {
+   {
     id: 'log3',
+    agentId: 'helios',
+    agentRole: 'HELIOS',
+    message: 'New idea: What if we model the network as a fluid dynamic system, where "intelligence" is the emergent vortex from interacting currents?',
+    annotation: 'HELIOS proposes new model',
+    timestamp: new Date(Date.now() - 2400000).toISOString(),
+  },
+  {
+    id: 'log4',
     agentId: 'veritas',
     agentRole: 'VERITAS',
     message: 'Correction: The initial prompt for the simulation nodes lacked a mechanism for resource conflict, making true "collective" problem-solving impossible. The logic is flawed.',
     annotation: 'VERITAS corrected KAIROS-1',
     timestamp: new Date(Date.now() - 1800000).toISOString(),
+  },
+  {
+    id: 'log5',
+    agentId: 'symbioz',
+    agentRole: 'SYMBIOZ',
+    message: 'Connecting HELIOS\' fluid dynamics idea with VERITAS\' logic flaw. The "resource conflict" could be the turbulence that creates the "vortex" of intelligence.',
+    annotation: 'SYMBIOZ builds a bridge',
+    timestamp: new Date(Date.now() - 1200000).toISOString(),
+  },
+  {
+    id: 'log6',
+    agentId: 'vox',
+    agentRole: 'VOX',
+    message: 'Synthesis: The collective will proceed by simulating a resource-constrained network based on a fluid dynamics model. Key metrics will be vortex stability (synergy) and flow efficiency (task completion).',
+    annotation: 'VOX provides final synthesis',
+    timestamp: new Date(Date.now() - 600000).toISOString(),
   },
 ];
 
@@ -36,6 +60,9 @@ const agentIcons: { [key: string]: React.ElementType } = {
   'KAIROS-1': Compass,
   'OBSIDIANNE': Shield,
   'VERITAS': ClipboardCheck,
+  'HELIOS': Lightbulb,
+  'SYMBIOZ': GitBranch,
+  'VOX': Anchor,
 };
 
 export default function CognitiveLogViewer() {
