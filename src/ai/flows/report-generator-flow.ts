@@ -12,20 +12,28 @@ import {z} from 'genkit';
 
 const GenerateReportInputSchema = z.object({
   mission: z.string().describe('The original mission statement.'),
-  executiveSummary: z.string().describe('The executive summary of the mission.'),
-  collaborationLog: z.string().describe('A JSON string of the collaboration log.'),
+  executiveSummary: z
+    .string()
+    .describe('The executive summary of the mission.'),
+  collaborationLog: z
+    .string()
+    .describe('A JSON string of the collaboration log.'),
   language: z.enum(['fr', 'en']).describe('The language for the response.'),
-  model: z.string().optional().describe('The AI model to use for the generation.'),
+  model: z
+    .string()
+    .optional()
+    .describe('The AI model to use for the generation.'),
 });
 export type GenerateReportInput = z.infer<typeof GenerateReportInputSchema>;
 
 const GenerateReportOutputSchema = z.object({
   reportMarkdown: z.string().describe('The final report in Markdown format.'),
-  webSources: z.array(z.string().url()).optional().describe("A list of URLs for the web sources cited in the report."),
 });
 export type GenerateReportOutput = z.infer<typeof GenerateReportOutputSchema>;
 
-export async function generateReport(input: GenerateReportInput): Promise<GenerateReportOutput> {
+export async function generateReport(
+  input: GenerateReportInput
+): Promise<GenerateReportOutput> {
   return generateReportFlow(input);
 }
 
@@ -33,7 +41,7 @@ const reportPrompt = ai.definePrompt({
   name: 'reportGeneratorPrompt',
   input: {schema: GenerateReportInputSchema},
   output: {schema: GenerateReportOutputSchema},
-  prompt: `You are a world-class strategic analyst with expertise in critical systems thinking. Your task is to produce an insightful, balanced, and actionable strategic report based *only* on the information provided. Do not use external tools or web search.
+  prompt: `You are a world-class strategic analyst with expertise in critical systems thinking. Your task is to produce an insightful, balanced, and actionable strategic report based **solely on the information provided**.
 
 **Input Materials:**
 - **Original Mission:** {{{mission}}}
@@ -53,17 +61,19 @@ const reportPrompt = ai.definePrompt({
    - Highlight any particularly innovative approaches or methodologies
 
 3. **Critical Gaps Assessment (35% of report):**
-   - Based *only on the provided log*, identify potential gaps in the reasoning:
-   - **Socio-economic dimension:** Are there unaddressed distributional effects, employment impacts, access inequalities?
-   - **Governance structures:** Are decision rights, accountability mechanisms, power dynamics clear?
-   - **Ethical tensions:** Are there potential conflicts between stakeholder interests?
-   - **Implementation challenges:** What are the implied technical feasibility, resource requirements, and adoption barriers?
+   - Based on the provided materials, assess potential gaps in the following areas:
+   - **Socio-economic dimension:** Analyze potential distributional effects, employment impacts, access inequalities hinted at in the logs.
+   - **Governance structures:** Examine decision rights, accountability mechanisms, power dynamics suggested by the agent interactions.
+   - **Ethical tensions:** Identify potential conflicts between stakeholder interests (commercial/social/regulatory) as they emerge from the discussion.
+   - **Cultural/international applicability:** Assess how solutions might function across different contexts based on the assumptions in the logs.
+   - **Implementation challenges:** Evaluate technical feasibility, resource requirements, and adoption barriers based on the proposed solutions.
 
 4. **Solution Critique (20% of report):**
-   - For each major proposed solution in the executive summary, apply this framework:
-     * Conceptual integrity: Is it internally coherent and logically sound based on the log?
-     * Evidential basis: What support exists within the provided materials?
-     * Unintended consequences: What second-order effects might emerge based on the discussion?
+   - For each major proposed solution, apply this framework:
+     * Conceptual integrity: Is it internally coherent and logically sound?
+     * Evidential basis: How is it supported by the provided logs?
+     * Implementation viability: What practical challenges can be inferred from the discussion?
+     * Unintended consequences: What second-order effects might emerge?
 
 5. **Strategic Recommendations (20% of report):**
    - Develop 4-7 actionable recommendations that specifically address identified gaps
@@ -80,11 +90,10 @@ const reportPrompt = ai.definePrompt({
 - Bold key concepts and findings
 - Include a brief methodology section explaining your analytical approach
 - Format must be responsive (readable on mobile and desktop)
-- The 'webSources' field in your output must be an empty array.
 
 Your entire response must be in {{{language}}}.
 
-Remember: Your value comes not from summarizing existing content, but from applying critical thinking to identify what was missed and providing strategic direction based *solely* on the provided context.`
+Remember: Your value comes not from summarizing existing content, but from applying critical thinking to identify what was missed and providing strategic direction based on your analysis of the provided collaboration. Do not use external information.`,
 });
 
 const generateReportFlow = ai.defineFlow(
@@ -95,8 +104,8 @@ const generateReportFlow = ai.defineFlow(
   },
   async (input) => {
     const response = await reportPrompt(input, {
-        model: input.model,
-        config: { maxOutputTokens: 8192 }
+      model: input.model,
+      config: {maxOutputTokens: 8192},
     });
     return response.output!;
   }

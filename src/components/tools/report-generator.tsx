@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Loader2, FileText, Download, Search } from "lucide-react"
+import { Loader2, FileText, Download } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { generateReport, type GenerateReportOutput } from "@/ai/flows/report-generator-flow"
 import ModelSelector from "../model-selector"
@@ -13,7 +13,6 @@ import { t } from "@/lib/i18n"
 import useLocalStorage from "@/hooks/use-local-storage"
 import type { AgentCollaborationOutput } from "@/ai/flows/agent-collaboration-flow"
 import { Textarea } from "../ui/textarea"
-import { Badge } from "../ui/badge"
 
 export default function ReportGenerator() {
   const [collaborationResult] = useLocalStorage<AgentCollaborationOutput | null>("collaboration-result", null)
@@ -69,8 +68,6 @@ export default function ReportGenerator() {
     document.body.removeChild(link);
   };
 
-  const webSearchUsed = report?.webSources && report.webSources.length > 0;
-
   return (
     <Card>
       <CardHeader>
@@ -95,34 +92,16 @@ export default function ReportGenerator() {
              <div className="space-y-4">
                 <div className="flex flex-wrap justify-between items-center gap-2">
                     <h3 className="font-semibold">{t.report.generated_report[language]}</h3>
-                    <div className="flex items-center gap-2">
-                        <Badge variant={webSearchUsed ? "default" : "secondary"}>
-                            <Search className="mr-2 h-3 w-3" />
-                            {t.report.web_search[language]} - {webSearchUsed ? t.report.used[language] : t.report.not_used[language]}
-                        </Badge>
-                        <Button onClick={handleDownload} variant="outline" size="sm">
-                            <Download className="mr-2"/>
-                            {t.report.download_button[language]}
-                        </Button>
-                    </div>
+                    <Button onClick={handleDownload} variant="outline" size="sm">
+                        <Download className="mr-2"/>
+                        {t.report.download_button[language]}
+                    </Button>
                 </div>
                 <Textarea 
                     readOnly
                     value={report.reportMarkdown}
                     className="h-[500px] font-mono text-xs bg-card"
                 />
-                {webSearchUsed && (
-                  <div className="mt-4">
-                    <h4 className="font-semibold mb-2">{t.report.sources_label[language]}</h4>
-                    <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1 bg-card p-4 rounded-lg border">
-                        {report.webSources.map((source, index) => (
-                            <li key={index}>
-                                <a href={source} target="_blank" rel="noopener noreferrer" className="underline hover:text-primary break-all">{source}</a>
-                            </li>
-                        ))}
-                    </ul>
-                  </div>
-                )}
             </div>
            ) : (
              <div className="flex items-center justify-center h-full text-muted-foreground text-center">
