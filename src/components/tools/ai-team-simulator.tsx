@@ -11,7 +11,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
-import { Zap, Loader2, BarChart2, GitMerge, Scale, Milestone, Users, PlusCircle, XCircle, BotMessageSquare } from 'lucide-react'
+import { 
+  Zap, Loader2, BarChart2, GitMerge, Scale, Milestone, Users, PlusCircle, XCircle, BotMessageSquare,
+  BrainCircuit, ShieldAlert, FlaskConical
+} from 'lucide-react'
 import { Progress } from "@/components/ui/progress"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Label } from "../ui/label"
@@ -211,7 +214,36 @@ export default function CognitiveClashSimulator() {
                                                 <p className="font-semibold text-primary">{turn.perspectiveName}</p>
                                                 <span className="text-xs text-muted-foreground font-mono">Turn {turn.turn}</span>
                                             </div>
-                                            <p className="text-sm text-foreground/90 mt-2">{turn.argument}</p>
+                                            <div className="mt-4 text-sm space-y-4">
+                                                <div className="flex items-start gap-3">
+                                                    <Milestone className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
+                                                    <div>
+                                                        <span className="font-semibold text-foreground/80">Position</span>
+                                                        <p className="text-foreground/90">{turn.argument.position}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-start gap-3">
+                                                    <BrainCircuit className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
+                                                    <div>
+                                                        <span className="font-semibold text-foreground/80">Justification</span>
+                                                        <p className="text-foreground/90">{turn.argument.justification}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-start gap-3">
+                                                    <ShieldAlert className="h-4 w-4 text-amber-500 mt-1 flex-shrink-0" />
+                                                    <div>
+                                                        <span className="font-semibold text-foreground/80">Risk Perceived</span>
+                                                        <p className="text-foreground/90">{turn.argument.riskPerceived}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-start gap-3">
+                                                    <FlaskConical className="h-4 w-4 text-secondary mt-1 flex-shrink-0" />
+                                                    <div>
+                                                        <span className="font-semibold text-foreground/80">Proposal</span>
+                                                        <p className="text-foreground/90">{turn.argument.proposal}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 );
