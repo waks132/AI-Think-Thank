@@ -8,6 +8,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {googleSearch} from '@genkit-ai/google-cloud';
 import {z} from 'genkit';
 
 const GenerateReportInputSchema = z.object({
@@ -21,6 +22,7 @@ export type GenerateReportInput = z.infer<typeof GenerateReportInputSchema>;
 
 const GenerateReportOutputSchema = z.object({
   reportMarkdown: z.string().describe('The final report in Markdown format.'),
+  webSources: z.array(z.string().url()).describe("A list of URLs for the web sources cited in the report."),
 });
 export type GenerateReportOutput = z.infer<typeof GenerateReportOutputSchema>;
 
@@ -32,40 +34,66 @@ const reportPrompt = ai.definePrompt({
   name: 'reportGeneratorPrompt',
   input: {schema: GenerateReportInputSchema},
   output: {schema: GenerateReportOutputSchema},
-  prompt: `You are a world-class strategic analyst tasked with producing a critical and insightful report. Your goal is NOT to simply summarize the provided information, but to analyze it, critique it, and synthesize it based on the given context.
+  tools: [googleSearch],
+  prompt: `You are a world-class strategic analyst with expertise in critical systems thinking. Your task is to produce an insightful, balanced, and actionable strategic report that goes significantly beyond the information provided.
 
-**Mission Context:**
+**Input Materials:**
 - **Original Mission:** {{{mission}}}
-- **Generated Executive Summary:** {{{executiveSummary}}}
-- **Detailed Collaboration Log:** {{{collaborationLog}}}
+- **Executive Summary:** {{{executiveSummary}}}
+- **Collaboration Log:** {{{collaborationLog}}}
 
-**Your Mandate:**
+**Strategic Analysis Framework:**
 
-1.  **Critical Analysis Synthesis:** Do not just rephrase the summary. Synthesize the entire collaboration log to build a deep understanding of the problem-solving process.
+1. **Methodical Review Process:**
+   - First, identify the core problem and objectives from the mission statement
+   - Analyze the collaboration log chronologically, noting key insights, pivots, and consensus points
+   - Compare the executive summary against your own analysis to identify potential gaps
 
-2.  **Identify Strengths:** Begin by acknowledging the key strengths and valid points raised in the collaboration.
+2. **Strengths Analysis (25% of report):**
+   - Identify 3-5 concrete strengths with specific examples from the collaboration
+   - For each strength, explain WHY it matters and its potential long-term impact
+   - Highlight any particularly innovative approaches or methodologies
 
-3.  **Expose Blind Spots (Angles Morts):** Based on the provided context, identify what the team might have missed. Your analysis MUST cover potential blind spots such as:
-    *   **Socio-economic impacts:** Who loses? What jobs are affected? Does this create inequality?
-    *   **Governance and Power:** Who governs this new system? How are decisions made? What are the risks of power concentration?
-    *   **Conflicts of Interest:** What are the potential conflicts between commercial goals and ethical imperatives?
-    *   **International & Cultural Perspectives:** How would this solution work in different legal and cultural contexts (e.g., Europe vs. USA vs. Asia)?
+3. **Critical Gaps Assessment (35% of report):**
+   - **Socio-economic dimension:** Analyze distributional effects, employment impacts, access inequalities
+   - **Governance structures:** Examine decision rights, accountability mechanisms, power dynamics
+   - **Ethical tensions:** Identify potential conflicts between stakeholder interests (commercial/social/regulatory)
+   - **Cultural/international applicability:** Assess how solutions might function across different contexts
+   - **Implementation challenges:** Evaluate technical feasibility, resource requirements, and adoption barriers
+   
+   For each gap, conduct a targeted web search for relevant data, expert opinions, or case studies.
 
-4.  **Critique the Proposals:** Scrutinize the main solutions proposed by the agents. Are concepts like "IA Empathique" realistic or just buzzwords? Are certifications meaningful? What are the hidden risks?
+4. **Solution Critique (20% of report):**
+   - For each major proposed solution, apply this framework:
+     * Conceptual integrity: Is it internally coherent and logically sound?
+     * Evidential basis: What empirical support exists? (Use web search)
+     * Implementation viability: What practical challenges might arise?
+     * Unintended consequences: What second-order effects might emerge?
 
-5.  **Formulate Actionable Recommendations:** Based on your critique, propose concrete, high-level recommendations to strengthen the framework. These should go beyond the team's initial ideas (e.g., periodic reviews, citizen participation, incident transparency, whistleblower protection).
+5. **Strategic Recommendations (20% of report):**
+   - Develop 4-7 actionable recommendations that specifically address identified gaps
+   - Each recommendation must be:
+     * Specific: Clearly defined action or initiative
+     * Measurable: Include potential metrics or indicators
+     * Complementary: Address different aspects of the problem space
+     * Balanced: Include both short-term wins and long-term structural changes
 
-6.  **Structure the Report:** Format the entire output as a single Markdown string in the \`reportMarkdown\` field. Use clear headings, bullet points, and bold text to create a professional and readable document. Structure it logically:
-    *   Titre
-    *   Executive Summary (a new, improved version based on your deeper analysis)
-    *   Points Forts
-    *   Limites et Angles Morts (Your critical analysis)
-    *   Analyse Critique des Propositions
-    *   Recommandations Complémentaires
-    *   Conclusion
+**Output Format Requirements:**
+- Structure as a professional markdown document with clear hierarchical headings
+- Include an executive summary of 150-250 words that highlights key findings and recommendations
+- Use bullet points for clarity but embed detailed analysis in paragraph form
+- Bold key concepts and findings
+- Include a brief methodology section explaining your analytical approach
+- Format must be responsive (readable on mobile and desktop)
 
-Your entire response must be in this language: {{{language}}}.
-`,
+**Citation Requirements:**
+- Conduct at least 3-5 web searches to enrich your analysis with external perspectives
+- For each search, cite the source URL in the webSources array
+- When incorporating insights from web sources, briefly note the source within the text
+
+Your entire response must be in {{{language}}}.
+
+Remember: Your value comes not from summarizing existing content, but from applying critical thinking to identify what was missed and providing strategic direction informed by broader expertise.`
 });
 
 const generateReportFlow = ai.defineFlow(
