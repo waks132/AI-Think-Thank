@@ -268,7 +268,7 @@ export default function MultiAgentDashboard() {
             </div>
           )}
 
-          {collaborationResult && (
+          {hasMounted && collaborationResult && (
             <div className="space-y-4 animate-fade-in pt-4">
               <Separator />
               <h3 className="font-headline text-xl">{t.dashboard.outcome_title[language]}</h3>
