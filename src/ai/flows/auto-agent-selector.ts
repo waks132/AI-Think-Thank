@@ -237,7 +237,7 @@ const autoAgentSelectorFlow = ai.defineFlow(
     // as it is the LLM's persona. The prompt instructs it to add itself back to the final list.
     const selectableAgents = input.agents.filter(agent => agent.id !== 'kairos-1');
     
-    const {output} = await autoAgentSelectorPrompt({...input, agents: selectableAgents}, {model: input.model});
-    return output!;
+    const response = await autoAgentSelectorPrompt({...input, agents: selectableAgents}, {model: input.model});
+    return response.output!;
   }
 );

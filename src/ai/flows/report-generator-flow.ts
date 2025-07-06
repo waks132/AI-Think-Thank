@@ -69,10 +69,10 @@ const generateReportFlow = ai.defineFlow(
     outputSchema: GenerateReportOutputSchema,
   },
   async (input) => {
-    const {output} = await reportPrompt(input, {
+    const response = await reportPrompt(input, {
         model: input.model,
         config: { maxOutputTokens: 8192 }
     });
-    return output!;
+    return response.output!;
   }
 );
