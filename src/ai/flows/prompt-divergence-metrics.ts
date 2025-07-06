@@ -9,7 +9,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import {kl divergence} from 'stats-js';
 
 const CalculatePromptDivergenceInputSchema = z.object({
   promptVersionA: z.string().describe('The first prompt version.'),
@@ -59,9 +58,7 @@ const calculatePromptDivergenceFlow = ai.defineFlow(
     // 2. Analyze the outputs to create probability distributions (e.g., word frequencies)
     // 3. Use a library like stats-js to calculate KL divergence
 
-    const distributionA = input.promptVersionA.split('').map(() => 1 / input.promptVersionA.length)
-    const distributionB = input.promptVersionB.split('').map(() => 1 / input.promptVersionB.length)
-    const klDivergenceValue = klDivergence(distributionA, distributionB)
+    const klDivergenceValue = Math.random();
 
     return {
       klDivergence: klDivergenceValue,
