@@ -16,6 +16,9 @@ import { Button } from '../ui/button';
 import { Label } from '../ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '../ui/separator';
+import ModelSelector from '../model-selector';
+import { availableModels } from '@/lib/models';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 
 const initialAgents: Agent[] = [
   { id: 'kairos-1', role: 'KAIROS-1', specialization: 'Coordination and detection of high-yield action levers', prompt: 'Your role is to coordinate and detect high-yield action levers.', icon: Compass },
@@ -48,7 +51,10 @@ export default function MultiAgentDashboard() {
   const [mission, setMission] = useState<string>('Develop a framework for ethical AI deployment in autonomous vehicles.');
   const [collaborationResult, setCollaborationResult] = useState<AgentCollaborationOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast();
+
+  const agentIconMap = new Map(agents.map(agent => [agent.role, agent.icon]));
 
   const handlePromptChange = (agentId: string, newPrompt: string) => {
     setAgents(prevAgents =>
@@ -91,6 +97,7 @@ export default function MultiAgentDashboard() {
       const result = await runAgentCollaboration({
         mission,
         agents: participatingAgents,
+        model: selectedModel,
       });
       setCollaborationResult(result);
     } catch (error) {
@@ -131,6 +138,7 @@ export default function MultiAgentDashboard() {
               rows={3}
             />
           </div>
+          <ModelSelector selectedModel={selectedModel} onModelChange={setSelectedModel} />
           <Button onClick={handleStartMission} disabled={isLoading} className="w-full">
             {isLoading ? (
               <><Loader2 className="mr-2 animate-spin" /> Orchestrating...</>
@@ -166,6 +174,37 @@ export default function MultiAgentDashboard() {
                   <p className="whitespace-pre-wrap text-muted-foreground">{collaborationResult.reasoning}</p>
                 </CardContent>
               </Card>
+
+              {collaborationResult.collaborationLog && collaborationResult.collaborationLog.length > 0 && (
+                <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="item-1">
+                        <AccordionTrigger>
+                            <div className="flex items-center gap-2 text-lg font-headline"><MessageSquare />View Collaboration Log</div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                            <div className="space-y-6 max-h-[400px] overflow-y-auto p-4 border rounded-lg bg-background/50">
+                                {collaborationResult.collaborationLog.map((log) => {
+                                    const Icon = agentIconMap.get(log.agentRole) || BrainCircuit;
+                                    return (
+                                        <div key={log.turn} className="flex items-start gap-4 animate-fade-in">
+                                            <div className="p-2 bg-accent rounded-full">
+                                                <Icon className="h-5 w-5 text-accent-foreground" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="flex items-baseline justify-between">
+                                                    <p className="font-semibold text-primary">{log.agentRole}</p>
+                                                    <span className="text-xs text-muted-foreground font-mono">Turn {log.turn}</span>
+                                                </div>
+                                                <p className="text-sm text-foreground/90">{log.contribution}</p>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
+              )}
             </div>
           )}
         </CardContent>
