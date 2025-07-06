@@ -219,7 +219,7 @@ export default function MultiAgentDashboard() {
                     </Card>
 
                     {collaborationResult.collaborationLog && collaborationResult.collaborationLog.length > 0 && (
-                        <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
+                        <Accordion type="single" collapsible>
                             <AccordionItem value="item-1">
                                 <AccordionTrigger>
                                     <div className="flex items-center gap-2 text-lg font-headline"><MessageSquare />View Collaboration Log</div>
@@ -266,6 +266,7 @@ export default function MultiAgentDashboard() {
               onPromptChange={handlePromptChange} 
               isSelected={selectedAgentIds.has(agent.id)}
               onSelectionChange={handleAgentSelectionChange}
+              selectedModel={selectedModel}
             />
           ))}
         </div>
