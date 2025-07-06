@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast"
 import { generateCognitiveHeatmap } from "@/ai/flows/cognitive-heatmap-flow"
 import type { HeatmapWord } from "@/lib/types"
 import ModelSelector from "../model-selector"
-import { availableModels } from "@/ai/genkit"
+import { availableModels } from "@/lib/models"
 
 const initialText = "The primary mission objective is to establish a self-sustaining hydroponics farm on Mars. Key challenges include radiation shielding, water reclamation, and adapting Earth-based plants to the Martian environment. Our strategy prioritizes a modular, scalable architecture, allowing for incremental expansion. The initial phase will focus on robust life support and energy systems, followed by the deployment of the agricultural modules. This approach mitigates risk and ensures core systems are operational before expanding."
 

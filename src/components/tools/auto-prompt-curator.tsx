@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Archive, ArchiveX, CheckSquare, Loader2 } from 'lucide-react'
 import { Badge } from "@/components/ui/badge"
 import ModelSelector from "../model-selector"
-import { availableModels } from "@/ai/genkit"
+import { availableModels } from "@/lib/models"
 
 const formSchema = z.object({
   promptText: z.string().min(10, { message: "Prompt text must be at least 10 characters." }),

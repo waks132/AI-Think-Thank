@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Lightbulb, Loader2, CheckCircle2, ChevronRight, Workflow } from 'lucide-react'
 import { Separator } from "@/components/ui/separator"
 import ModelSelector from "../model-selector"
-import { availableModels } from "@/ai/genkit"
+import { availableModels } from "@/lib/models"
 import { Badge } from "../ui/badge"
 
 const formSchema = z.object({

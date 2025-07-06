@@ -1,6 +1,6 @@
 "use client";
 
-import { availableModels } from "@/ai/genkit";
+import { availableModels } from "@/lib/models";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "./ui/label";
 import { Bot } from "lucide-react";

@@ -15,7 +15,7 @@ import { WandSparkles, Loader2, Lightbulb, Sigma } from 'lucide-react'
 import { Progress } from "@/components/ui/progress"
 import { Label } from "@/components/ui/label"
 import ModelSelector from "../model-selector"
-import { availableModels } from "@/ai/genkit"
+import { availableModels } from "@/lib/models"
 
 const formSchema = z.object({
   originalPrompt: z.string().min(10, { message: "Original prompt must be at least 10 characters." }),
@@ -32,8 +32,8 @@ export default function AdaptivePromptOrchestrator() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      originalPrompt: "",
-      agentPerformance: "",
+      originalPrompt: "Your role is to coordinate and detect high-yield action levers.",
+      agentPerformance: "The prompt is too abstract and lacks actionable examples, making it difficult for the agent to generate specific, testable outputs.",
     },
   })
 

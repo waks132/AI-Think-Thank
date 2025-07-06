@@ -9,8 +9,3 @@ export const ai = genkit({
   // This can be overridden in individual generate calls.
   model: 'googleai/gemini-2.0-flash',
 });
-
-// List of available models for the UI
-export const availableModels = [
-  'googleai/gemini-2.0-flash',
-];

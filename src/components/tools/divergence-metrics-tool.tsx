@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { Scale, Loader2, Info } from 'lucide-react'
 import ModelSelector from "../model-selector"
-import { availableModels } from "@/ai/genkit"
+import { availableModels } from "@/lib/models"
 import { Progress } from "../ui/progress"
 const Diff = require('diff');
 

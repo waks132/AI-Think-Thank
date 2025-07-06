@@ -8,7 +8,7 @@ import { trackCausalFlow } from "@/ai/flows/causal-flow-tracker-flow";
 import { Button } from "../ui/button";
 import useLocalStorage from "@/hooks/use-local-storage";
 import { useToast } from "@/hooks/use-toast";
-import { availableModels } from "@/ai/genkit";
+import { availableModels } from "@/lib/models";
 import ModelSelector from "../model-selector";
 
 const AGENT_DATA: Partial<Record<string, { color: string }>> = {
