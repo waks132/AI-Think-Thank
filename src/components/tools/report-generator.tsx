@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Loader2, FileText, Download } from "lucide-react"
+import { Loader2, FileText, Download, Globe } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { generateReport, type GenerateReportOutput } from "@/ai/flows/report-generator-flow"
 import ModelSelector from "../model-selector"
@@ -13,6 +13,8 @@ import { t } from "@/lib/i18n"
 import useLocalStorage from "@/hooks/use-local-storage"
 import type { AgentCollaborationOutput } from "@/ai/flows/agent-collaboration-flow"
 import { Textarea } from "../ui/textarea"
+import { Badge } from "../ui/badge"
+import { cn } from "@/lib/utils"
 
 export default function ReportGenerator() {
   const [collaborationResult] = useLocalStorage<AgentCollaborationOutput | null>("collaboration-result", null)
@@ -90,11 +92,36 @@ export default function ReportGenerator() {
              </div>
            ) : report ? (
              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                    <h3 className="font-semibold">{t.report.generated_report[language]}</h3>
+                    <Badge variant="outline" className={cn("transition-all", report.sources && report.sources.length > 0 ? "border-green-500/50 bg-green-500/10 text-green-300" : "text-muted-foreground")}>
+                      <Globe className="mr-2 h-4 w-4" />
+                      {t.report.web_search[language]} {report.sources && report.sources.length > 0 ? t.report.used[language] : t.report.not_used[language]}
+                    </Badge>
+                </div>
                 <Textarea 
                     readOnly
                     value={report.reportMarkdown}
                     className="h-[500px] font-mono text-xs bg-card"
                 />
+                 {report.sources && report.sources.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-2">{t.report.sources_label[language]}</h4>
+                    <div className="p-4 border rounded-lg bg-card space-y-2 max-h-48 overflow-y-auto">
+                      {report.sources.map((source, index) => (
+                        <a 
+                          key={index} 
+                          href={source} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-sm text-primary hover:underline truncate block"
+                        >
+                          {source}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className="flex justify-end items-center gap-4">
                   <Button onClick={handleDownload} className="w-full">
                       <Download className="mr-2"/>
