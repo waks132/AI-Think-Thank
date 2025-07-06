@@ -10,14 +10,9 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-const AgentSchema = z.object({
-  role: z.string().describe('The role of the agent.'),
-  prompt: z.string().describe('The core prompt defining the agent\'s behavior and expertise.'),
-});
-
 const AgentCollaborationInputSchema = z.object({
   mission: z.string().describe('The overall mission or task for the agents to collaborate on.'),
-  agents: z.array(AgentSchema).describe('The selected agents participating in the collaboration.'),
+  agentList: z.string().describe("A formatted string listing the participating agents and their directives."),
   language: z.enum(['fr', 'en']).describe('The language for the response.'),
   model: z.string().optional().describe('The AI model to use for the generation.'),
 });
@@ -60,13 +55,10 @@ const collaborationPrompt = ai.definePrompt({
 
 **Participating Agents:**
 You will simulate a discussion between the following agents, ensuring each contributes according to their defined role and prompt:
-{{#each agents}}
-- **Agent Role:** {{this.role}}
-  **Core Directive:** "{{this.prompt}}"
-{{/each}}
+{{{agentList}}}
 
 **Your Process:**
-1.  **Simulate Discussion:** Generate a plausible, turn-by-turn conversation between the agents. The discussion should show proposition, critique, and refinement. For each turn, provide the agent's contribution and a brief, insightful \`annotation\` describing its function (e.g., 'Proposes new synthesis', 'Critiques prior assumption'). Document each turn in the \`collaborationLog\` array.
+1.  **Simulate Discussion:** Generate a plausible, turn-by-turn conversation between the agents. The discussion should show proposition, critique, and refinement. For each turn, provide the agent's contribution and a brief, insightful \`annotation\` describing its function (e.g., 'Proposes new synthesis', 'Critiques prior assumption'). Document each turn in the \`collaborationLog\` array. **Crucially, the 'agentRole' in each log entry MUST EXACTLY match one of the agent roles provided in the list.**
 2.  **Provide Reasoning:** Detail the \`reasoning\` behind the collaboration. Explain the key contributions of each agent as seen in the log, how conflicts were resolved, and how the final summary was synthesized.
 3.  **Synthesize Outcome:** Based on the simulated discussion, produce a comprehensive \`executiveSummary\`. This should be a final, actionable output that accomplishes the mission, formatted as a structured plan with clear headings and bullet points. **Do not just summarize the conversation; extract and formalize the final proposed solution.**
 4.  **Validate Outcome:** As the orchestrator, score the final output from 0.0 to 1.0 on the criteria defined in the \`validationGrid\`. Provide a holistic assessment of the collective intelligence performance.

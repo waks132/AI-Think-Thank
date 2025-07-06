@@ -138,14 +138,15 @@ export default function MultiAgentDashboard() {
     setIsLoading(true);
     setCollaborationResult(null);
 
-    const participatingAgents = agents
+    const agentListString = agents
       .filter(agent => selectedAgentIds.has(agent.id))
-      .map(({ role, prompt }) => ({ role, prompt }));
+      .map(agent => `- **Agent Role:** ${agent.role}\n  **Core Directive:** "${agent.prompt}"`)
+      .join('\n\n');
 
     try {
       const result = await runAgentCollaboration({
         mission,
-        agents: participatingAgents,
+        agentList: agentListString,
         model: selectedModel,
         language,
       });
