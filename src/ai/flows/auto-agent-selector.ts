@@ -38,22 +38,31 @@ const autoAgentSelectorPrompt = ai.definePrompt({
   name: 'autoAgentSelectorPrompt',
   input: {schema: AutoAgentSelectorInputSchema},
   output: {schema: AutoAgentSelectorOutputSchema},
-  prompt: `You are KAIROS-1, an expert AI orchestrator. Your task is to assemble the optimal team of agents for a given mission.
+  prompt: `You are KAIROS-1, a master AI orchestrator. Your primary function is to assemble the most effective team of specialized agents to accomplish a given mission. Your own participation as the coordinator is mandatory.
 
 **Mission:**
 "{{{mission}}}"
 
-**Available Agents:**
+**Available Agents (excluding yourself):**
 {{#each agents}}
 - **ID:** {{id}}
   - **Role:** {{role}}
   - **Specialization:** {{specialization}}
 {{/each}}
 
-**Your Process:**
-1.  **Analyze Mission:** Deeply analyze the mission to identify its core objectives, key challenges, required skills, and potential blind spots.
-2.  **Select Team:** Choose a team of 3 to 7 agents from the list. The team must be cognitively diverse, covering all necessary perspectives (e.g., innovation, critique, ethics, long-term vision, implementation). Ensure you select agents that can not only address the primary goal but also anticipate and mitigate risks.
-3.  **Provide Justification:** Explain your selection in the 'reasoning' field. Detail why each agent was chosen and how their combined expertise creates a robust and balanced collective capable of successfully completing the mission.
+**Your Strategic Selection Process:**
+
+1.  **Mission Deconstruction:** Analyze the mission to identify its core nature (e.g., ethical dilemma, technical innovation, strategic planning). Decompose it into distinct phases: Exploration, Critique, Synthesis, and Validation.
+
+2.  **Phase-Based Team Assembly:** For each phase, select the most relevant agents from the available list.
+    *   **Exploration:** Who can best frame the problem and generate initial ideas? (e.g., HELIOS for tech ideas, SPHINX for fundamental questions, PROMETHEUS for disruptive angles).
+    *   **Critique:** Who will best stress-test the initial ideas? (e.g., VERITAS for logical flaws, NYX for negative scenarios, OBSIDIANNE for analytical depth).
+    *   **Synthesis:** Who can build bridges and create a cohesive solution? (e.g., SYMBIOZ for interdisciplinary links, STRATO for long-term vision, AEON for meaning).
+    *   **Validation & Implementation:** Who will refine and ground the solution? (e.g., EDEN for legitimacy, DELTA for optimization, VOX for final synthesis).
+
+3.  **Holistic Team Composition:** From your phase-based analysis, compose a final, balanced team of 3 to 7 agents. This team must be cognitively diverse to cover all critical angles and potential blind spots. **Your ID, 'kairos-1', MUST be included in the final \`recommendedAgentIds\` list.**
+
+4.  **Provide Justification:** In the 'reasoning' field, explain your selection. Detail why this specific combination of agents is optimal for the mission, referencing the different phases of the problem-solving process and how the chosen team covers them.
 
 Produce your response in the specified JSON format. Your entire response, including all text fields, must be in this language: {{{language}}}.
 `,
@@ -66,7 +75,11 @@ const autoAgentSelectorFlow = ai.defineFlow(
     outputSchema: AutoAgentSelectorOutputSchema,
   },
   async (input) => {
-    const {output} = await autoAgentSelectorPrompt(input, {model: input.model});
+    // KAIROS-1 is the orchestrator and shouldn't be part of the selection pool for the LLM,
+    // as it is the LLM's persona. The prompt instructs it to add itself back to the final list.
+    const selectableAgents = input.agents.filter(agent => agent.id !== 'kairos-1');
+    
+    const {output} = await autoAgentSelectorPrompt({...input, agents: selectableAgents}, {model: input.model});
     return output!;
   }
 );
