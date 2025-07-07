@@ -15,7 +15,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Separator } from '../ui/separator';
 import ModelSelector from '../model-selector';
 import { availableModels } from '@/lib/models';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { Progress } from '../ui/progress';
 import { useLanguage } from '@/context/language-context';
 import { t } from '@/lib/i18n';
@@ -235,36 +234,39 @@ export default function MultiAgentDashboard() {
   useEffect(() => {
     if (hasMounted) {
       const personaMap = new Map(personaList.map(p => [p.id, p]));
+      const storedAgents = JSON.parse(window.localStorage.getItem('agents') || '[]') as Partial<Agent>[];
+      const storedAgentMap = new Map(storedAgents.map(a => [a.id, a]));
 
-      setAgents(prevAgents => {
-        const prevAgentMap = new Map(prevAgents.map(a => [a.id, a]));
-
-        return personaList.map(persona => {
-          const existingAgent = prevAgentMap.get(persona.id);
-          // The icon is a non-serializable component, so we must always get it from the persona list.
-          const icon = personaMap.get(persona.id)?.icon;
-
-          if (existingAgent) {
-            // Agent exists, re-hydrate its icon and translate its text fields
-            return {
-              ...existingAgent,
-              role: persona.name[language],
-              specialization: persona.specialization[language],
-              icon: icon!,
-            };
-          } else {
-            // Agent does not exist, create a new one from the persona definition
-            return {
-              id: persona.id,
-              role: persona.name[language],
-              specialization: persona.specialization[language],
-              prompt: persona.values[language],
-              icon: icon!,
-              lastPsiScore: null,
-            };
-          }
-        });
+      const hydratedAgents = personaList.map(persona => {
+        const storedAgent = storedAgentMap.get(persona.id);
+        
+        // Explicitly reconstruct the agent object to ensure data integrity
+        // and prevent non-serializable data from being malformed.
+        if (storedAgent) {
+          // Agent exists in storage. Preserve its dynamic data (prompt, score)
+          // but re-hydrate non-serializable data (icon) and translatable data.
+          return {
+            id: persona.id, // from persona
+            prompt: storedAgent.prompt || persona.values[language], // from storage, with fallback
+            lastPsiScore: storedAgent.lastPsiScore, // from storage
+            role: persona.name[language], // from persona (for translation)
+            specialization: persona.specialization[language], // from persona (for translation)
+            icon: persona.icon, // from persona (re-hydration)
+          };
+        } else {
+          // Agent does not exist in storage, create a new one from persona definition.
+          return {
+            id: persona.id,
+            role: persona.name[language],
+            specialization: persona.specialization[language],
+            prompt: persona.values[language],
+            icon: persona.icon,
+            lastPsiScore: null,
+          };
+        }
       });
+      
+      setAgents(hydratedAgents);
     }
   }, [hasMounted, language, setAgents]);
 
