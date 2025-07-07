@@ -28,7 +28,7 @@ const ORCHESTRATOR_IDS = ['kairos-1', 'disruptor'];
 
 export default function MultiAgentDashboard() {
   const { language } = useLanguage();
-  const [hasMounted, setHasMounted] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   const [agents, setAgents] = useLocalStorage<Agent[]>('agents', []);
   const [logs, setLogs] = useLocalStorage<LogEntry[]>('cognitive-logs', []);
   const [promptHistories, setPromptHistories] = useLocalStorage<Record<string, PromptVersion[]>>('prompt-histories', {});
@@ -56,13 +56,13 @@ export default function MultiAgentDashboard() {
       specialization: a.specialization,
   })), [agents]);
 
-  const triggerCausalFlowAnalysis = useCallback(async (currentLogs: LogEntry[], agentList: {id: string; role: string; specialization: string}[]) => {
+  const triggerCausalFlowAnalysis = useCallback(async (currentLogs: LogEntry[]) => {
     if (currentLogs.length === 0) return;
 
     try {
       const result = await trackCausalFlow({
         logEntries: JSON.stringify(currentLogs.map((log, index) => ({ ...log, index }))),
-        agentList: agentList,
+        agentList: allAvailableAgentsForFlow,
         model: selectedModel,
         language,
       });
@@ -153,7 +153,7 @@ export default function MultiAgentDashboard() {
           description: t.dashboard.toast_log_description[language],
         });
 
-        triggerCausalFlowAnalysis(newLogEntries, allAvailableAgentsForFlow);
+        triggerCausalFlowAnalysis(newLogEntries);
       }
 
     } catch (error) {
@@ -232,48 +232,40 @@ export default function MultiAgentDashboard() {
   };
 
   useEffect(() => {
-    if (hasMounted) {
-      const personaMap = new Map(personaList.map(p => [p.id, p]));
-      const storedAgents = JSON.parse(window.localStorage.getItem('agents') || '[]') as Partial<Agent>[];
-      const storedAgentMap = new Map(storedAgents.map(a => [a.id, a]));
-
-      const hydratedAgents = personaList.map(persona => {
-        const storedAgent = storedAgentMap.get(persona.id);
-        
-        // Explicitly reconstruct the agent object to ensure data integrity
-        // and prevent non-serializable data from being malformed.
-        if (storedAgent) {
-          // Agent exists in storage. Preserve its dynamic data (prompt, score)
-          // but re-hydrate non-serializable data (icon) and translatable data.
-          return {
-            id: persona.id, // from persona
-            prompt: storedAgent.prompt || persona.values[language], // from storage, with fallback
-            lastPsiScore: storedAgent.lastPsiScore, // from storage
-            role: persona.name[language], // from persona (for translation)
-            specialization: persona.specialization[language], // from persona (for translation)
-            icon: persona.icon, // from persona (re-hydration)
-          };
-        } else {
-          // Agent does not exist in storage, create a new one from persona definition.
-          return {
-            id: persona.id,
-            role: persona.name[language],
-            specialization: persona.specialization[language],
-            prompt: persona.values[language],
-            icon: persona.icon,
-            lastPsiScore: null,
-          };
-        }
-      });
+    // This effect handles the hydration on mount. It runs only once on the client.
+    const storedAgents = JSON.parse(window.localStorage.getItem('agents') || '[]') as Partial<Agent>[];
+    const storedAgentMap = new Map(storedAgents.map(a => a.id ? [a.id, a] : null).filter(Boolean) as [string, Partial<Agent>][]);
+    
+    const hydratedAgents = personaList.map(persona => {
+      const storedAgent = storedAgentMap.get(persona.id);
       
-      setAgents(hydratedAgents);
-    }
-  }, [hasMounted, language, setAgents]);
+      // Explicitly reconstruct the agent object to ensure data integrity
+      // and prevent non-serializable data from being malformed.
+      if (storedAgent) {
+        return {
+          id: persona.id,
+          prompt: storedAgent.prompt || persona.values[language],
+          lastPsiScore: storedAgent.lastPsiScore,
+          role: persona.name[language],
+          specialization: persona.specialization[language],
+          icon: persona.icon,
+        };
+      } else {
+        return {
+          id: persona.id,
+          role: persona.name[language],
+          specialization: persona.specialization[language],
+          prompt: persona.values[language],
+          icon: persona.icon,
+          lastPsiScore: null,
+        };
+      }
+    });
+    
+    setAgents(hydratedAgents);
+    setIsHydrated(true);
+  }, [language, setAgents]);
 
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
 
   const sortedAgents = useMemo(() => {
       return [...agents].sort((a, b) => {
@@ -286,11 +278,12 @@ export default function MultiAgentDashboard() {
   }, [agents]);
   
   const finalSelectedAgentCount = useMemo(() => {
+    if (!isHydrated) return 0;
     const finalSet = new Set(selectedAgentIds);
     const orchestratorsInRoster = agents.filter(a => ORCHESTRATOR_IDS.includes(a.id));
     orchestratorsInRoster.forEach(o => finalSet.add(o.id));
     return finalSet.size;
-  }, [selectedAgentIds, agents]);
+  }, [selectedAgentIds, agents, isHydrated]);
 
   return (
     <div className="animate-fade-in space-y-8">
@@ -320,18 +313,18 @@ export default function MultiAgentDashboard() {
           </div>
           <ModelSelector selectedModel={selectedModel} onModelChange={setSelectedModel} />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Button onClick={handleSuggestTeam} disabled={isLoading || isSuggesting} variant="outline">
+              <Button onClick={handleSuggestTeam} disabled={isLoading || isSuggesting || !isHydrated} variant="outline">
                 {isSuggesting ? (
                   <><Loader2 className="mr-2 animate-spin" /> {t.dashboard.suggest_team_loading[language]}</>
                 ) : (
                   <><WandSparkles className="mr-2" /> {t.dashboard.suggest_team_button[language]}</>
                 )}
               </Button>
-              <Button onClick={handleStartMission} disabled={isLoading || isSuggesting}>
+              <Button onClick={handleStartMission} disabled={isLoading || isSuggesting || !isHydrated}>
                 {isLoading ? (
                   <><Loader2 className="mr-2 animate-spin" /> {t.dashboard.start_button_loading[language]}</>
                 ) : (
-                  <><Sparkles className="mr-2" /> {t.dashboard.start_button[language]} ({hasMounted ? finalSelectedAgentCount : 0} {t.dashboard.agents_selected[language]})</>
+                  <><Sparkles className="mr-2" /> {t.dashboard.start_button[language]} ({finalSelectedAgentCount} {t.dashboard.agents_selected[language]})</>
                 )}
               </Button>
             </div>
@@ -343,7 +336,7 @@ export default function MultiAgentDashboard() {
             </div>
           )}
 
-          {hasMounted && collaborationResult && (
+          {isHydrated && collaborationResult && (
             <div className="space-y-4 animate-fade-in pt-4">
               <Separator />
               <h3 className="font-headline text-xl">{t.dashboard.outcome_title[language]}</h3>
@@ -450,7 +443,7 @@ export default function MultiAgentDashboard() {
         <h2 className="text-2xl font-bold font-headline mb-2">{t.dashboard.roster_title[language]}</h2>
         <p className="text-muted-foreground mb-6">{t.dashboard.roster_description[language]}</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {hasMounted ? sortedAgents.map(agent => {
+          {isHydrated ? sortedAgents.map(agent => {
             const isOrchestrator = ORCHESTRATOR_IDS.includes(agent.id);
             return (
               <AgentCard 
