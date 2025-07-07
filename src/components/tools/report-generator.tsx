@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Loader2, FileText, Download, SearchCheck } from "lucide-react"
+import { Loader2, FileText, Download } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { generateReport, type GenerateReportOutput } from "@/ai/flows/report-generator-flow"
 import ModelSelector from "../model-selector"
@@ -13,7 +13,6 @@ import { t } from "@/lib/i18n"
 import useLocalStorage from "@/hooks/use-local-storage"
 import type { AgentCollaborationOutput } from "@/ai/flows/agent-collaboration-flow"
 import { Textarea } from "../ui/textarea"
-import { Badge } from "../ui/badge"
 
 export default function ReportGenerator() {
   const [collaborationResult] = useLocalStorage<AgentCollaborationOutput | null>("collaboration-result", null)
@@ -94,12 +93,6 @@ export default function ReportGenerator() {
                 <div className="flex flex-wrap justify-between items-center gap-4">
                     <h3 className="font-semibold">{t.report.generated_report[language]}</h3>
                     <div className="flex items-center gap-4">
-                        {report.webSources && report.webSources.length > 0 && (
-                            <Badge variant="secondary" className="flex items-center gap-2">
-                                <SearchCheck className="h-4 w-4 text-green-500"/>
-                                {t.report.web_search_used[language]}
-                            </Badge>
-                        )}
                         <Button onClick={handleDownload} variant="outline" size="sm">
                             <Download className="mr-2"/>
                             {t.report.download_button[language]}
@@ -111,20 +104,6 @@ export default function ReportGenerator() {
                     value={report.reportMarkdown}
                     className="h-[500px] font-mono text-xs bg-card"
                 />
-                 {report.webSources && report.webSources.length > 0 && (
-                    <div className="space-y-2 pt-4">
-                        <h4 className="font-semibold">{t.report.sources_title[language]}</h4>
-                        <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                            {report.webSources.map((source, index) => (
-                                <li key={index}>
-                                    <a href={source} target="_blank" rel="noopener noreferrer" className="hover:underline text-primary">
-                                        {source}
-                                    </a>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                 )}
             </div>
            ) : (
              <div className="flex items-center justify-center h-full text-muted-foreground text-center">

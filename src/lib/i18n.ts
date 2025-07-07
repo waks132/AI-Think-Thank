@@ -112,8 +112,8 @@ export const t = {
       en: 'Scalability',
     },
     log_title: {
-      fr: 'Voir le Journal de Collaboration',
-      en: 'View Collaboration Log',
+      fr: 'Journal de Collaboration',
+      en: 'Collaboration Log',
     },
     turn: {
       fr: 'Tour',
@@ -327,10 +327,10 @@ export const t = {
   causal: {
     title: { fr: 'Suivi de Flux Causal', en: 'Causal Flow Tracker' },
     description: { fr: 'Analysez les logs cognitifs pour visualiser dynamiquement comment les agents s\'influencent.', en: 'Analyze cognitive logs to dynamically visualize how agents influence each other.' },
-    analyze_button: { fr: 'Analyser le Flux', en: 'Analyze Flow' },
+    analyze_button: { fr: 'Actualiser l\'Analyse', en: 'Refresh Analysis' },
     loading_text: { fr: 'Analyse des schémas d\'influence...', en: 'Analyzing influence patterns...' },
     no_links: { fr: 'Aucun lien causal détecté dans les logs actuels.', en: 'No causal links detected in the current logs.' },
-    re_analyze: { fr: 'Lancez une mission ou cliquez sur "Analyser" pour traiter les derniers logs.', en: 'Launch a mission or click "Analyze" to process the latest logs.' },
+    re_analyze: { fr: 'Les résultats de la dernière analyse de mission s\'affichent ici. Actualisez pour retraiter les logs.', en: 'Results from the last mission analysis are shown here. Refresh to re-process the logs.' },
     toast_no_logs_title: { fr: 'Aucun Log à Analyser', en: 'No Logs to Analyze' },
     toast_no_logs_description: { fr: 'Le journal cognitif est vide. Lancez une mission d\'abord.', en: 'The cognitive log is empty. Launch a mission first.' },
     toast_fail_title: { fr: 'Échec de l\'Analyse', en: 'Analysis Failed' },
@@ -349,7 +349,5 @@ export const t = {
     fail_title: { fr: 'Échec de la Génération', en: 'Generation Failed' },
     fail_description: { fr: 'Impossible de générer le rapport. Veuillez réessayer.', en: 'Could not generate the report. Please try again.' },
     generated_report: { fr: 'Rapport Généré', en: 'Generated Report' },
-    web_search_used: { fr: 'Recherche Web Utilisée', en: 'Web Search Used' },
-    sources_title: { fr: 'Sources Web', en: 'Web Sources' },
   },
 };
