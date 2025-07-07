@@ -71,7 +71,7 @@ export default function MultiAgentDashboard() {
     } catch (error) {
       console.error("Automated Causal Flow Analysis Failed:", error);
     }
-  }, [language, selectedModel, setCausalFlows]);
+  }, [language, selectedModel, setCausalFlows, allAvailableAgentsForFlow]);
 
   const handlePromptChange = (agentId: string, newPrompt: string, refinementResult?: AdaptivePromptRewriterOutput) => {
     setAgents(prevAgents => 
@@ -87,9 +87,10 @@ export default function MultiAgentDashboard() {
     };
 
     setPromptHistories(prevHistories => {
-      const existingHistory = prevHistories[agentId] || [];
+      const agentHistoryKey = `prompt-history-${agentId}`;
+      const existingHistory = prevHistories[agentHistoryKey] || [];
       const updatedHistory = [newVersion, ...existingHistory].slice(0, 20);
-      return { ...prevHistories, [agentId]: updatedHistory };
+      return { ...prevHistories, [agentHistoryKey]: updatedHistory };
     });
   };
 
@@ -105,7 +106,8 @@ export default function MultiAgentDashboard() {
 
   const handleStartMission = async () => {
     const finalSelectedIds = new Set(selectedAgentIds);
-    ORCHESTRATOR_IDS.forEach(id => finalSelectedIds.add(id));
+    const orchestratorsInRoster = agents.filter(a => ORCHESTRATOR_IDS.includes(a.id));
+    orchestratorsInRoster.forEach(o => finalSelectedIds.add(o.id));
 
     if (finalSelectedIds.size < 2) {
       toast({
@@ -141,7 +143,6 @@ export default function MultiAgentDashboard() {
           agentRole: log.agentRole,
           message: log.contribution,
           annotation: log.annotation,
-          // Simulate sequential timestamps
           timestamp: new Date(missionStartTime.getTime() + (index * 3000)).toISOString(),
         }));
         
@@ -179,6 +180,13 @@ export default function MultiAgentDashboard() {
       });
 
       if (result && result.recommendedAgentIds) {
+        if (result.missionClassification === 'Anti-Manipulation') {
+          const disruptor = agents.find(a => a.id === 'disruptor');
+          if (disruptor) {
+            result.recommendedAgentIds.push(disruptor.id);
+          }
+        }
+        
         if (result.recommendedAgentIds.length > 0) {
           const recommendedSet = new Set(result.recommendedAgentIds);
           // Do not allow user to unselect orchestrators suggested by AI
@@ -226,34 +234,40 @@ export default function MultiAgentDashboard() {
 
   useEffect(() => {
     if (hasMounted) {
-      const allPersonas = personaList;
-      const agentMap = new Map(agents.map(a => a.id));
-      
-      if (agents.length < allPersonas.length) {
-        const missingPersonas = allPersonas.filter(p => !agentMap.has(p.id));
-        const newAgents: Agent[] = missingPersonas.map(p => ({
-          id: p.id,
-          role: p.name[language],
-          specialization: p.specialization[language],
-          prompt: p.values[language],
-          icon: p.icon,
-          lastPsiScore: null
-        }));
-        setAgents(prev => [...prev, ...newAgents]);
-      }
+      const personaMap = new Map(personaList.map(p => [p.id, p]));
 
-      // Translate existing agents if language changes
-      setAgents(prev => prev.map(agent => {
-        const persona = personaList.find(p => p.id === agent.id);
-        if (!persona) return agent;
-        return {
-          ...agent,
-          role: persona.name[language],
-          specialization: persona.specialization[language],
-        }
-      }));
+      setAgents(prevAgents => {
+        const prevAgentMap = new Map(prevAgents.map(a => [a.id, a]));
+
+        return personaList.map(persona => {
+          const existingAgent = prevAgentMap.get(persona.id);
+          // The icon is a non-serializable component, so we must always get it from the persona list.
+          const icon = personaMap.get(persona.id)?.icon;
+
+          if (existingAgent) {
+            // Agent exists, re-hydrate its icon and translate its text fields
+            return {
+              ...existingAgent,
+              role: persona.name[language],
+              specialization: persona.specialization[language],
+              icon: icon!,
+            };
+          } else {
+            // Agent does not exist, create a new one from the persona definition
+            return {
+              id: persona.id,
+              role: persona.name[language],
+              specialization: persona.specialization[language],
+              prompt: persona.values[language],
+              icon: icon!,
+              lastPsiScore: null,
+            };
+          }
+        });
+      });
     }
-  }, [hasMounted, language, agents.length, setAgents]);
+  }, [hasMounted, language, setAgents]);
+
 
   useEffect(() => {
     setHasMounted(true);
@@ -271,11 +285,8 @@ export default function MultiAgentDashboard() {
   
   const finalSelectedAgentCount = useMemo(() => {
     const finalSet = new Set(selectedAgentIds);
-    ORCHESTRATOR_IDS.forEach(id => {
-      if(agents.some(a => a.id === id)) {
-        finalSet.add(id)
-      }
-    });
+    const orchestratorsInRoster = agents.filter(a => ORCHESTRATOR_IDS.includes(a.id));
+    orchestratorsInRoster.forEach(o => finalSet.add(o.id));
     return finalSet.size;
   }, [selectedAgentIds, agents]);
 
