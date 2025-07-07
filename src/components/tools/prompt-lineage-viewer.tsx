@@ -43,7 +43,8 @@ export default function PromptLineageViewer() {
 
   useEffect(() => {
     if (selectedAgentId) {
-      const history = promptHistories[selectedAgentId] || [];
+      const agentHistoryKey = `prompt-history-${selectedAgentId}`;
+      const history = promptHistories[agentHistoryKey] || [];
       setPromptHistory(history);
       if (history.length > 0) {
         setSelectedVersion1(history[0]);
