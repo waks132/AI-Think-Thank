@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import useLocalStorage from '@/hooks/use-local-storage';
@@ -35,22 +35,35 @@ const DiffView: React.FC<DiffViewProps> = ({ string1, string2 }) => {
 export default function PromptLineageViewer() {
   const [agents] = useLocalStorage<Agent[]>('agents', []);
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
-  const [promptHistory] = useLocalStorage<PromptVersion[]>(selectedAgentId ? `prompt-history-${selectedAgentId}` : '', []);
+  const [promptHistories] = useLocalStorage<Record<string, PromptVersion[]>>('prompt-histories', {});
+  const [promptHistory, setPromptHistory] = useState<PromptVersion[]>([]);
   const [selectedVersion1, setSelectedVersion1] = useState<PromptVersion | null>(null);
   const [selectedVersion2, setSelectedVersion2] = useState<PromptVersion | null>(null);
   const { language } = useLanguage();
 
+  useEffect(() => {
+    if (selectedAgentId) {
+      const history = promptHistories[selectedAgentId] || [];
+      setPromptHistory(history);
+      if (history.length > 0) {
+        setSelectedVersion1(history[0]);
+      } else {
+        setSelectedVersion1(null);
+      }
+      if (history.length > 1) {
+        setSelectedVersion2(history[1]);
+      } else {
+        setSelectedVersion2(null);
+      }
+    } else {
+      setPromptHistory([]);
+      setSelectedVersion1(null);
+      setSelectedVersion2(null);
+    }
+  }, [selectedAgentId, promptHistories]);
+
   const handleAgentChange = (agentId: string) => {
     setSelectedAgentId(agentId);
-    setSelectedVersion1(null);
-    setSelectedVersion2(null);
-    const history = JSON.parse(localStorage.getItem(`prompt-history-${agentId}`) || '[]');
-    if (history.length > 0) {
-      setSelectedVersion1(history[0]);
-    }
-    if (history.length > 1) {
-        setSelectedVersion2(history[1]);
-    }
   };
   
   const handleVersionSelect = (version: PromptVersion) => {
@@ -68,6 +81,8 @@ export default function PromptLineageViewer() {
     }
   };
 
+  const sortedAgents = [...agents].sort((a,b) => a.role.localeCompare(b.role));
+
   return (
     <Card>
       <CardHeader>
@@ -77,12 +92,12 @@ export default function PromptLineageViewer() {
       <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="md:col-span-1 space-y-4">
             <h3 className="font-semibold">{t.lineage.select_agent_label[language]}</h3>
-            <Select onValueChange={handleAgentChange} defaultValue={selectedAgentId || undefined}>
+            <Select onValueChange={handleAgentChange} value={selectedAgentId || ""}>
                 <SelectTrigger>
                     <SelectValue placeholder={t.lineage.select_agent_placeholder[language]} />
                 </SelectTrigger>
                 <SelectContent>
-                    {agents.map(agent => (
+                    {sortedAgents.map(agent => (
                         <SelectItem key={agent.id} value={agent.id}>{agent.role}</SelectItem>
                     ))}
                 </SelectContent>
@@ -154,5 +169,3 @@ export default function PromptLineageViewer() {
     </Card>
   );
 }
-
-    

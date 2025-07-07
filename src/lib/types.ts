@@ -6,6 +6,7 @@ export interface Agent {
   specialization: string;
   prompt: string;
   icon: LucideIcon;
+  lastPsiScore?: number | null;
 }
 
 export interface PromptVersion {

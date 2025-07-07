@@ -112,6 +112,10 @@ export const t = {
       en: 'Scalability',
     },
     log_title: {
+      fr: 'Voir le Journal de Collaboration',
+      en: 'View Collaboration Log',
+    },
+    log_title_visible: {
       fr: 'Journal de Collaboration',
       en: 'Collaboration Log',
     },
@@ -128,7 +132,7 @@ export const t = {
       en: 'Select agents for the mission and edit their core prompts to adapt their behavior.',
     },
     toast_select_title: { fr: 'Erreur de Sélection', en: 'Selection Error' },
-    toast_select_description: { fr: 'Veuillez sélectionner au moins deux agents pour la collaboration.', en: 'Please select at least two agents for collaboration.' },
+    toast_select_description: { fr: 'Veuillez sélectionner au moins deux agents (non-orchestrateurs) pour la collaboration.', en: 'Please select at least two (non-orchestrator) agents for collaboration.' },
     toast_log_title: { fr: 'Log de Mission Enregistré', en: 'Mission Log Saved' },
     toast_log_description: { fr: 'La collaboration a été ajoutée au visualiseur de logs.', en: 'The collaboration has been added to the log viewer.' },
     toast_fail_title: { fr: 'Échec de la Collaboration', en: 'Collaboration Failed' },
@@ -147,6 +151,7 @@ export const t = {
     },
     refine_button: { fr: 'Affiner', en: 'Refine' },
     save_button: { fr: 'Sauvegarder', en: 'Save' },
+    orchestrator_badge: { fr: 'Orchestrateur', en: 'Orchestrator' },
     toast_save_title: { fr: 'Prompt Sauvegardé', en: 'Prompt Saved' },
     toast_save_description: {
       fr: 'Le prompt pour {agentRole} a été mis à jour.',
@@ -196,7 +201,7 @@ export const t = {
     no_results: { fr: 'Les résultats de l\'analyse du clash apparaîtront ici.', en: 'Clash analysis results will appear here.' },
     perspective: { fr: 'Perspective', en: 'Perspective' },
     select_persona_placeholder: { fr: 'Sélectionnez un Persona...', en: 'Select a Persona...' },
-    directive_placeholder: { fr: 'Sélectionnez un persona pour voir sa directive.', en: 'Select a persona to see its directive.' },
+    directive_placeholder: { fr: 'Le prompt de l\'agent (synchronisé avec le Dashboard) sera utilisé.', en: 'The agent prompt (synced with Dashboard) will be used.' },
     turn: { fr: 'Tour', en: 'Turn' },
     position: { fr: 'Position', en: 'Position' },
     justification: { fr: 'Justification', en: 'Justification' },

@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Users, Loader2, Sparkles, FileText, BrainCircuit, ShieldCheck, MessageSquare, WandSparkles } from 'lucide-react';
 import AgentCard from './agent-card';
-import type { Agent, LogEntry } from '@/lib/types';
+import type { Agent, LogEntry, PromptVersion } from '@/lib/types';
 import useLocalStorage from '@/hooks/use-local-storage';
 import { runAgentCollaboration, type AgentCollaborationOutput } from '@/ai/flows/agent-collaboration-flow';
 import { autoAgentSelector, type AutoAgentSelectorOutput } from '@/ai/flows/auto-agent-selector';
@@ -22,75 +22,25 @@ import { t } from '@/lib/i18n';
 import { personaList } from '@/lib/personas';
 import { Skeleton } from '../ui/skeleton';
 import { Badge } from '../ui/badge';
-import { trackCausalFlow } from '@/ai/flows/causal-flow-tracker-flow';
+import { trackCausalFlow, type CausalFlowTrackerOutput } from '@/ai/flows/causal-flow-tracker-flow';
+import type { AdaptivePromptRewriterOutput } from '@/ai/flows/adaptive-prompt-rewriter';
 
 const ORCHESTRATOR_IDS = ['kairos-1', 'disruptor'];
 
 export default function MultiAgentDashboard() {
   const { language } = useLanguage();
   const [hasMounted, setHasMounted] = useState(false);
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
-  const [storedAgents, setStoredAgents] = useLocalStorage<Agent[]>('agents', []);
+  const [agents, setAgents] = useLocalStorage<Agent[]>('agents', []);
   const [logs, setLogs] = useLocalStorage<LogEntry[]>('cognitive-logs', []);
-  const [selectedAgentIds, setSelectedAgentIds] = useState<Set<string>>(new Set(['kairos-1', 'helios', 'veritas']));
+  const [promptHistories, setPromptHistories] = useLocalStorage<Record<string, PromptVersion[]>>('prompt-histories', {});
+  const [selectedAgentIds, setSelectedAgentIds] = useState<Set<string>>(new Set(['helios', 'veritas', 'symbioz']));
   const [mission, setMission] = useLocalStorage<string>('mission-text', 'Développer un cadre pour le déploiement éthique de l\'IA dans les véhicules autonomes.');
   const [collaborationResult, setCollaborationResult] = useLocalStorage<AgentCollaborationOutput | null>("collaboration-result", null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast();
-
-  const agents: Agent[] = useMemo(() => {
-    const allPersonas = personaList;
-    const storedAgentMap = new Map(storedAgents.map(a => [a.id, a]));
-
-    const currentAgents = allPersonas.map(persona => {
-      const storedAgent = storedAgentMap.get(persona.id);
-      return {
-        id: persona.id,
-        role: persona.name[language],
-        specialization: persona.specialization[language],
-        prompt: storedAgent ? storedAgent.prompt : persona.values[language],
-        icon: persona.icon,
-      };
-    });
-
-    if (hasMounted && currentAgents.length > storedAgents.length) {
-        const newStoredAgents = currentAgents.map(agent => {
-            const persona = personaList.find(p => p.id === agent.id);
-            if (!persona) return null;
-            return {
-                id: agent.id,
-                role: persona.name.en,
-                specialization: persona.specialization.en,
-                prompt: agent.prompt,
-                icon: agent.icon,
-            }
-        }).filter(Boolean) as Agent[];
-        setStoredAgents(newStoredAgents);
-    }
-
-    return currentAgents.sort((a, b) => {
-        const aIsOrchestrator = ORCHESTRATOR_IDS.includes(a.id);
-        const bIsOrchestrator = ORCHESTRATOR_IDS.includes(b.id);
-        if (aIsOrchestrator && !bIsOrchestrator) return -1;
-        if (!aIsOrchestrator && bIsOrchestrator) return 1;
-        return a.id.localeCompare(b.id);
-    });
-  }, [storedAgents, language, hasMounted, setStoredAgents]);
-  
-  const agentMap = useMemo(() => new Map(agents.map(a => [a.role, a])), [agents]);
-  
-  const allAvailableAgentsForFlow = useMemo(() => agents.map(a => ({
-      id: a.id,
-      role: a.role,
-      specialization: a.specialization,
-      isOrchestrator: ORCHESTRATOR_IDS.includes(a.id)
-  })), [agents]);
+  const [, setCausalFlows] = useLocalStorage<CausalFlowTrackerOutput['causalFlows']>('causal-flow-result', []);
 
   const agentIconMap = useMemo(() => {
     const map = new Map<string, React.ElementType>();
@@ -100,44 +50,46 @@ export default function MultiAgentDashboard() {
     });
     return map;
   }, []);
+  
+  const allAvailableAgentsForFlow = useMemo(() => agents.map(a => ({
+      id: a.id,
+      role: a.role,
+      specialization: a.specialization,
+  })), [agents]);
 
-  const triggerCausalFlowAnalysis = async () => {
-    const currentLogs = JSON.parse(window.localStorage.getItem('cognitive-logs') || '[]');
-    if (currentLogs.length === 0) {
-      return; 
-    }
+  const triggerCausalFlowAnalysis = useCallback(async (currentLogs: LogEntry[], agentList: {id: string; role: string; specialization: string}[]) => {
+    if (currentLogs.length === 0) return;
 
     try {
-      await trackCausalFlow({
-        logEntries: JSON.stringify(currentLogs.map((log: any, index: number) => ({...log, index}))),
-        agentList: allAvailableAgentsForFlow,
+      const result = await trackCausalFlow({
+        logEntries: JSON.stringify(currentLogs.map((log, index) => ({ ...log, index }))),
+        agentList: agentList,
         model: selectedModel,
         language,
       });
+      setCausalFlows(result.causalFlows);
     } catch (error) {
       console.error("Automated Causal Flow Analysis Failed:", error);
     }
-  };
+  }, [language, selectedModel, setCausalFlows]);
 
-  const handlePromptChange = (agentId: string, newPrompt: string) => {
-    setStoredAgents(prevAgents => {
-      const agentIndex = prevAgents.findIndex(a => a.id === agentId);
-      if (agentIndex !== -1) {
-        const newAgents = [...prevAgents];
-        newAgents[agentIndex] = { ...newAgents[agentIndex], prompt: newPrompt };
-        return newAgents;
-      } else {
-        const persona = personaList.find(p => p.id === agentId);
-        if (!persona) return prevAgents;
-        const newAgent: Agent = {
-          id: persona.id,
-          role: persona.name.en,
-          specialization: persona.specialization.en,
-          prompt: newPrompt,
-          icon: persona.icon,
-        };
-        return [...prevAgents, newAgent];
-      }
+  const handlePromptChange = (agentId: string, newPrompt: string, refinementResult?: AdaptivePromptRewriterOutput) => {
+    setAgents(prevAgents => 
+      prevAgents.map(agent => 
+        agent.id === agentId ? { ...agent, prompt: newPrompt, lastPsiScore: refinementResult?.psiScore ?? agent.lastPsiScore } : agent
+      )
+    );
+
+    const newVersion: PromptVersion = {
+      id: new Date().toISOString(),
+      prompt: newPrompt,
+      timestamp: new Date().toISOString(),
+    };
+
+    setPromptHistories(prevHistories => {
+      const existingHistory = prevHistories[agentId] || [];
+      const updatedHistory = [newVersion, ...existingHistory].slice(0, 20);
+      return { ...prevHistories, [agentId]: updatedHistory };
     });
   };
 
@@ -145,17 +97,17 @@ export default function MultiAgentDashboard() {
     if (ORCHESTRATOR_IDS.includes(agentId)) return;
     setSelectedAgentIds(prev => {
       const newSet = new Set(prev);
-      if (isSelected) {
-        newSet.add(agentId);
-      } else {
-        newSet.delete(agentId);
-      }
+      if (isSelected) newSet.add(agentId);
+      else newSet.delete(agentId);
       return newSet;
     });
   };
 
   const handleStartMission = async () => {
-    if (selectedAgentIds.size < 2) {
+    const finalSelectedIds = new Set(selectedAgentIds);
+    ORCHESTRATOR_IDS.forEach(id => finalSelectedIds.add(id));
+
+    if (finalSelectedIds.size < 2) {
       toast({
         variant: 'destructive',
         title: t.dashboard.toast_select_title[language],
@@ -168,7 +120,7 @@ export default function MultiAgentDashboard() {
     setCollaborationResult(null);
 
     const agentListString = agents
-      .filter(agent => selectedAgentIds.has(agent.id))
+      .filter(agent => finalSelectedIds.has(agent.id))
       .map(agent => `- **Agent Role:** ${agent.role}\n  **Core Directive:** "${agent.prompt}"`)
       .join('\n\n');
 
@@ -182,23 +134,26 @@ export default function MultiAgentDashboard() {
       setCollaborationResult(result);
       
       if (result.collaborationLog) {
-        const newLogEntries: LogEntry[] = result.collaborationLog.map(log => ({
-          id: `${new Date().toISOString()}-${log.turn}`,
-          agentId: agentMap.get(log.agentRole)?.id || 'unknown',
+        const missionStartTime = new Date();
+        const newLogEntries: LogEntry[] = result.collaborationLog.map((log, index) => ({
+          id: `${missionStartTime.toISOString()}-${log.turn}`,
+          agentId: agents.find(a => a.role === log.agentRole)?.id || 'unknown',
           agentRole: log.agentRole,
           message: log.contribution,
           annotation: log.annotation,
-          timestamp: new Date().toISOString(),
+          // Simulate sequential timestamps
+          timestamp: new Date(missionStartTime.getTime() + (index * 3000)).toISOString(),
         }));
         
-        setLogs(prevLogs => [...newLogEntries, ...prevLogs]);
+        const updatedLogs = [...newLogEntries, ...logs];
+        setLogs(updatedLogs);
         
         toast({
           title: t.dashboard.toast_log_title[language],
           description: t.dashboard.toast_log_description[language],
         });
 
-        triggerCausalFlowAnalysis();
+        triggerCausalFlowAnalysis(newLogEntries, allAvailableAgentsForFlow);
       }
 
     } catch (error) {
@@ -214,56 +169,115 @@ export default function MultiAgentDashboard() {
   };
 
   const handleSuggestTeam = async () => {
-      setIsSuggesting(true);
-      try {
-        const result: AutoAgentSelectorOutput = await autoAgentSelector({
-          mission,
-          agents: allAvailableAgentsForFlow,
-          model: selectedModel,
-          language,
-        });
+    setIsSuggesting(true);
+    try {
+      const result: AutoAgentSelectorOutput = await autoAgentSelector({
+        mission,
+        agents: allAvailableAgentsForFlow.filter(a => !ORCHESTRATOR_IDS.includes(a.id)),
+        model: selectedModel,
+        language,
+      });
 
-        if (result && result.recommendedAgentIds) {
-          if (result.recommendedAgentIds.length > 0) {
-            setSelectedAgentIds(new Set(result.recommendedAgentIds));
-            toast({
-              title: `${t.dashboard.toast_suggest_title[language]}: ${result.missionClassification}`,
-              description: (
-                <div className="text-xs max-w-md">
-                  <p className="font-bold">{result.recommendation}</p>
-                  <p className="mt-2 whitespace-pre-wrap">{result.orchestrationRationale}</p>
-                  <p className="mt-2 font-semibold">{t.dashboard.protocols_activated[language]}:</p>
-                  <p className="whitespace-pre-wrap">{result.specialProtocolsActivated}</p>
-                </div>
-              ),
-              duration: 15000,
-            });
-          } else {
-             setSelectedAgentIds(new Set());
-             toast({
-              variant: "destructive",
-              title: `${t.dashboard.toast_suggest_title[language]}: ${result.missionClassification}`,
-              description: (
-                <div className="text-xs max-w-md">
-                  <p className="font-bold">{result.recommendation}</p>
-                  <p className="mt-2 whitespace-pre-wrap">{result.orchestrationRationale}</p>
-                </div>
-              ),
-              duration: 15000,
-            });
-          }
+      if (result && result.recommendedAgentIds) {
+        if (result.recommendedAgentIds.length > 0) {
+          const recommendedSet = new Set(result.recommendedAgentIds);
+          // Do not allow user to unselect orchestrators suggested by AI
+          const finalSet = new Set([...selectedAgentIds, ...recommendedSet]);
+          setSelectedAgentIds(finalSet);
+          
+          toast({
+            title: `${t.dashboard.toast_suggest_title[language]}: ${result.missionClassification}`,
+            description: (
+              <div className="text-xs max-w-md">
+                <p className="font-bold">{result.recommendation}</p>
+                <p className="mt-2 whitespace-pre-wrap">{result.orchestrationRationale}</p>
+                <p className="mt-2 font-semibold">{t.dashboard.protocols_activated[language]}:</p>
+                <p className="whitespace-pre-wrap">{result.specialProtocolsActivated}</p>
+              </div>
+            ),
+            duration: 15000,
+          });
+        } else {
+           setSelectedAgentIds(new Set());
+           toast({
+            variant: "destructive",
+            title: `${t.dashboard.toast_suggest_title[language]}: ${result.missionClassification}`,
+            description: (
+              <div className="text-xs max-w-md">
+                <p className="font-bold">{result.recommendation}</p>
+                <p className="mt-2 whitespace-pre-wrap">{result.orchestrationRationale}</p>
+              </div>
+            ),
+            duration: 15000,
+          });
         }
-      } catch (error) {
-        console.error("Error suggesting team:", error);
-        toast({
-          variant: "destructive",
-          title: "Suggestion Failed",
-          description: "Could not get an AI team suggestion. Please try again.",
-        });
-      } finally {
-        setIsSuggesting(false);
       }
-    };
+    } catch (error) {
+      console.error("Error suggesting team:", error);
+      toast({
+        variant: "destructive",
+        title: "Suggestion Failed",
+        description: "Could not get an AI team suggestion. Please try again.",
+      });
+    } finally {
+      setIsSuggesting(false);
+    }
+  };
+
+  useEffect(() => {
+    if (hasMounted) {
+      const allPersonas = personaList;
+      const agentMap = new Map(agents.map(a => a.id));
+      
+      if (agents.length < allPersonas.length) {
+        const missingPersonas = allPersonas.filter(p => !agentMap.has(p.id));
+        const newAgents: Agent[] = missingPersonas.map(p => ({
+          id: p.id,
+          role: p.name[language],
+          specialization: p.specialization[language],
+          prompt: p.values[language],
+          icon: p.icon,
+          lastPsiScore: null
+        }));
+        setAgents(prev => [...prev, ...newAgents]);
+      }
+
+      // Translate existing agents if language changes
+      setAgents(prev => prev.map(agent => {
+        const persona = personaList.find(p => p.id === agent.id);
+        if (!persona) return agent;
+        return {
+          ...agent,
+          role: persona.name[language],
+          specialization: persona.specialization[language],
+        }
+      }));
+    }
+  }, [hasMounted, language, agents.length, setAgents]);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  const sortedAgents = useMemo(() => {
+      return [...agents].sort((a, b) => {
+          const aIsOrchestrator = ORCHESTRATOR_IDS.includes(a.id);
+          const bIsOrchestrator = ORCHESTRATOR_IDS.includes(b.id);
+          if (aIsOrchestrator && !bIsOrchestrator) return -1;
+          if (!aIsOrchestrator && bIsOrchestrator) return 1;
+          return a.id.localeCompare(b.id);
+      });
+  }, [agents]);
+  
+  const finalSelectedAgentCount = useMemo(() => {
+    const finalSet = new Set(selectedAgentIds);
+    ORCHESTRATOR_IDS.forEach(id => {
+      if(agents.some(a => a.id === id)) {
+        finalSet.add(id)
+      }
+    });
+    return finalSet.size;
+  }, [selectedAgentIds, agents]);
 
   return (
     <div className="animate-fade-in space-y-8">
@@ -304,7 +318,7 @@ export default function MultiAgentDashboard() {
                 {isLoading ? (
                   <><Loader2 className="mr-2 animate-spin" /> {t.dashboard.start_button_loading[language]}</>
                 ) : (
-                  <><Sparkles className="mr-2" /> {t.dashboard.start_button[language]} ({hasMounted ? selectedAgentIds.size : 0} {t.dashboard.agents_selected[language]})</>
+                  <><Sparkles className="mr-2" /> {t.dashboard.start_button[language]} ({hasMounted ? finalSelectedAgentCount : 0} {t.dashboard.agents_selected[language]})</>
                 )}
               </Button>
             </div>
@@ -320,8 +334,8 @@ export default function MultiAgentDashboard() {
             <div className="space-y-4 animate-fade-in pt-4">
               <Separator />
               <h3 className="font-headline text-xl">{t.dashboard.outcome_title[language]}</h3>
-               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-6">
+               <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                <div className="lg:col-span-3 space-y-6">
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2"><FileText />{t.dashboard.summary_title[language]}</CardTitle>
@@ -338,10 +352,7 @@ export default function MultiAgentDashboard() {
                       <p className="whitespace-pre-wrap text-muted-foreground">{collaborationResult.reasoning}</p>
                     </CardContent>
                   </Card>
-                </div>
-
-                <div className="lg:col-span-1 space-y-6">
-                   {collaborationResult.validationGrid && (
+                  {collaborationResult.validationGrid && (
                      <Card>
                         <CardHeader>
                           <CardTitle className="flex items-center gap-2 text-lg"><ShieldCheck />{t.dashboard.assessment_title[language]}</CardTitle>
@@ -379,41 +390,41 @@ export default function MultiAgentDashboard() {
                         </CardContent>
                       </Card>
                    )}
+                </div>
 
+                <div className="lg:col-span-2 space-y-6">
                     {collaborationResult.collaborationLog && collaborationResult.collaborationLog.length > 0 && (
-                        <Accordion type="single" collapsible>
-                            <AccordionItem value="item-1">
-                                <AccordionTrigger>
-                                    <div className="flex items-center gap-2 text-lg font-headline"><MessageSquare />{t.dashboard.log_title[language]}</div>
-                                </AccordionTrigger>
-                                <AccordionContent>
-                                    <div className="space-y-6 max-h-[400px] overflow-y-auto p-4 border rounded-lg bg-background/50">
-                                        {collaborationResult.collaborationLog.map((log) => {
-                                            const Icon = agentIconMap.get(log.agentRole) || BrainCircuit;
-                                            return (
-                                                <div key={log.turn} className="flex items-start gap-4 animate-fade-in">
-                                                    <div className="p-2 bg-accent rounded-full">
-                                                        <Icon className="h-5 w-5 text-accent-foreground" />
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <div className="flex items-baseline justify-between">
-                                                            <p className="font-semibold text-primary">{log.agentRole}</p>
-                                                            <span className="text-xs text-muted-foreground font-mono">{t.dashboard.turn[language]} {log.turn}</span>
-                                                        </div>
-                                                        <p className="text-sm text-foreground/90">{log.contribution}</p>
-                                                         {log.annotation && (
-                                                          <p className="mt-1 text-xs text-secondary font-medium italic">
-                                                            -- {log.annotation}
-                                                          </p>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </AccordionContent>
-                            </AccordionItem>
-                        </Accordion>
+                      <Card className="h-full flex flex-col">
+                        <CardHeader>
+                           <CardTitle className="flex items-center gap-2 text-lg font-headline"><MessageSquare />{t.dashboard.log_title_visible[language]}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex-grow">
+                          <div className="space-y-6 max-h-[700px] overflow-y-auto p-4 border rounded-lg bg-background/50 h-full">
+                              {collaborationResult.collaborationLog.map((log) => {
+                                  const Icon = agentIconMap.get(log.agentRole) || BrainCircuit;
+                                  return (
+                                      <div key={log.turn} className="flex items-start gap-4 animate-fade-in">
+                                          <div className="p-2 bg-accent rounded-full">
+                                              <Icon className="h-5 w-5 text-accent-foreground" />
+                                          </div>
+                                          <div className="flex-1">
+                                              <div className="flex items-baseline justify-between">
+                                                  <p className="font-semibold text-primary">{log.agentRole}</p>
+                                                  <span className="text-xs text-muted-foreground font-mono">{t.dashboard.turn[language]} {log.turn}</span>
+                                              </div>
+                                              <p className="text-sm text-foreground/90">{log.contribution}</p>
+                                               {log.annotation && (
+                                                <p className="mt-1 text-xs text-secondary font-medium italic">
+                                                  -- {log.annotation}
+                                                </p>
+                                              )}
+                                          </div>
+                                      </div>
+                                  );
+                              })}
+                          </div>
+                        </CardContent>
+                      </Card>
                     )}
                 </div>
               </div>
@@ -426,14 +437,14 @@ export default function MultiAgentDashboard() {
         <h2 className="text-2xl font-bold font-headline mb-2">{t.dashboard.roster_title[language]}</h2>
         <p className="text-muted-foreground mb-6">{t.dashboard.roster_description[language]}</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {hasMounted ? agents.map(agent => {
+          {hasMounted ? sortedAgents.map(agent => {
             const isOrchestrator = ORCHESTRATOR_IDS.includes(agent.id);
             return (
               <AgentCard 
                 key={agent.id} 
                 agent={agent} 
                 onPromptChange={handlePromptChange} 
-                isSelected={selectedAgentIds.has(agent.id)}
+                isSelected={isOrchestrator || selectedAgentIds.has(agent.id)}
                 onSelectionChange={handleAgentSelectionChange}
                 selectedModel={selectedModel}
                 isOrchestrator={isOrchestrator}
