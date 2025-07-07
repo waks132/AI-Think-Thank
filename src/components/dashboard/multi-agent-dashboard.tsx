@@ -22,7 +22,9 @@ import { t } from '@/lib/i18n';
 import { personaList } from '@/lib/personas';
 import { Skeleton } from '../ui/skeleton';
 import { Badge } from '../ui/badge';
+import { trackCausalFlow } from '@/ai/flows/causal-flow-tracker-flow';
 
+const ORCHESTRATOR_IDS = ['kairos-1', 'disruptor'];
 
 export default function MultiAgentDashboard() {
   const { language } = useLanguage();
@@ -43,10 +45,10 @@ export default function MultiAgentDashboard() {
   const { toast } = useToast();
 
   const agents: Agent[] = useMemo(() => {
-    const allDashboardPersonas = personaList.filter(p => p.id !== 'disruptor');
+    const allPersonas = personaList;
     const storedAgentMap = new Map(storedAgents.map(a => [a.id, a]));
 
-    const currentAgents = allDashboardPersonas.map(persona => {
+    const currentAgents = allPersonas.map(persona => {
       const storedAgent = storedAgentMap.get(persona.id);
       return {
         id: persona.id,
@@ -57,27 +59,39 @@ export default function MultiAgentDashboard() {
       };
     });
 
-    const newStoredAgents = currentAgents.map(agent => {
-        const persona = personaList.find(p => p.id === agent.id);
-        if (!persona) return null;
-        return {
-            id: agent.id,
-            role: persona.name.en, // Stored role/specialization doesn't matter
-            specialization: persona.specialization.en,
-            prompt: agent.prompt,
-            icon: agent.icon,
-        }
-    }).filter(Boolean) as Agent[];
-    
-    // This effect ensures newly added personas in code get added to local storage
-    if (hasMounted && newStoredAgents.length > storedAgents.length) {
+    if (hasMounted && currentAgents.length > storedAgents.length) {
+        const newStoredAgents = currentAgents.map(agent => {
+            const persona = personaList.find(p => p.id === agent.id);
+            if (!persona) return null;
+            return {
+                id: agent.id,
+                role: persona.name.en,
+                specialization: persona.specialization.en,
+                prompt: agent.prompt,
+                icon: agent.icon,
+            }
+        }).filter(Boolean) as Agent[];
         setStoredAgents(newStoredAgents);
     }
 
-    return currentAgents.sort((a, b) => a.id.localeCompare(b.id));
+    return currentAgents.sort((a, b) => {
+        const aIsOrchestrator = ORCHESTRATOR_IDS.includes(a.id);
+        const bIsOrchestrator = ORCHESTRATOR_IDS.includes(b.id);
+        if (aIsOrchestrator && !bIsOrchestrator) return -1;
+        if (!aIsOrchestrator && bIsOrchestrator) return 1;
+        return a.id.localeCompare(b.id);
+    });
   }, [storedAgents, language, hasMounted, setStoredAgents]);
   
   const agentMap = useMemo(() => new Map(agents.map(a => [a.role, a])), [agents]);
+  
+  const allAvailableAgentsForFlow = useMemo(() => agents.map(a => ({
+      id: a.id,
+      role: a.role,
+      specialization: a.specialization,
+      isOrchestrator: ORCHESTRATOR_IDS.includes(a.id)
+  })), [agents]);
+
   const agentIconMap = useMemo(() => {
     const map = new Map<string, React.ElementType>();
     personaList.forEach(p => {
@@ -87,24 +101,37 @@ export default function MultiAgentDashboard() {
     return map;
   }, []);
 
+  const triggerCausalFlowAnalysis = async () => {
+    const currentLogs = JSON.parse(window.localStorage.getItem('cognitive-logs') || '[]');
+    if (currentLogs.length === 0) {
+      return; 
+    }
+
+    try {
+      await trackCausalFlow({
+        logEntries: JSON.stringify(currentLogs.map((log: any, index: number) => ({...log, index}))),
+        agentList: allAvailableAgentsForFlow,
+        model: selectedModel,
+        language,
+      });
+    } catch (error) {
+      console.error("Automated Causal Flow Analysis Failed:", error);
+    }
+  };
 
   const handlePromptChange = (agentId: string, newPrompt: string) => {
     setStoredAgents(prevAgents => {
       const agentIndex = prevAgents.findIndex(a => a.id === agentId);
-
       if (agentIndex !== -1) {
-        // Agent exists, update it
         const newAgents = [...prevAgents];
         newAgents[agentIndex] = { ...newAgents[agentIndex], prompt: newPrompt };
         return newAgents;
       } else {
-        // Agent does not exist in storage, add it
         const persona = personaList.find(p => p.id === agentId);
-        if (!persona) return prevAgents; // Should not happen
-
+        if (!persona) return prevAgents;
         const newAgent: Agent = {
           id: persona.id,
-          role: persona.name.en, // Stored role/specialization doesn't matter, it's overwritten by language
+          role: persona.name.en,
           specialization: persona.specialization.en,
           prompt: newPrompt,
           icon: persona.icon,
@@ -115,6 +142,7 @@ export default function MultiAgentDashboard() {
   };
 
   const handleAgentSelectionChange = (agentId: string, isSelected: boolean) => {
+    if (ORCHESTRATOR_IDS.includes(agentId)) return;
     setSelectedAgentIds(prev => {
       const newSet = new Set(prev);
       if (isSelected) {
@@ -169,6 +197,8 @@ export default function MultiAgentDashboard() {
           title: t.dashboard.toast_log_title[language],
           description: t.dashboard.toast_log_description[language],
         });
+
+        triggerCausalFlowAnalysis();
       }
 
     } catch (error) {
@@ -176,7 +206,7 @@ export default function MultiAgentDashboard() {
       toast({
         variant: "destructive",
         title: t.dashboard.toast_fail_title[language],
-        description: t.dashboard.toast_fail_description[language],
+        description: (error as Error).message || t.dashboard.toast_fail_description[language],
       });
     } finally {
       setIsLoading(false);
@@ -186,15 +216,9 @@ export default function MultiAgentDashboard() {
   const handleSuggestTeam = async () => {
       setIsSuggesting(true);
       try {
-        const availableAgentsForFlow = agents.map(a => ({
-          id: a.id,
-          role: a.role,
-          specialization: a.specialization,
-        }));
-
         const result: AutoAgentSelectorOutput = await autoAgentSelector({
           mission,
-          agents: availableAgentsForFlow,
+          agents: allAvailableAgentsForFlow,
           model: selectedModel,
           language,
         });
@@ -205,11 +229,11 @@ export default function MultiAgentDashboard() {
             toast({
               title: `${t.dashboard.toast_suggest_title[language]}: ${result.missionClassification}`,
               description: (
-                <div className="text-xs">
+                <div className="text-xs max-w-md">
                   <p className="font-bold">{result.recommendation}</p>
-                  <p className="mt-2">{result.orchestrationRationale}</p>
+                  <p className="mt-2 whitespace-pre-wrap">{result.orchestrationRationale}</p>
                   <p className="mt-2 font-semibold">{t.dashboard.protocols_activated[language]}:</p>
-                  <p>{result.specialProtocolsActivated}</p>
+                  <p className="whitespace-pre-wrap">{result.specialProtocolsActivated}</p>
                 </div>
               ),
               duration: 15000,
@@ -220,9 +244,9 @@ export default function MultiAgentDashboard() {
               variant: "destructive",
               title: `${t.dashboard.toast_suggest_title[language]}: ${result.missionClassification}`,
               description: (
-                <div className="text-xs">
+                <div className="text-xs max-w-md">
                   <p className="font-bold">{result.recommendation}</p>
-                  <p className="mt-2">{result.orchestrationRationale}</p>
+                  <p className="mt-2 whitespace-pre-wrap">{result.orchestrationRationale}</p>
                 </div>
               ),
               duration: 15000,
@@ -317,42 +341,44 @@ export default function MultiAgentDashboard() {
                 </div>
 
                 <div className="lg:col-span-1 space-y-6">
-                   <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-lg"><ShieldCheck />{t.dashboard.assessment_title[language]}</CardTitle>
-                        <CardDescription>{t.dashboard.assessment_description[language]}</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4 pt-2">
-                        <div className="space-y-1">
-                          <div className="flex justify-between items-baseline">
-                            <Label className="text-sm">{t.dashboard.clarity_label[language]}</Label>
-                            <span className="font-bold text-primary">{collaborationResult.validationGrid.clarity.toFixed(2)}</span>
+                   {collaborationResult.validationGrid && (
+                     <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2 text-lg"><ShieldCheck />{t.dashboard.assessment_title[language]}</CardTitle>
+                          <CardDescription>{t.dashboard.assessment_description[language]}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4 pt-2">
+                          <div className="space-y-1">
+                            <div className="flex justify-between items-baseline">
+                              <Label className="text-sm">{t.dashboard.clarity_label[language]}</Label>
+                              <span className="font-bold text-primary">{collaborationResult.validationGrid.clarity.toFixed(2)}</span>
+                            </div>
+                            <Progress value={collaborationResult.validationGrid.clarity * 100} />
                           </div>
-                          <Progress value={collaborationResult.validationGrid.clarity * 100} />
-                        </div>
-                         <div className="space-y-1">
-                           <div className="flex justify-between items-baseline">
-                            <Label className="text-sm">{t.dashboard.synthesis_label[language]}</Label>
-                            <span className="font-bold text-primary">{collaborationResult.validationGrid.synthesis.toFixed(2)}</span>
-                           </div>
-                          <Progress value={collaborationResult.validationGrid.synthesis * 100} />
-                        </div>
-                         <div className="space-y-1">
-                          <div className="flex justify-between items-baseline">
-                            <Label className="text-sm">{t.dashboard.ethics_label[language]}</Label>
-                            <span className="font-bold text-primary">{collaborationResult.validationGrid.ethics.toFixed(2)}</span>
-                           </div>
-                          <Progress value={collaborationResult.validationGrid.ethics * 100} />
-                        </div>
-                         <div className="space-y-1">
-                          <div className="flex justify-between items-baseline">
-                            <Label className="text-sm">{t.dashboard.scalability_label[language]}</Label>
-                            <span className="font-bold text-primary">{collaborationResult.validationGrid.scalability.toFixed(2)}</span>
-                           </div>
-                          <Progress value={collaborationResult.validationGrid.scalability * 100} />
-                        </div>
-                      </CardContent>
-                    </Card>
+                           <div className="space-y-1">
+                             <div className="flex justify-between items-baseline">
+                              <Label className="text-sm">{t.dashboard.synthesis_label[language]}</Label>
+                              <span className="font-bold text-primary">{collaborationResult.validationGrid.synthesis.toFixed(2)}</span>
+                             </div>
+                            <Progress value={collaborationResult.validationGrid.synthesis * 100} />
+                          </div>
+                           <div className="space-y-1">
+                            <div className="flex justify-between items-baseline">
+                              <Label className="text-sm">{t.dashboard.ethics_label[language]}</Label>
+                              <span className="font-bold text-primary">{collaborationResult.validationGrid.ethics.toFixed(2)}</span>
+                             </div>
+                            <Progress value={collaborationResult.validationGrid.ethics * 100} />
+                          </div>
+                           <div className="space-y-1">
+                            <div className="flex justify-between items-baseline">
+                              <Label className="text-sm">{t.dashboard.scalability_label[language]}</Label>
+                              <span className="font-bold text-primary">{collaborationResult.validationGrid.scalability.toFixed(2)}</span>
+                             </div>
+                            <Progress value={collaborationResult.validationGrid.scalability * 100} />
+                          </div>
+                        </CardContent>
+                      </Card>
+                   )}
 
                     {collaborationResult.collaborationLog && collaborationResult.collaborationLog.length > 0 && (
                         <Accordion type="single" collapsible>
@@ -400,16 +426,20 @@ export default function MultiAgentDashboard() {
         <h2 className="text-2xl font-bold font-headline mb-2">{t.dashboard.roster_title[language]}</h2>
         <p className="text-muted-foreground mb-6">{t.dashboard.roster_description[language]}</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {hasMounted ? agents.map(agent => (
-            <AgentCard 
-              key={agent.id} 
-              agent={agent} 
-              onPromptChange={handlePromptChange} 
-              isSelected={selectedAgentIds.has(agent.id)}
-              onSelectionChange={handleAgentSelectionChange}
-              selectedModel={selectedModel}
-            />
-          )) : Array.from({ length: 12 }).map((_, index) => (
+          {hasMounted ? agents.map(agent => {
+            const isOrchestrator = ORCHESTRATOR_IDS.includes(agent.id);
+            return (
+              <AgentCard 
+                key={agent.id} 
+                agent={agent} 
+                onPromptChange={handlePromptChange} 
+                isSelected={selectedAgentIds.has(agent.id)}
+                onSelectionChange={handleAgentSelectionChange}
+                selectedModel={selectedModel}
+                isOrchestrator={isOrchestrator}
+              />
+            )
+          }) : Array.from({ length: 12 }).map((_, index) => (
             <Card key={index} className="flex flex-col h-full">
                 <CardHeader className="flex flex-row items-start gap-4">
                     <div className="flex flex-col items-center gap-4">
