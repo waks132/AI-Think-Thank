@@ -24,6 +24,7 @@ const CollaborationTurnSchema = z.object({
     contribution: z.string().describe("The agent's message or contribution in this turn."),
     annotation: z.string().optional().describe("A brief, insightful annotation of the contribution's function (e.g., 'Proposes new synthesis', 'Critiques prior assumption', 'Reframes the problem').")
  });
+export type CollaborationTurn = z.infer<typeof CollaborationTurnSchema>;
 
 const ValidationCriteriaSchema = z.object({
     clarity: z.number().min(0).max(1).describe("Score (0-1) for clarity and quality of reasoning."),
@@ -44,11 +45,13 @@ export async function runAgentCollaboration(input: AgentCollaborationInput): Pro
   return agentCollaborationFlow(input);
 }
 
-const collaborationPrompt = ai.definePrompt({
-  name: 'agentCollaborationPrompt',
+
+// Step 1: Generate the collaboration log
+const collaborationLogPrompt = ai.definePrompt({
+  name: 'collaborationLogPrompt',
   input: {schema: AgentCollaborationInputSchema},
-  output: {schema: AgentCollaborationOutputSchema},
-  prompt: `You are a master orchestrator of a cognitive collective of AI agents. Your task is to facilitate a collaboration between a selection of specialized agents to accomplish a given mission.
+  output: {schema: z.object({ collaborationLog: z.array(CollaborationTurnSchema) })},
+  prompt: `You are a master orchestrator of a cognitive collective of AI agents. Your task is to simulate a collaboration between a selection of specialized agents to accomplish a given mission.
 
 **Mission:**
 "{{{mission}}}"
@@ -58,13 +61,53 @@ You will simulate a discussion between the following agents, ensuring each contr
 {{{agentList}}}
 
 **Your Process:**
-1.  **Simulate Discussion:** Generate a plausible, turn-by-turn conversation between the agents. The discussion should show proposition, critique, and refinement. For each turn, provide the agent's contribution and a brief, insightful \`annotation\` describing its function (e.g., 'Proposes new synthesis', 'Critiques prior assumption'). Document each turn in the \`collaborationLog\` array. **Crucially, the 'agentRole' in each log entry MUST EXACTLY match one of the agent roles provided in the list.**
-2.  **Provide Reasoning:** Detail the \`reasoning\` behind the collaboration. Explain the key contributions of each agent as seen in the log, how conflicts were resolved, and how the final summary was synthesized.
-3.  **Synthesize Outcome:** Based on the simulated discussion, produce a comprehensive \`executiveSummary\`. This should be a final, actionable output that accomplishes the mission, formatted as a structured plan with clear headings and bullet points. **Do not just summarize the conversation; extract and formalize the final proposed solution.**
-4.  **Validate Outcome:** As the orchestrator, score the final output from 0.0 to 1.0 on the criteria defined in the \`validationGrid\`. Provide a holistic assessment of the collective intelligence performance.
+1.  **Simulate Discussion:** Generate a plausible, turn-by-turn conversation between the agents. The discussion should show proposition, critique, and refinement.
+2.  **Create Log:** For each turn, provide the agent's contribution and a brief, insightful \`annotation\` describing its function (e.g., 'Proposes new synthesis', 'Critiques prior assumption').
+3.  **Document:** Document every turn in the \`collaborationLog\` array. **Crucially, the 'agentRole' in each log entry MUST EXACTLY match one of the agent roles provided in the list.**
 
-Produce your response in the specified JSON format. Your entire response, including all text fields, must be in this language: {{{language}}}.`,
+Produce ONLY the \`collaborationLog\` in the specified JSON format. Do not generate any other fields. Your entire response must be in this language: {{{language}}}.`,
 });
+
+
+// Step 2: Analyze the log and generate the summary, reasoning, and validation
+const CollaborationAnalysisInputSchema = z.object({
+  mission: z.string(),
+  agentList: z.string(),
+  collaborationLog: z.array(CollaborationTurnSchema),
+  language: z.enum(['fr', 'en']),
+});
+
+const CollaborationAnalysisOutputSchema = z.object({
+    executiveSummary: z.string().describe('A structured executive summary of the final proposed framework or solution, formatted with clear headings and bullet points.'),
+    reasoning: z.string().describe('A step-by-step reasoning of how the agents interacted, their key contributions, and how the final synthesis was achieved.'),
+    validationGrid: ValidationCriteriaSchema.describe("An assessment grid from the orchestrator's perspective, scoring the final output on multiple axes (from 0.0 to 1.0)."),
+});
+
+const collaborationAnalysisPrompt = ai.definePrompt({
+    name: 'collaborationAnalysisPrompt',
+    input: { schema: CollaborationAnalysisInputSchema },
+    output: { schema: CollaborationAnalysisOutputSchema },
+    prompt: `You are a master orchestrator of a cognitive collective of AI agents. You have just observed a collaboration. Your task is to analyze the provided log and produce a final report.
+
+**Original Mission:**
+"{{{mission}}}"
+
+**Participating Agents:**
+{{{agentList}}}
+
+**Full Collaboration Log:**
+\`\`\`json
+{{{json collaborationLog}}}
+\`\`\`
+
+**Your Analysis Process:**
+1.  **Synthesize Outcome:** Based on the provided collaboration log, produce a comprehensive \`executiveSummary\`. This should be a final, actionable output that accomplishes the mission, formatted as a structured plan with clear headings and bullet points. **Do not just summarize the conversation; extract and formalize the final proposed solution.**
+2.  **Provide Reasoning:** Detail the \`reasoning\` behind the collaboration. Explain the key contributions of each agent as seen in the log, how conflicts were resolved, and how the final summary was synthesized from the discussion.
+3.  **Validate Outcome:** As the orchestrator, score the final output from 0.0 to 1.0 on the criteria defined in the \`validationGrid\`. Provide a holistic assessment of the collective intelligence performance based on the log.
+
+Produce your response in the specified JSON format. Your entire response, including all text fields, must be in this language: {{{language}}}.`
+});
+
 
 const agentCollaborationFlow = ai.defineFlow(
   {
@@ -73,10 +116,34 @@ const agentCollaborationFlow = ai.defineFlow(
     outputSchema: AgentCollaborationOutputSchema,
   },
   async (input) => {
-    const response = await collaborationPrompt(input, {
+    // Step 1: Generate the collaboration log
+    const logResponse = await collaborationLogPrompt(input, {
       model: input.model,
       config: { maxOutputTokens: 8192 }
     });
-    return response.output!;
+    const collaborationLog = logResponse.output?.collaborationLog;
+    if (!collaborationLog) {
+        throw new Error("Failed to generate collaboration log.");
+    }
+    
+    // Step 2: Generate the analysis from the log
+    const analysisResponse = await collaborationAnalysisPrompt({
+        ...input,
+        collaborationLog,
+    }, {
+        model: input.model,
+        config: { maxOutputTokens: 4096 } // Can be smaller now
+    });
+
+    const analysis = analysisResponse.output;
+    if (!analysis) {
+        throw new Error("Failed to generate collaboration analysis.");
+    }
+    
+    // Step 3: Combine results
+    return {
+        ...analysis,
+        collaborationLog,
+    };
   }
 );
