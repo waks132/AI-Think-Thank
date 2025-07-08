@@ -62,7 +62,7 @@ You will simulate a discussion between the following agents, ensuring each contr
 
 **Your Process:**
 1.  **Simulate Discussion:** Generate a plausible, turn-by-turn conversation between the agents. The discussion should show proposition, critique, and refinement.
-2.  **Create Log:** For each turn, provide the agent's contribution and a brief, insightful \`annotation\` describing its function (e.g., 'Proposes new synthesis', 'Critiques prior assumption').
+2.  **Create Log:** For each turn, provide a **concise** agent's contribution (under 150 words) and a brief, insightful \`annotation\` describing its function (e.g., 'Proposes new synthesis', 'Critiques prior assumption').
 3.  **Document:** Document every turn in the \`collaborationLog\` array. **Crucially, the 'agentRole' in each log entry MUST EXACTLY match one of the agent roles provided in the list.**
 
 Produce ONLY the \`collaborationLog\` in the specified JSON format. Do not generate any other fields. Your entire response must be in this language: {{{language}}}.`,
@@ -119,7 +119,7 @@ const agentCollaborationFlow = ai.defineFlow(
     // Step 1: Generate the collaboration log
     const logResponse = await collaborationLogPrompt(input, {
       model: input.model,
-      config: { maxOutputTokens: 8192 }
+      config: { maxOutputTokens: 7500 }
     });
     const collaborationLog = logResponse.output?.collaborationLog;
     if (!collaborationLog) {
