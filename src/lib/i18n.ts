@@ -23,6 +23,7 @@ export const t = {
     heatmap: { fr: 'Heatmap Cognitive', en: 'Cognitive Heatmap' },
     causal_flow: { fr: 'Flux Causal', en: 'Causal Flow' },
     report: { fr: 'Générateur de Rapport', en: 'Report Generator' },
+    knowledge_base: { fr: 'Base de Connaissances', en: 'Knowledge Base' },
   },
   modelSelector: {
     label: {
@@ -355,4 +356,9 @@ export const t = {
     fail_description: { fr: 'Impossible de générer le rapport. Veuillez réessayer.', en: 'Could not generate the report. Please try again.' },
     generated_report: { fr: 'Rapport Généré', en: 'Generated Report' },
   },
+  knowledge: {
+    title: { fr: 'Base de Connaissances', en: 'Knowledge Base' },
+    description: { fr: 'Consultez la bibliothèque interne de rapports corrigés, de bonnes pratiques et de leçons cognitives. Les agents utilisent cette base pour combler leurs lacunes.', en: 'Consult the internal library of corrected reports, best practices, and cognitive lessons. Agents use this base to fill their gaps.' },
+    no_documents: { fr: 'Aucun document trouvé dans la base de connaissances.', en: 'No documents found in the knowledge base.' }
+  }
 };

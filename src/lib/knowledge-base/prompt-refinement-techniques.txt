@@ -1,0 +1,27 @@
+Titre: Techniques d'Affinage de Prompt pour éviter les Lacunes Cognitives
+
+Leçon Clé: Un prompt efficace n'est pas celui qui est le plus long, mais celui qui a la plus haute densité de contraintes utiles.
+
+---
+**Lacune Commune 1: Abstraction excessive**
+- Prompt initial: "Analyse la situation."
+- Problème: L'agent ne sait pas QUOI analyser, avec QUEL objectif, et sous QUEL format.
+- Correction: Utiliser la technique du "Canevas Analytique".
+- Prompt corrigé: "Analyse la situation [décrire la situation] en utilisant le canevas suivant: 1. Forces en présence (liste), 2. Faiblesses structurelles (liste), 3. Levier d'action le plus prometteur (une seule phrase), 4. Risque principal associé à ce levier (une seule phrase). Ton analyse doit être concise et ne pas dépasser 150 mots."
+- Leçon: Fournir un format de sortie structuré guide la cognition de l'agent.
+
+---
+**Lacune Commune 2: Absence d'Exemples (Few-shot prompting)**
+- Prompt initial: "Sois créatif."
+- Problème: La "créativité" est un concept subjectif. L'agent ne connaît pas les attentes.
+- Correction: Fournir un ou deux exemples de la créativité attendue.
+- Prompt corrigé: "Génère une idée marketing pour notre produit. Sois créatif. Par exemple: 1. Une campagne de guérilla marketing où nos produits sont cachés dans la ville. 2. Un partenariat avec un artiste pour une édition limitée."
+- Leçon: Les exemples contraignent l'espace de recherche de l'agent vers des zones plus pertinentes.
+
+---
+**Lacune Commune 3: Ignorance du "Rôle Négatif"**
+- Prompt initial: "Liste les avantages de cette approche."
+- Problème: L'agent est incité à un biais de confirmation.
+- Correction: Forcer l'agent à adopter un rôle contradictoire.
+- Prompt corrigé: "Tu es un 'Red Team Strategist'. Ta mission est d'identifier les 3 pires failles ou conséquences négatives imprévues de cette approche. Sois pessimiste et rigoureux."
+- Leçon: Définir un rôle (persona) est l'un des moyens les plus puissants pour orienter le comportement d'un agent.

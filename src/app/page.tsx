@@ -3,7 +3,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Header from "@/components/header"
 import MultiAgentDashboard from "@/components/dashboard/multi-agent-dashboard"
-import CognitiveClashSimulator from "@/components/tools/ai-team-simulator"
+import CognitiveClashSimulator from "@/components/tools/cognitive-clash-simulator"
 import AdaptivePromptOrchestrator from "@/components/tools/adaptive-prompt-orchestrator"
 import AutoPromptCurator from "@/components/tools/auto-prompt-curator"
 import DivergenceMetricsTool from "@/components/tools/divergence-metrics-tool"
@@ -13,6 +13,7 @@ import CognitiveLogViewer from "@/components/tools/cognitive-log-viewer"
 import CognitiveHeatmap from "@/components/tools/cognitive-heatmap"
 import CausalFlowTracker from "@/components/tools/causal-flow-tracker"
 import ReportGenerator from "@/components/tools/report-generator"
+import KnowledgeBaseViewer from "@/components/tools/knowledge-base-viewer"
 import { useLanguage } from "@/context/language-context"
 import { t } from "@/lib/i18n"
 
@@ -58,16 +59,18 @@ export default function Home() {
 
           <TabsContent value="analysis" className="mt-6">
             <Tabs defaultValue="logs" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto flex-wrap">
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto flex-wrap">
                 <TabsTrigger value="logs">{t.page.logs[language]}</TabsTrigger>
                 <TabsTrigger value="heatmap">{t.page.heatmap[language]}</TabsTrigger>
                 <TabsTrigger value="causal_flow">{t.page.causal_flow[language]}</TabsTrigger>
                 <TabsTrigger value="report">{t.page.report[language]}</TabsTrigger>
+                <TabsTrigger value="knowledge_base">{t.page.knowledge_base[language]}</TabsTrigger>
               </TabsList>
               <TabsContent value="logs" className="mt-6"><CognitiveLogViewer /></TabsContent>
               <TabsContent value="heatmap" className="mt-6"><CognitiveHeatmap /></TabsContent>
               <TabsContent value="causal_flow" className="mt-6"><CausalFlowTracker /></TabsContent>
               <TabsContent value="report" className="mt-6"><ReportGenerator /></TabsContent>
+              <TabsContent value="knowledge_base" className="mt-6"><KnowledgeBaseViewer /></TabsContent>
             </Tabs>
           </TabsContent>
         </Tabs>

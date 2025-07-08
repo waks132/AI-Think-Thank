@@ -9,6 +9,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { queryKnowledgeBaseTool } from '@/ai/tools/knowledge-base-tool';
 
 const AgentReasoningInputSchema = z.object({
   task: z.string().describe('The task for the agent to perform.'),
@@ -38,6 +39,7 @@ export async function agentReasoning(input: AgentReasoningInput): Promise<AgentR
 
 const agentReasoningPrompt = ai.definePrompt({
   name: 'agentReasoningPrompt',
+  tools: [queryKnowledgeBaseTool],
   input: {schema: AgentReasoningInputSchema},
   output: {schema: AgentReasoningOutputSchema},
   prompt: `You are a logical reasoning AI. Your task is to solve the given task within the provided context by thinking step-by-step.
@@ -49,6 +51,8 @@ Break down your thought process into a structured array of steps. For each step:
 1.  Identify the primary "cognitive_function" you are using from this list: ['Observation', 'Inference', 'Planification', 'Anticipation', 'Constraint Integration', 'Optimization', 'Synthesis'].
 2.  Provide the detailed 'reasoning' for that step.
 3.  Assign an 'importance' score (0.0 to 1.0) representing the cognitive weight of this step on the final solution.
+
+**Crucially, if you identify a potential gap in your knowledge or reasoning, you MUST use the 'queryKnowledgeBaseTool' to search for corrected analyses or best practices that might improve your plan. Integrate the findings from the knowledge base into your reasoning steps.**
 
 After detailing all the steps in 'thoughtProcess':
 1.  Provide a final 'conclusion'.
