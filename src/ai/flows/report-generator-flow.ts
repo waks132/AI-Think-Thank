@@ -27,7 +27,13 @@ const GenerateReportInputSchema = z.object({
 export type GenerateReportInput = z.infer<typeof GenerateReportInputSchema>;
 
 const GenerateReportOutputSchema = z.object({
-  reportMarkdown: z.string().describe('The final report in Markdown format.'),
+    reportTitle: z.string().describe("The main title for the report, e.g., 'Strategic Report: Sustainable Transformation of TerraFoods'."),
+    executiveSummarySection: z.string().describe("The executive summary section content (150-250 words) in Markdown format."),
+    methodologySection: z.string().describe("The methodology section content, including the collaborative dynamics analysis as a Markdown table."),
+    strengthsAnalysisSection: z.string().describe("The strengths analysis section content, with 3-5 concrete points in Markdown format."),
+    gapsAssessmentSection: z.string().describe("The critical gaps assessment section content in Markdown format."),
+    solutionCritiqueSection: z.string().describe("The solution critique section content in Markdown format."),
+    recommendationsSection: z.string().describe("The strategic recommendations section content, with 4-7 actionable points and risk analysis in Markdown format."),
 });
 export type GenerateReportOutput = z.infer<typeof GenerateReportOutputSchema>;
 
@@ -50,50 +56,23 @@ const reportPrompt = ai.definePrompt({
 
 **Strategic Analysis Framework:**
 
-1. **Methodology:**
+You must fill the fields in the requested JSON output format by generating the content for each section of the report.
+
+1. **reportTitle:** Create a concise and professional title for the report.
+2. **executiveSummarySection:** Write an "Executive Summary" of exactly 150-250 words. It must present the most important conclusions and key recommendations based *only* on the provided materials. This section must be self-contained.
+3. **methodologySection:**
    - **Review Process:** Identify the core problem from the mission, analyze the collaboration log for key insights, and compare the executive summary against your analysis to find gaps.
-   - **Collaborative Dynamics Analysis:** In a dedicated subsection, present a brief table of the collaborative dynamics showing: (1) The 2-3 most influential agents and why, (2) The main points of disagreement, and (3) How consensus was reached.
-
-2. **Executive Summary:**
-   - Start with an "Executive Summary" of exactly 150-250 words. It must present the most important conclusions and key recommendations based *only* on the provided materials. This section must be self-contained, allowing a busy decision-maker to grasp the report's essentials in under a minute.
-
-3. **Strengths Analysis (25% of report):**
-   - Identify 3-5 concrete strengths with specific examples from the collaboration log. For each, explain its importance and potential long-term impact. Highlight innovative approaches found in the logs.
-
-4. **Critical Gaps Assessment (35% of report):**
-   - Based *only* on the provided context, identify and analyze critical gaps in the proposed solution. Consider the following dimensions if the context allows:
-   - **Internal Contradictions:** Are there contradictions within the collaboration log or between the summary and the log?
-   - **Socio-economic Dimension:** Does the log mention distributional effects, employment impacts, or access inequalities?
-   - **Governance Structures:** Does the log discuss decision rights, accountability, and power dynamics?
-   - **Ethical Tensions:** What potential conflicts between stakeholder interests are revealed in the logs?
-   - **Implementation Challenges:** What technical feasibility, resource needs, and adoption barriers are mentioned in the context?
-
-5. **Solution Critique (20% of report):**
-   - For each major proposed solution in the executive summary, apply this framework using *only* the provided materials:
-     * Conceptual integrity: Is it logically sound based on the log?
-     * Evidential basis: What support exists within the provided context?
-     * **Cost-Benefit Analysis:** Provide a high-level, estimated cost-benefit analysis for the solution *if the logs provide enough information to do so*.
-     * Implementation viability: What practical challenges are mentioned in the logs?
-     * Unintended consequences: What second-order effects are hinted at in the logs?
-
-6. **Strategic Recommendations (20% of report):**
-   - Develop 4-7 actionable recommendations addressing identified gaps, based *solely* on the provided information.
-   - For each recommendation:
-     * Provide a clear, specific action statement.
-     * If possible, derive quantitative KPIs from the information in the logs.
-     * Indicate timeframe: short-term (1-2 years), medium-term (3-5 years), or long-term (5+ years).
-     * Include brief risk analysis: main risk, probability (Low/Medium/High), impact (Low/Medium/High), and mitigation strategy, all inferred from the context.
-   - **Recommendation Interdependencies:** Conclude this section with a brief paragraph explaining how the different recommendations influence or depend on each other.
-
-7. **Concrete Examples:**
-   - For each key point (strength, gap, or recommendation), include at least one concrete, specific example *taken directly from the collaboration log or executive summary*.
+   - **Collaborative Dynamics Analysis:** In a subsection, present a brief table in Markdown of the collaborative dynamics showing: (1) The 2-3 most influential agents and why, (2) The main points of disagreement, and (3) How consensus was reached.
+4. **strengthsAnalysisSection (25% of content):** Identify 3-5 concrete strengths with specific examples from the collaboration log. For each, explain its importance and potential long-term impact. Highlight innovative approaches found in the logs.
+5. **gapsAssessmentSection (35% of content):** Based *only* on the provided context, identify and analyze critical gaps in the proposed solution. Consider the following dimensions if the context allows: Internal Contradictions, Socio-economic Dimension, Governance Structures, Ethical Tensions, Implementation Challenges.
+6. **solutionCritiqueSection (20% of content):** For each major proposed solution in the executive summary, apply this framework using *only* the provided materials: Conceptual integrity, Evidential basis, Cost-Benefit Analysis (if possible), Implementation viability, Unintended consequences.
+7. **recommendationsSection (20% of content):** Develop 4-7 actionable recommendations addressing identified gaps, based *solely* on the provided information. For each recommendation, provide a clear action, quantitative KPIs (if possible), timeframe, and a brief risk analysis. Conclude with interdependencies.
 
 **Output Format Requirements:**
-- Structure as a professional markdown document with clear hierarchical headings.
-- Bold key concepts and findings.
+- For each field, generate professional, well-formatted Markdown content.
+- Bold key concepts and findings within the Markdown.
 - Do not invent information or sources. Your entire analysis must be traceable to the provided input materials.
-
-Your entire response must be in {{{language}}}.
+- Your entire response, including all text fields, must be in {{{language}}}.
 
 Remember: Your value comes not from external knowledge, but from deep critical thinking and strategic analysis of the provided context.`,
 });

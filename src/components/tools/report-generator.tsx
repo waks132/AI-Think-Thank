@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Loader2, FileText, Download } from "lucide-react"
+import { Loader2, FileText, Download, AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { generateReport, type GenerateReportOutput } from "@/ai/flows/report-generator-flow"
 import ModelSelector from "../model-selector"
@@ -14,14 +14,36 @@ import useLocalStorage from "@/hooks/use-local-storage"
 import type { AgentCollaborationOutput } from "@/ai/flows/agent-collaboration-flow"
 import { Textarea } from "../ui/textarea"
 
+const assembleMarkdown = (data: GenerateReportOutput, language: 'fr' | 'en'): string => {
+    return [
+      `# ${data.reportTitle}`,
+      `## ${language === 'fr' ? 'Résumé Exécutif' : 'Executive Summary'}\n\n${data.executiveSummarySection}`,
+      `## ${language === 'fr' ? 'Méthodologie' : 'Methodology'}\n\n${data.methodologySection}`,
+      `## ${language === 'fr' ? 'Analyse des Forces' : 'Strengths Analysis'}\n\n${data.strengthsAnalysisSection}`,
+      `## ${language === 'fr' ? 'Évaluation des Lacunes Critiques' : 'Critical Gaps Assessment'}\n\n${data.gapsAssessmentSection}`,
+      `## ${language === 'fr' ? 'Critique de la Solution' : 'Solution Critique'}\n\n${data.solutionCritiqueSection}`,
+      `## ${language === 'fr' ? 'Recommandations Stratégiques' : 'Strategic Recommendations'}\n\n${data.recommendationsSection}`,
+    ].join('\n\n');
+};
+
 export default function ReportGenerator() {
   const [collaborationResult] = useLocalStorage<AgentCollaborationOutput | null>("collaboration-result", null)
   const [mission] = useLocalStorage<string>('mission-text', '');
-  const [report, setReport] = useLocalStorage<GenerateReportOutput | null>('mission-report', null);
+  const [reportData, setReportData] = useLocalStorage<GenerateReportOutput | null>('mission-report-data', null);
+  const [reportMarkdown, setReportMarkdown] = useState<string | null>(null);
+
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast();
   const { language } = useLanguage();
+  
+  useEffect(() => {
+    if (reportData) {
+      setReportMarkdown(assembleMarkdown(reportData, language));
+    } else {
+      setReportMarkdown(null);
+    }
+  }, [reportData, language]);
 
   const handleGenerateReport = async () => {
     if (!collaborationResult) {
@@ -34,7 +56,7 @@ export default function ReportGenerator() {
     }
 
     setIsLoading(true);
-    setReport(null);
+    setReportData(null);
     try {
       const result = await generateReport({
           mission: mission,
@@ -43,7 +65,7 @@ export default function ReportGenerator() {
           model: selectedModel,
           language,
        });
-      setReport(result);
+      setReportData(result);
     } catch (error) {
         console.error("Error generating report:", error);
         toast({
@@ -57,8 +79,8 @@ export default function ReportGenerator() {
   }
 
   const handleDownload = () => {
-    if (!report?.reportMarkdown) return;
-    const blob = new Blob([report.reportMarkdown], { type: 'text/markdown;charset=utf-8;' });
+    if (!reportMarkdown) return;
+    const blob = new Blob([reportMarkdown], { type: 'text/markdown;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -88,12 +110,12 @@ export default function ReportGenerator() {
                 <Loader2 className="h-8 w-8 animate-spin text-primary mr-2"/>
                 <p>{t.report.loading_text[language]}</p>
              </div>
-           ) : report ? (
+           ) : reportMarkdown ? (
              <div className="space-y-4 animate-fade-in">
                 <div className="flex flex-wrap justify-between items-center gap-4">
                     <h3 className="font-semibold">{t.report.generated_report[language]}</h3>
                     <div className="flex items-center gap-4">
-                        <Button onClick={handleDownload} variant="outline" size="sm">
+                        <Button onClick={handleDownload} variant="outline" size="sm" disabled={!reportMarkdown}>
                             <Download className="mr-2"/>
                             {t.report.download_button[language]}
                         </Button>
@@ -101,13 +123,15 @@ export default function ReportGenerator() {
                 </div>
                 <Textarea 
                     readOnly
-                    value={report.reportMarkdown}
+                    value={reportMarkdown}
                     className="h-[500px] font-mono text-xs bg-card"
                 />
             </div>
            ) : (
-             <div className="flex items-center justify-center h-full text-muted-foreground text-center">
-                <p>{t.report.no_report[language]}</p>
+             <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-center">
+                <AlertCircle className="h-10 w-10 mb-4 text-primary/50" />
+                <p className="font-semibold">{!collaborationResult ? t.report.no_data_description[language] : t.report.no_report[language]}</p>
+                <p className="text-sm">{!collaborationResult ? t.page.dashboard[language] : ''}</p>
              </div>
            )}
         </div>
