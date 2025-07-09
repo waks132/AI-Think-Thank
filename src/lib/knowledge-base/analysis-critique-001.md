@@ -1,6 +1,7 @@
+ID: ANALYSIS-ETHICAL-AI-01
 # Analyse Critique d'un Déploiement d'IA Éthique
 
-**Rapport Corrigé - ID: 74B-RTX**
+**Rapport Corrigé**
 
 ## Lacune Initiale Identifiée
 L'analyse initiale a proposé une solution techniquement robuste pour un véhicule autonome, mais a sous-estimé les **dilemmes éthiques de second ordre**. La solution se concentrait uniquement sur l'évitement d'obstacles immédiats, sans modéliser les scénarios de "trolley problem" inévitables (ex: choisir entre percuter un groupe A ou un groupe B).

@@ -1,3 +1,4 @@
+ID: GUIDE-SYSTEM-RESILIENCE-01
 # Patrons de Résilience pour Systèmes Multi-Agents
 
 ## Lacune Initiale Identifiée

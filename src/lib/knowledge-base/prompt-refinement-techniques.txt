@@ -1,3 +1,4 @@
+ID: GUIDE-PROMPT-REFINEMENT-01
 Titre: Techniques d'Affinage de Prompt pour éviter les Lacunes Cognitives
 
 Leçon Clé: Un prompt efficace n'est pas celui qui est le plus long, mais celui qui a la plus haute densité de contraintes utiles.

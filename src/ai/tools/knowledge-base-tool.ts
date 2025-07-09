@@ -8,6 +8,7 @@ import { searchKnowledgeBase } from '@/services/knowledge-base-service';
 import { z } from 'genkit';
 
 const KnowledgeDocumentSchema = z.object({
+  id: z.string().nullable().describe('The unique identifier of the document (e.g., "REPORT-TEST-NEXUS-PRIME-05").'),
   filename: z.string().describe('The name of the file in the knowledge base.'),
   content: z.string().describe('The full content of the document.'),
 });
@@ -15,10 +16,10 @@ const KnowledgeDocumentSchema = z.object({
 export const queryKnowledgeBaseTool = ai.defineTool(
   {
     name: 'queryKnowledgeBaseTool',
-    description: "Searches the internal knowledge base of corrected analyses, best practices, and cognitive patterns to find relevant information. Use this to fill knowledge gaps, learn from past mistakes, and improve the quality of your reasoning.",
+    description: "Searches the internal knowledge base of corrected analyses, best practices, and cognitive patterns to find relevant information. Use this to fill knowledge gaps, learn from past mistakes, and improve the quality of your reasoning. You can search by keywords or by a specific document ID.",
     input: {
       schema: z.object({
-        query: z.string().describe('A keyword or phrase to search for in the knowledge base. Be specific to get the best results.'),
+        query: z.string().describe('A keyword, phrase, or a specific document ID (e.g., "REPORT-TEST-NEXUS-PRIME-05") to search for in the knowledge base. Be specific to get the best results.'),
       })
     },
     output: {

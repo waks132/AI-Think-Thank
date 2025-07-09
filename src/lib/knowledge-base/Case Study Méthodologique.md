@@ -1,4 +1,5 @@
-Case Study Méthodologique
+ID: GUIDE-METHODOLOGY-CYCLE-01
+# Case Study Méthodologique
 De la Vision Théorique à l’Opérationnalité Adaptative : Cycle d’Itération ΣTradeCortex
 1. Contexte
 Face au défi de l’intégration du capital naturel et social dans les systèmes économiques et financiers, ΣTradeCortex a été mandaté pour produire une théorie et un cadre computationnel de rupture, tout en assurant leur crédibilité et opérabilité.
@@ -85,4 +86,3 @@ Créez des “kits” adaptés au contexte et simplifiez continuellement.
 Installez un cycle de feedback court : “Que devons-nous simplifier, abandonner, approfondir ?”
 
 Documentez et publiez vos apprentissages, y compris les impasses.
-

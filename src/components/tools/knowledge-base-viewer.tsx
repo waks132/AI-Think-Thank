@@ -19,7 +19,9 @@ export default function KnowledgeBaseViewer() {
             try {
                 setIsLoading(true);
                 const docs = await getKnowledgeBaseDocuments();
-                setDocuments(docs);
+                // Sort documents by filename for consistent ordering
+                const sortedDocs = docs.sort((a, b) => a.filename.localeCompare(b.filename));
+                setDocuments(sortedDocs);
             } catch (error) {
                 console.error("Failed to fetch knowledge base documents:", error);
             } finally {
@@ -45,9 +47,12 @@ export default function KnowledgeBaseViewer() {
                         {documents.map((doc) => (
                             <AccordionItem value={doc.filename} key={doc.filename}>
                                 <AccordionTrigger>
-                                    <div className="flex items-center gap-2">
-                                        <Book className="h-4 w-4" />
-                                        {doc.filename}
+                                    <div className="flex items-center gap-3 text-left">
+                                        <Book className="h-4 w-4 mt-1 self-start flex-shrink-0" />
+                                        <div className="flex flex-col items-start">
+                                            <span className="font-medium">{doc.filename}</span>
+                                            {doc.id && <span className="text-xs text-muted-foreground font-mono mt-1">ID: {doc.id}</span>}
+                                        </div>
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent>

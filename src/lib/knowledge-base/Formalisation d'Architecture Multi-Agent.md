@@ -1,6 +1,7 @@
-Formalisation d'Architecture Multi-Agents Évolutive
+ID: FRAMEWORK-MULTI-AGENT-ARCH-01
+# Formalisation d'Architecture Multi-Agents Évolutive
 
-Framework d'Optimisation Cognitive - ID: ARCH-EVO-001
+Framework d'Optimisation Cognitive
 
 I. Axes de Correction Architecturale
 Axe 1 : Méta-Cognition Structurelle

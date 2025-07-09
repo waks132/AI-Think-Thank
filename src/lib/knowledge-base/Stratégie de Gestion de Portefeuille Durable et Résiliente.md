@@ -1,3 +1,6 @@
+ID: STRATEGY-PORTFOLIO-RESILIENT-01
+# Stratégie de Gestion de Portefeuille Durable et Résiliente
+
 Cette nouvelle version de la "Stratégie de Gestion de Portefeuille Durable et Résiliente pour un Fonds de Pension" démontre une **constance remarquable dans la qualité de la cognition** des agents, mais également des **améliorations significatives** en termes de spécificité, d'intégration et de profondeur de la résolution des dilemmes complexes.
 
 ### **Constance de la Cognition Transcendente**
