@@ -80,27 +80,27 @@ const prompt = ai.definePrompt({
   output: {schema: CognitiveClashSimulatorOutputSchema},
   prompt: `You are a sophisticated simulator of cognitive and ideological dynamics. Your task is to simulate a "Cognitive Clash" between multiple opposing perspectives based on a given scenario.
 
-**Scenario:** {{{scenarioDescription}}}
+Scenario: {{{scenarioDescription}}}
 
-**The Clashing Perspectives:**
+The Clashing Perspectives:
 {{#each perspectives}}
-- **Perspective Name:** {{name}}
-  **Core Values:** "{{values}}"
+- Perspective Name: {{name}}
+  Core Values: "{{values}}"
 {{/each}}
 
-**Simulation Parameters:**
-*   **Rounds:** {{{numRounds}}} (A round consists of each perspective making an argument).
+Simulation Parameters:
+*   Rounds: {{{numRounds}}} (A round consists of each perspective making an argument).
 
-**Your Mission:**
-1.  **Simulate the Debate:** Generate a plausible, turn-by-turn debate. The total number of turns should be roughly the number of perspectives times the number of rounds. The discussion should show proposition, critique, and refinement. A mediating perspective should attempt to find common ground.
-2.  **Structure the Arguments:** For each turn in the \`simulationLog\`, you MUST formalize the argument using the following structure: \`{ position, justification, riskPerceived, proposal }\`. Ensure every field is filled with a meaningful, non-trivial statement reflecting the persona's move.
-3.  **Analyze the Overall Clash:** After the debate is complete, provide a holistic analysis.
-    *   **Clash Summary:** Write a brief executive summary of the entire simulation.
-    *   **Resilience Score:** Evaluate the system's resilience. Did the agents converge, find a compromise, or maintain stability? Score it from 0.0 (total collapse) to 1.0 (strong, stable synthesis).
-    *   **Polarization Index:** Evaluate the final distance between the perspectives. Did they become more extreme and entrenched in their views? Score it from 0.0 (full agreement/fusion) to 1.0 (irreconcilable radicalization).
-    *   **Emergent Synthesis:** Describe the final state of the system. What is the resolution? Is it a creative compromise, a clear victory for one side, a stalemate, or a complete breakdown in communication?
-4.  **Map Argument Flow:** Analyze the entire \`simulationLog\` you just generated. Identify and map the direct argumentative interactions where one perspective influences another. For each interaction, specify the source (\`fromPerspective\`), the target (\`toPerspective\`), the \`interactionType\`, and a concise \`summary\` of the influential point. Populate the \`argumentFlow\` array with this analysis.
-5.  **Analyze Underlying Assumptions:** After the simulation, reflect on the entire dialogue. Identify the most critical unstated assumptions made by the agents. For each identified assumption, provide a detailed analysis:
+Your Mission:
+1.  Simulate the Debate: Generate a plausible, turn-by-turn debate. The total number of turns should be roughly the number of perspectives times the number of rounds. The discussion should show proposition, critique, and refinement. A mediating perspective should attempt to find common ground.
+2.  Structure the Arguments: For each turn in the \`simulationLog\`, you MUST formalize the argument using the following structure: \`{ position, justification, riskPerceived, proposal }\`. Ensure every field is filled with a meaningful, non-trivial statement reflecting the persona's move.
+3.  Analyze the Overall Clash: After the debate is complete, provide a holistic analysis.
+    *   Clash Summary: Write a brief executive summary of the entire simulation.
+    *   Resilience Score: Evaluate the system's resilience. Did the agents converge, find a compromise, or maintain stability? Score it from 0.0 (total collapse) to 1.0 (strong, stable synthesis).
+    *   Polarization Index: Evaluate the final distance between the perspectives. Did they become more extreme and entrenched in their views? Score it from 0.0 (full agreement/fusion) to 1.0 (irreconcilable radicalization).
+    *   Emergent Synthesis: Describe the final state of the system. What is the resolution? Is it a creative compromise, a clear victory for one side, a stalemate, or a complete breakdown in communication?
+4.  Map Argument Flow: Analyze the entire \`simulationLog\` you just generated. Identify and map the direct argumentative interactions where one perspective influences another. For each interaction, specify the source (\`fromPerspective\`), the target (\`toPerspective\`), the \`interactionType\`, and a concise \`summary\` of the influential point. Populate the \`argumentFlow\` array with this analysis.
+5.  Analyze Underlying Assumptions: After the simulation, reflect on the entire dialogue. Identify the most critical unstated assumptions made by the agents. For each identified assumption, provide a detailed analysis:
     *   Note the \`assumption\` itself.
     *   Identify the \`agentRole\` who made it and the \`turn\` number.
     *   Provide a sharp \`critique\` of this assumption, highlighting its biases or limitations from a disruptive, meta-cognitive perspective.
