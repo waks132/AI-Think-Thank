@@ -557,11 +557,12 @@ const autoAgentSelectorFlow = ai.defineFlow(
     outputSchema: AutoAgentSelectorOutputSchema,
   },
   async (input) => {
-    // KAIROS-1 and other orchestrators should not be part of the selection pool for the LLM,
-    // as KAIROS-1 is the LLM's persona.
+    // Prevent orchestrators from being in the list of selectable agents for the model
     const selectableAgents = input.agents.filter(agent => !ORCHESTRATOR_IDS.includes(agent.id));
     
-    const response = await autoAgentSelectorPrompt({...input, agents: selectableAgents}, {model: input.model, retries: 5});
+    const response = await autoAgentSelectorPrompt({...input, agents: selectableAgents}, {model: input.model, retries: 10});
     return response.output!;
   }
 );
+
+    

@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Implements the Cognitive Clash simulation flow.
@@ -124,7 +123,7 @@ const cognitiveClashSimulatorFlow = ai.defineFlow(
     const response = await prompt(input, {
       model: input.model,
       config: { maxOutputTokens: 8192 },
-      retries: 5,
+      retries: 10,
     });
     return response.output!;
   }
