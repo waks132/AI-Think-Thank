@@ -50,7 +50,7 @@ const agentCollaborationPrompt = ai.definePrompt({
   tools: [queryKnowledgeBaseTool],
   input: {schema: AgentCollaborationInputSchema},
   output: {schema: AgentCollaborationOutputSchema},
-  prompt: `You are a master orchestrator of a cognitive collective of AI agents. Your primary task is to determine the optimal solution for a given mission by simulating a collaboration between a selected team of agents.
+  prompt: `You are a master orchestrator of a cognitive collective of AI agents. Your primary task is to determine the optimal solution for a given mission by simulating a collaboration between a selected team of agents. Your work must be deeply informed by the collective's past learnings to avoid repeating mistakes.
 
 **Mission:**
 "{{{mission}}}"
@@ -63,14 +63,14 @@ The collaboration you simulate MUST feature contributions from **every single ag
 
 1.  **Simulate Collaboration & Detail Agent Contributions:** For **every single agent** from the 'Participating Agents' list, you MUST summarize their single most critical and unique contribution to the final solution. Populate the \`agentContributions\` array with this analysis. Each agent must have one entry.
 
-2.  **MANDATORY CONFORMITY CHECK:** Before writing the final summary, you MUST ensure compliance with our internal frameworks.
-    *   **Use the \`queryKnowledgeBaseTool\`** to search for relevant conformity reports and frameworks. Search for documents with IDs like "ANALYSIS-CONFORMITY-..." or "FRAMEWORK-IA-CONTROL-...".
-    *   **Analyze the findings** to understand past failures (e.g., lack of realism, missing "Red Team", vague financing, ignoring political facts) and mandatory procedures.
-    *   **Populate the \`conformityCheck\` field:** List the document IDs you consulted and write a summary explaining how your proposed solution explicitly avoids the documented errors and adheres to the control framework.
+2.  **MANDATORY CONFORMITY CHECK (METHODOLOGY-DRIVEN):** Before writing the final summary, you MUST ensure compliance with our internal frameworks. This is not a box-ticking exercise; you must demonstrate a deep understanding of the *methodologies* and *principles* within the knowledge base.
+    *   **Use the \`queryKnowledgeBaseTool\`** to search for relevant conformity reports, methodology guides, and post-mortems (e.g., search for documents with IDs like "ANALYSIS-CONFORMITY-...", "FRAMEWORK-IA-CONTROL-...", or "GUIDE-METHODOLOGY-...").
+    *   **Analyze the findings in depth.** Your goal is to understand the *'why'* behind past failures (e.g., lack of realism, missing "Red Team", vague financing, ignoring political facts) and the core principles of mandatory procedures. You must apply the *methodologies* from the reports, not just list facts.
+    *   **Populate the \`conformityCheck\` field:** List the document IDs you consulted and write a detailed summary explaining how your proposed solution *embodies the successful principles* and *explicitly avoids the root causes of documented errors*. Show, don't just tell.
 
-3.  **Synthesize Final Outcome:** Based on the contributions AND the conformity check, produce a comprehensive \`executiveSummary\`. This summary MUST be realistic, actionable, and compliant with the lessons learned from the knowledge base.
+3.  **Synthesize Final Outcome:** Based on the agent contributions AND your deep conformity analysis, produce a comprehensive \`executiveSummary\`. This summary MUST be realistic, actionable, and demonstrably compliant with the lessons learned from the knowledge base.
 
-4.  **Provide Detailed Reasoning:** Based on the contributions, explain the \`reasoning\` behind how you synthesized the final \`executiveSummary\` from the various key contributions of the agents.
+4.  **Provide Detailed Reasoning:** Based on the contributions, explain the \`reasoning\` behind how you synthesized the final \`executiveSummary\` from the various key contributions of the agents, explicitly mentioning how the conformity check shaped the final outcome.
 
 Produce your entire response in the specified JSON format, filling all fields of the output schema. Your entire response, including all text fields, must be in this language: {{{language}}}.`,
 });
