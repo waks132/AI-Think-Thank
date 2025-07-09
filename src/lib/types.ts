@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
+import type { AgentContribution } from './ai/flows/agent-collaboration-flow';
 
 export interface Agent {
   id: string;
@@ -29,10 +30,4 @@ export interface HeatmapWord {
     weight: number;
 }
 
-export interface CausalLink {
-    from: string;
-    to: string;
-    reason: string;
-    turn: number;
-    influentialQuote: string;
-}
+export type { AgentContribution };

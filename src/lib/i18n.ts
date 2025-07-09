@@ -6,7 +6,7 @@ export const t = {
       fr: 'Collectif Cognitif',
       en: 'Cognitive Collective',
     },
-    lang_fr: { fr: 'FR', en: 'FR' },
+    lang_fr: { fr: 'FR', en: 'EN' },
     lang_en: { fr: 'EN', en: 'EN' },
   },
   page: {
@@ -115,6 +115,10 @@ export const t = {
     log_title: {
       fr: 'Voir le Journal de Collaboration',
       en: 'View Collaboration Log',
+    },
+    key_contributions_title: {
+      fr: 'Contributions Clés',
+      en: 'Key Contributions'
     },
     log_title_visible: {
       fr: 'Journal de Collaboration',

@@ -61,7 +61,7 @@ export default function ReportGenerator() {
       const result = await generateReport({
           mission: mission,
           executiveSummary: collaborationResult.executiveSummary,
-          collaborationLog: JSON.stringify(collaborationResult.collaborationLog),
+          agentContributions: JSON.stringify(collaborationResult.agentContributions),
           model: selectedModel,
           language,
        });

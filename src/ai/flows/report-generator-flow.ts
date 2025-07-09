@@ -15,9 +15,9 @@ const GenerateReportInputSchema = z.object({
   executiveSummary: z
     .string()
     .describe('The executive summary of the mission.'),
-  collaborationLog: z
+  agentContributions: z
     .string()
-    .describe('A JSON string of the collaboration log.'),
+    .describe('A JSON string of the agent contributions array.'),
   language: z.enum(['fr', 'en']).describe('The language for the response.'),
   model: z
     .string()
@@ -52,7 +52,7 @@ const reportPrompt = ai.definePrompt({
 **Input Materials:**
 - **Original Mission:** {{{mission}}}
 - **Executive Summary:** {{{executiveSummary}}}
-- **Collaboration Log:** {{{collaborationLog}}}
+- **Agent Contributions:** {{{agentContributions}}}
 
 **Strategic Analysis Framework:**
 
@@ -61,11 +61,11 @@ You must fill the fields in the requested JSON output format by generating the c
 1. **reportTitle:** Create a concise and professional title for the report.
 2. **executiveSummarySection:** Write an "Executive Summary" of exactly 150-250 words. It must present the most important conclusions and key recommendations based *only* on the provided materials. This section must be self-contained.
 3. **methodologySection:**
-   - **Review Process:** Identify the core problem from the mission, analyze the collaboration log for key insights, and compare the executive summary against your analysis to find gaps.
-   - **Collaborative Dynamics Analysis:** In a subsection, present a brief table in Markdown of the collaborative dynamics showing: (1) The 2-3 most influential agents and why, (2) The main points of disagreement, and (3) How consensus was reached.
-4. **strengthsAnalysisSection (25% of content):** Identify 3-5 concrete strengths with specific examples from the collaboration log. For each, explain its importance and potential long-term impact. Highlight innovative approaches found in the logs.
+   - **Review Process:** Identify the core problem from the mission, analyze the agent contributions for key insights, and compare the executive summary against your analysis to find gaps.
+   - **Collaborative Dynamics Analysis:** In a subsection, present a brief table in Markdown of the collaborative dynamics showing: (1) The 2-3 most influential agents (based on their contribution type and content) and why, (2) The main points of conceptual tension or critique, and (3) How consensus was reached according to the reasoning.
+4. **strengthsAnalysisSection (25% of content):** Identify 3-5 concrete strengths with specific examples from the agent contributions. For each, explain its importance and potential long-term impact. Highlight innovative approaches found in the contributions.
 5. **gapsAssessmentSection (35% of content):** Based *only* on the provided context, identify and analyze critical gaps in the proposed solution. Consider the following dimensions if the context allows: Internal Contradictions, Socio-economic Dimension, Governance Structures, Ethical Tensions, Implementation Challenges.
-6. **solutionCritiqueSection (20% of content):** For each major proposed solution in the executive summary, apply this framework using *only* the provided materials: Conceptual integrity, Evidential basis, Cost-Benefit Analysis (if possible), Implementation viability, Unintended consequences.
+6. **solutionCritiqueSection (20% of content):** For each major proposed solution in the executive summary, apply this framework using *only* the provided materials: Conceptual integrity, Evidential basis (from contributions), Cost-Benefit Analysis (if possible), Implementation viability, Unintended consequences.
 7. **recommendationsSection (20% of content):** Develop 4-7 actionable recommendations addressing identified gaps, based *solely* on the provided information. For each recommendation, provide a clear action, quantitative KPIs (if possible), timeframe, and a brief risk analysis. Conclude with interdependencies.
 
 **Output Format Requirements:**

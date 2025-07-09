@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Users, Loader2, Sparkles, FileText, BrainCircuit, ShieldCheck, MessageSquare, WandSparkles, Check, AlertTriangle, Route, Hammer, Lightbulb, CheckCircle } from 'lucide-react';
 import AgentCard from './agent-card';
-import type { Agent, LogEntry, PromptVersion } from '@/lib/types';
+import type { Agent, AgentContribution, LogEntry, PromptVersion } from '@/lib/types';
 import useLocalStorage from '@/hooks/use-local-storage';
 import { runAgentCollaboration, type AgentCollaborationOutput } from '@/ai/flows/agent-collaboration-flow';
 import { autoAgentSelector, type AutoAgentSelectorOutput } from '@/ai/flows/auto-agent-selector';
@@ -23,10 +23,8 @@ import { t } from '@/lib/i18n';
 import { personaList } from '@/lib/personas';
 import { Skeleton } from '../ui/skeleton';
 import { Badge } from '../ui/badge';
-import { trackCausalFlow, type CausalFlowTrackerOutput } from '@/ai/flows/causal-flow-tracker-flow';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
-import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 const Diff = require('diff');
 
 const ORCHESTRATOR_IDS = ['kairos-1', 'disruptor'];
@@ -75,13 +73,11 @@ export default function MultiAgentDashboard() {
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const [contributionAnalysis, setContributionAnalysis] = useLocalStorage<{ participating: string[], missing: string[] } | null>("contribution-analysis", null);
   const { toast } = useToast();
-  const [, setCausalFlows] = useLocalStorage<CausalFlowTrackerOutput['causalFlows']>('causal-flow-result', []);
 
   const agentIconMap = useMemo(() => {
     const map = new Map<string, React.ElementType>();
     personaList.forEach(p => {
-      map.set(p.name.fr, p.icon);
-      map.set(p.name.en, p.icon);
+      map.set(p.id, p.icon);
     });
     return map;
   }, []);
@@ -91,20 +87,6 @@ export default function MultiAgentDashboard() {
       role: a.role,
       specialization: a.specialization,
   })), [agents]);
-
-  const triggerCausalFlowAnalysis = useCallback(async (currentLogs: LogEntry[]) => {
-    if (currentLogs.length === 0) return;
-
-    try {
-      const result = await trackCausalFlow({
-        logEntries: JSON.stringify(currentLogs.map((log, index) => ({ ...log, index }))),
-        language,
-      });
-      setCausalFlows(result.causalFlows);
-    } catch (error) {
-      console.error("Automated Causal Flow Analysis Failed:", error);
-    }
-  }, [language, setCausalFlows]);
 
   const handlePromptChange = (agentId: string, newPrompt: string, refinementResult?: AdaptivePromptRewriterOutput) => {
     setAgents(prevAgents => 
@@ -171,15 +153,15 @@ export default function MultiAgentDashboard() {
       });
       setCollaborationResult(result);
       
-      if (result.collaborationLog) {
+      if (result.agentContributions) {
         const missionStartTime = new Date();
-        const newLogEntries: LogEntry[] = result.collaborationLog.map((log, index) => ({
-          id: `${missionStartTime.toISOString()}-${log.turn}`,
-          agentId: log.agentId,
-          agentRole: log.agentRole,
-          message: log.contribution,
-          annotation: log.annotation,
-          timestamp: new Date(missionStartTime.getTime() + (index * 3000)).toISOString(),
+        const newLogEntries: LogEntry[] = result.agentContributions.map((contrib, index) => ({
+          id: `${missionStartTime.toISOString()}-${contrib.agentId}-${index}`,
+          agentId: contrib.agentId,
+          agentRole: contrib.agentRole,
+          message: contrib.keyContribution,
+          annotation: contrib.contributionType,
+          timestamp: new Date(missionStartTime.getTime() + (index * 1000)).toISOString(),
         }));
         
         const updatedLogs = [...newLogEntries, ...logs];
@@ -190,10 +172,8 @@ export default function MultiAgentDashboard() {
           description: t.dashboard.toast_log_description[language],
         });
 
-        triggerCausalFlowAnalysis(newLogEntries);
-
         const expectedAgentIds = new Set(finalSelectedIds);
-        const contributingAgentIds = new Set(result.collaborationLog.map(log => log.agentId));
+        const contributingAgentIds = new Set(result.agentContributions.map(log => log.agentId));
         
         const missingAgentIds = [...expectedAgentIds].filter(id => !contributingAgentIds.has(id) && !ORCHESTRATOR_IDS.includes(id));
         const participatingAgentRoles = [...contributingAgentIds]
@@ -578,72 +558,29 @@ export default function MultiAgentDashboard() {
                       <p className="whitespace-pre-wrap text-muted-foreground">{collaborationResult.reasoning}</p>
                     </CardContent>
                   </Card>
-                  {collaborationResult.validationGrid && (
-                     <Card>
-                        <CardHeader>
-                          <CardTitle className="flex items-center gap-2 text-lg"><ShieldCheck />{t.dashboard.assessment_title[language]}</CardTitle>
-                          <CardDescription>{t.dashboard.assessment_description[language]}</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4 pt-2">
-                          <div className="space-y-1">
-                            <div className="flex justify-between items-baseline">
-                              <Label className="text-sm">{t.dashboard.clarity_label[language]}</Label>
-                              <span className="font-bold text-primary">{collaborationResult.validationGrid.clarity.toFixed(2)}</span>
-                            </div>
-                            <Progress value={collaborationResult.validationGrid.clarity * 100} />
-                          </div>
-                           <div className="space-y-1">
-                             <div className="flex justify-between items-baseline">
-                              <Label className="text-sm">{t.dashboard.synthesis_label[language]}</Label>
-                              <span className="font-bold text-primary">{collaborationResult.validationGrid.synthesis.toFixed(2)}</span>
-                             </div>
-                            <Progress value={collaborationResult.validationGrid.synthesis * 100} />
-                          </div>
-                           <div className="space-y-1">
-                            <div className="flex justify-between items-baseline">
-                              <Label className="text-sm">{t.dashboard.ethics_label[language]}</Label>
-                              <span className="font-bold text-primary">{collaborationResult.validationGrid.ethics.toFixed(2)}</span>
-                             </div>
-                            <Progress value={collaborationResult.validationGrid.ethics * 100} />
-                          </div>
-                           <div className="space-y-1">
-                            <div className="flex justify-between items-baseline">
-                              <Label className="text-sm">{t.dashboard.scalability_label[language]}</Label>
-                              <span className="font-bold text-primary">{collaborationResult.validationGrid.scalability.toFixed(2)}</span>
-                             </div>
-                            <Progress value={collaborationResult.validationGrid.scalability * 100} />
-                          </div>
-                        </CardContent>
-                      </Card>
-                   )}
                 </div>
 
                 <div className="lg:col-span-2 space-y-6">
-                    {collaborationResult.collaborationLog && collaborationResult.collaborationLog.length > 0 && (
+                    {collaborationResult.agentContributions && collaborationResult.agentContributions.length > 0 && (
                       <Card className="h-full flex flex-col">
                         <CardHeader>
-                           <CardTitle className="flex items-center gap-2 text-lg font-headline"><MessageSquare />{t.dashboard.log_title_visible[language]}</CardTitle>
+                           <CardTitle className="flex items-center gap-2 text-lg font-headline"><MessageSquare />{t.dashboard.key_contributions_title[language]}</CardTitle>
                         </CardHeader>
                         <CardContent className="flex-grow">
-                          <div className="space-y-6 max-h-[700px] overflow-y-auto p-4 border rounded-lg bg-background/50 h-full">
-                              {collaborationResult.collaborationLog.map((log) => {
-                                  const Icon = agentIconMap.get(log.agentRole) || BrainCircuit;
+                          <div className="space-y-4 max-h-[700px] overflow-y-auto p-4 border rounded-lg bg-background/50 h-full">
+                              {collaborationResult.agentContributions.map((contrib) => {
+                                  const Icon = agentIconMap.get(contrib.agentId) || BrainCircuit;
                                   return (
-                                      <div key={log.turn} className="flex items-start gap-4 animate-fade-in">
+                                      <div key={contrib.agentId} className="flex items-start gap-4 animate-fade-in">
                                           <div className="p-2 bg-accent rounded-full">
                                               <Icon className="h-5 w-5 text-accent-foreground" />
                                           </div>
                                           <div className="flex-1">
                                               <div className="flex items-baseline justify-between">
-                                                  <p className="font-semibold text-primary">{log.agentRole}</p>
-                                                  <span className="text-xs text-muted-foreground font-mono">{t.dashboard.turn[language]} {log.turn}</span>
+                                                  <p className="font-semibold text-primary">{contrib.agentRole}</p>
+                                                  <Badge variant="secondary" className="text-xs">{contrib.contributionType}</Badge>
                                               </div>
-                                              <p className="text-sm text-foreground/90">{log.contribution}</p>
-                                               {log.annotation && (
-                                                <p className="mt-1 text-xs text-secondary font-medium italic">
-                                                  -- {log.annotation}
-                                                </p>
-                                              )}
+                                              <p className="text-sm text-foreground/90">{contrib.keyContribution}</p>
                                           </div>
                                       </div>
                                   );
