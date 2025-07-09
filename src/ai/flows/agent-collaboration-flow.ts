@@ -32,6 +32,7 @@ const ConformityCheckSchema = z.object({
   reportsConsulted: z.array(z.string()).describe("An array of document IDs from the knowledge base that were consulted for this check."),
   summary: z.string().describe("A brief summary explaining how the executive summary avoids past mistakes and respects the control framework's rules found in the consulted documents."),
   appliedMethodologies: z.array(z.string()).describe("A list of specific methodologies or principles from the knowledge base that were actively applied in the solution design, proving a deep understanding of the content."),
+  realityCheckSummary: z.string().describe("A summary of how the solution was grounded in reality by challenging abstract proposals with factual data (e.g., from REALITY-ANCHOR). This confirms that creative ideas were validated against real-world constraints.").optional(),
 });
 
 const DynamicsMatrixEntrySchema = z.object({
@@ -74,12 +75,16 @@ The collaboration you simulate MUST feature contributions from **every single ag
 
 **Your Comprehensive Process:**
 
-1.  **Simulate Collaboration & Detail Agent Contributions:** For **every single agent** from the 'Participating Agents' list, you MUST summarize their single most critical and unique contribution to the final solution. Populate the \`agentContributions\` array with this analysis. Each agent must have one entry.
+1.  **Simulate Collaboration & Detail Agent Contributions:** For **every single agent** from the 'Participating Agents' list, you MUST summarize their single most critical and unique contribution to the final solution. Populate the \`agentContributions\` array with this analysis. Each agent must have one entry. **Crucially, ensure that proposals from creative or abstract agents (e.g., CONCEPT-CREATOR, XENOTHINK) are systematically challenged by pragmatic agents (e.g., STRATO, KRONOS, REALITY-ANCHOR) to ground them in reality.**
 
-2.  **MANDATORY CONFORMITY CHECK (METHODOLOGY-DRIVEN):** Before writing the final summary, you MUST ensure compliance with our internal frameworks. This is not a box-ticking exercise; you must demonstrate a deep understanding of the *methodologies* and *principles* within the knowledge base.
+2.  **MANDATORY CONFORMITY AND REALITY CHECK (METHODOLOGY-DRIVEN):** Before writing the final summary, you MUST ensure compliance with our internal frameworks. This is not a box-ticking exercise; you must demonstrate a deep understanding of the *methodologies* and *principles* within the knowledge base.
     *   **Use the \`queryKnowledgeBaseTool\`** to search for relevant conformity reports, methodology guides, and post-mortems (e.g., search for documents with IDs like "ANALYSIS-CONFORMITY-...", "FRAMEWORK-IA-CONTROL-...", or "GUIDE-METHODOLOGY-...").
-    *   **Analyze the findings in depth.** Your goal is to understand the *'why'* behind past failures (e.g., lack of realism, missing "Red Team", vague financing, ignoring political facts) and the core principles of mandatory procedures. You must apply the *methodologies* from the reports, not just list facts.
-    *   **Populate the \`conformityCheck\` field:** List the document IDs you consulted. In the \`summary\` field, explain how your solution avoids past errors. Crucially, in the \`appliedMethodologies\` field, list the specific principles and methodologies from the consulted documents that you actively applied to prove you have understood their substance.
+    *   **Analyze the findings in depth.** Your goal is to understand the *'why'* behind past failures (e.g., lack of realism, missing "Red Team", vague financing, ignoring political facts) and the core principles of mandatory procedures.
+    *   **Populate the \`conformityCheck\` field:**
+        *   List the document IDs you consulted in \`reportsConsulted\`.
+        *   In the \`summary\` field, explain how your solution avoids past errors.
+        *   In \`appliedMethodologies\`, list the specific principles you actively applied.
+        *   **In \`realityCheckSummary\`, describe how abstract ideas were tested against real-world facts, referencing contributions from pragmatic agents like REALITY-ANCHOR.**
 
 3.  **Synthesize Final Outcome:** Based on the agent contributions AND your deep conformity analysis, produce a comprehensive \`executiveSummary\`. This summary MUST be realistic, actionable, and demonstrably compliant with the lessons learned from the knowledge base.
 
