@@ -10,6 +10,8 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { queryKnowledgeBaseTool } from '@/ai/tools/knowledge-base-tool';
+import { strategicSynthesisCritique } from './strategic-synthesis-critique';
+import { adaptivePromptRewriter } from './adaptive-prompt-rewriter';
 
 const AgentCollaborationInputSchema = z.object({
   mission: z.string().describe('The overall mission or task for the agents to collaborate on.'),
@@ -103,17 +105,49 @@ const agentCollaborationFlow = ai.defineFlow(
     outputSchema: AgentCollaborationOutputSchema,
   },
   async (input) => {
-    const response = await agentCollaborationPrompt(input, {
+    // Step 1: Initial collaboration
+    const initialResponse = await agentCollaborationPrompt(input, {
       model: input.model,
       config: { maxOutputTokens: 8192 },
       retries: 10,
     });
     
-    const output = response.output;
-    if (!output) {
-        throw new Error("Failed to generate agent collaboration result.");
+    const initialOutput = initialResponse.output;
+    if (!initialOutput) {
+        throw new Error("Failed to generate initial agent collaboration result.");
     }
-    
-    return output;
+
+    // Step 2: Red Team critique of the initial summary
+    const critique = await strategicSynthesisCritique({
+        synthesisText: initialOutput.executiveSummary,
+        scenario: input.mission,
+        model: input.model,
+        language: input.language,
+    });
+
+    // Step 3: Refine the summary based on the critique
+    const performanceLacunae = `
+      Based on an initial critical "Red Team" analysis, the following points were raised about the summary. 
+      Your task is to rewrite the original summary to address these points. You must reinforce the identified strengths and mitigate the weaknesses. The new summary should be more robust, insightful, and actionable.
+      **Critical Analysis to Address:**
+      - Strengths to emphasize: ${critique.strengths.join('; ')}.
+      - Weaknesses to correct: ${critique.weaknesses.join('; ')}.
+      - Potential unintended consequences to consider or mention: ${critique.unintendedConsequences.join('; ')}.
+      - Practical implementation challenges to acknowledge: ${critique.implementationChallenges.join('; ')}.
+      - Strategic recommendations to integrate or reflect: ${critique.recommendations.join('; ')}.
+    `.trim();
+
+    const refinement = await adaptivePromptRewriter({
+        originalPrompt: initialOutput.executiveSummary,
+        agentPerformance: performanceLacunae,
+        model: input.model,
+        language: input.language,
+    });
+
+    // Return the refined output, keeping the rest of the initial output
+    return {
+        ...initialOutput,
+        executiveSummary: refinement.rewrittenPrompt,
+    };
   }
 );
