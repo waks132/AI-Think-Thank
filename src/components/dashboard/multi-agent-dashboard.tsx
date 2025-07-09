@@ -179,8 +179,6 @@ export default function MultiAgentDashboard() {
       if (result && result.recommendedAgentIds) {
         if (result.recommendedAgentIds.length > 0) {
           const recommendedSet = new Set(result.recommendedAgentIds);
-          // FIX: Replace the current selection with the AI's recommendation
-          // instead of adding to it.
           setSelectedAgentIds(recommendedSet);
           
           toast({
@@ -189,7 +187,6 @@ export default function MultiAgentDashboard() {
               <div className="text-xs max-w-md">
                 <p className="font-bold">{result.recommendation}</p>
                 <p className="mt-2 whitespace-pre-wrap">{result.orchestrationRationale}</p>
-                <p className="mt-2 whitespace-pre-wrap">{result.specialProtocolsActivated}</p>
                 {result.paradigmNativeProtocol && (
                   <div className="mt-2 border-t pt-2 border-primary/20">
                     <p className="font-semibold">{t.dashboard.paradigm_protocol[language]}</p>
