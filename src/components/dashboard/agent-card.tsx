@@ -22,9 +22,10 @@ interface AgentCardProps {
   onSelectionChange: (agentId: string, isSelected: boolean) => void;
   selectedModel: string;
   isOrchestrator: boolean;
+  orchestratorContext?: string;
 }
 
-export default function AgentCard({ agent, onPromptChange, isSelected, onSelectionChange, selectedModel, isOrchestrator }: AgentCardProps) {
+export default function AgentCard({ agent, onPromptChange, isSelected, onSelectionChange, selectedModel, isOrchestrator, orchestratorContext }: AgentCardProps) {
   const [currentPrompt, setCurrentPrompt] = useState(agent.prompt);
   const [isRefining, setIsRefining] = useState(false);
   const { toast } = useToast();
@@ -47,6 +48,7 @@ export default function AgentCard({ agent, onPromptChange, isSelected, onSelecti
         agentPerformance: "The current prompt could be clearer, more specific, and provide more actionable guidance to fulfill its role effectively. It should be refined for better performance.",
         model: selectedModel,
         language: language,
+        orchestratorContext: orchestratorContext,
       });
 
       if (result) {

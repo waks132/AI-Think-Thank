@@ -88,6 +88,14 @@ export default function MultiAgentDashboard() {
       specialization: a.specialization,
   })), [agents]);
 
+  const orchestratorContext = useMemo(() => {
+    if (!agents || agents.length === 0) return undefined;
+    return agents
+      .filter(agent => ORCHESTRATOR_IDS.includes(agent.id))
+      .map(agent => `Role: ${agent.role}, Prompt: "${agent.prompt}"`)
+      .join(' | ');
+  }, [agents]);
+
   const handlePromptChange = (agentId: string, newPrompt: string, refinementResult?: AdaptivePromptRewriterOutput) => {
     setAgents(prevAgents => 
       prevAgents.map(agent => 
@@ -611,6 +619,7 @@ export default function MultiAgentDashboard() {
                 onSelectionChange={handleAgentSelectionChange}
                 selectedModel={selectedModel}
                 isOrchestrator={isOrchestrator}
+                orchestratorContext={orchestratorContext}
               />
             )
           }) : Array.from({ length: 12 }).map((_, index) => (

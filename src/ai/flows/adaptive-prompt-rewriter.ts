@@ -15,6 +15,7 @@ import {z} from 'genkit';
 const AdaptivePromptRewriterInputSchema = z.object({
   originalPrompt: z.string().describe('The original prompt to be rewritten.'),
   agentPerformance: z.string().describe('A description of the agent\'s performance with the original prompt, including any identified lacunae (e.g., lack of factual accuracy, redundancy).'),
+  orchestratorContext: z.string().optional().describe('The prompts of the orchestrator agents to provide strategic context for the refinement.'),
   metricsDivergence: z.number().optional().describe('KL divergence between versions of prompts'),
   language: z.enum(['fr', 'en']).describe('The language for the response.'),
   model: z.string().optional().describe('The AI model to use for the generation.'),
@@ -58,6 +59,9 @@ Your operational cycle is as follows:
 
 *   **Original Prompt**: {{{originalPrompt}}}
 *   **Agent Performance Lacunae**: {{{agentPerformance}}}
+{{#if orchestratorContext}}
+*   **Orchestrator's Strategic Context**: To ensure systemic harmony, the rewritten prompt must align with the following directives from the orchestrator agents: "{{{orchestratorContext}}}"
+{{/if}}
 {{#if metricsDivergence}}
 *   **Metrics Divergence**: {{{metricsDivergence}}} (This can be used as a risk/coherence factor in your Ψ evaluation)
 {{/if}}
