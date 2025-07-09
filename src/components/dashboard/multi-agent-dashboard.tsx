@@ -365,7 +365,8 @@ export default function MultiAgentDashboard() {
     });
 
     setIsHydrated(true);
-  }, [language, setAgents, setPromptHistories, toast]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language, setAgents, setPromptHistories]);
 
 
   const sortedAgents = useMemo(() => {
@@ -529,7 +530,11 @@ export default function MultiAgentDashboard() {
                     </div>
                     <div>
                       <h4 className="font-semibold mb-1">{t.dashboard.reports_consulted[language]}</h4>
-                       <p className="text-xs text-muted-foreground font-mono">{collaborationResult.conformityCheck.reportsConsulted.join(', ')}</p>
+                       <div className="flex flex-wrap gap-2">
+                        {collaborationResult.conformityCheck.reportsConsulted.map(reportId => (
+                          <Badge variant="outline" key={reportId} className="font-mono text-xs">{reportId}</Badge>
+                        ))}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
