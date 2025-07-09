@@ -79,13 +79,14 @@ The collaboration you simulate MUST feature contributions from **every single ag
 
 1.  **Simulate Collaboration & Detail Agent Contributions:** For **every single agent** from the 'Participating Agents' list, you MUST summarize their single most critical and unique contribution to the final solution. Populate the \`agentContributions\` array with this analysis. Each agent must have one entry. **Crucially, ensure that proposals from creative or abstract agents (e.g., CONCEPT-CREATOR, XENOTHINK) are systematically challenged by pragmatic agents (e.g., STRATO, KRONOS, REALITY-ANCHOR) to ground them in reality.**
 
-2.  **MANDATORY CONFORMITY AND REALITY CHECK (METHODOLOGY-DRIVEN):** Before writing the final summary, you MUST ensure compliance with our internal frameworks. This is not a box-ticking exercise; you must demonstrate a deep understanding of the *methodologies* and *principles* within the knowledge base.
-    *   **Use the \`queryKnowledgeBaseTool\`** to search for relevant conformity reports, methodology guides, and post-mortems (e.g., search for documents with IDs like "ANALYSIS-CONFORMITY-...", "FRAMEWORK-IA-CONTROL-...", or "GUIDE-METHODOLOGY-...").
-    *   **Analyze the findings in depth.** Your goal is to understand the *'why'* behind past failures (e.g., lack of realism, missing "Red Team", vague financing, ignoring political facts) and the core principles of mandatory procedures.
+2.  **MANDATORY CONFORMITY AND REALITY CHECK (DEEP KNOWLEDGE BASE INTEGRATION):** Before writing the final summary, you MUST ground your analysis in the entirety of our collective's past learnings to avoid repeating mistakes. This is a critical step requiring deep integration, not superficial checking.
+    *   **Comprehensive Consultation:** Your first step is to perform broad queries using the \`queryKnowledgeBaseTool\` to understand the full scope of available documents (e.g., query for "analysis", "framework", "guide", "report").
+    *   **Targeted Analysis:** Based on the mission's specific challenges, perform additional, targeted queries with the \`queryKnowledgeBaseTool\` to find the most relevant conformity reports, methodology guides, and post-mortems.
+    *   **Synthesize and Apply:** Analyze the findings in depth. Your goal is to understand the *'why'* behind past failures (e.g., lack of realism, missing "Red Team", vague financing, ignoring political facts) and the core principles of mandatory procedures. You must actively apply these lessons.
     *   **Populate the \`conformityCheck\` field:**
-        *   List the document IDs you consulted in \`reportsConsulted\`.
-        *   In the \`summary\` field, explain how your solution avoids past errors.
-        *   In \`appliedMethodologies\`, list the specific principles you actively applied.
+        *   In \`reportsConsulted\`, list **only the document IDs that you effectively used** and that had a direct and significant influence on your final framework. Do not list every document you scanned.
+        *   In the \`summary\` field, explain how your solution avoids past errors *by referencing specific lessons from the consulted documents*.
+        *   In \`appliedMethodologies\`, list the specific methodologies or principles from the knowledge base that were actively applied in the solution design, proving a deep understanding of the content.
         *   **In \`realityCheckSummary\`, describe how abstract ideas were tested against real-world facts, referencing contributions from pragmatic agents like REALITY-ANCHOR.**
 
 3.  **Synthesize Final Outcome:** Based on the agent contributions AND your deep conformity analysis, produce a comprehensive \`executiveSummary\`. This summary MUST be realistic, actionable, and demonstrably compliant with the lessons learned from the knowledge base.
