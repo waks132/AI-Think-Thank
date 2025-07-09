@@ -1,12 +1,14 @@
 "use client"
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { Users, Loader2, Sparkles, FileText, BrainCircuit, ShieldCheck, MessageSquare, WandSparkles, Beaker, Zap } from 'lucide-react';
+import { Users, Loader2, Sparkles, FileText, BrainCircuit, ShieldCheck, MessageSquare, WandSparkles, Check, AlertTriangle, Route, Hammer, Lightbulb } from 'lucide-react';
 import AgentCard from './agent-card';
 import type { Agent, LogEntry, PromptVersion } from '@/lib/types';
 import useLocalStorage from '@/hooks/use-local-storage';
 import { runAgentCollaboration, type AgentCollaborationOutput } from '@/ai/flows/agent-collaboration-flow';
 import { autoAgentSelector, type AutoAgentSelectorOutput } from '@/ai/flows/auto-agent-selector';
+import { strategicSynthesisCritique, type StrategicSynthesisCritiqueOutput } from '@/ai/flows/strategic-synthesis-critique';
+import { adaptivePromptRewriter, type AdaptivePromptRewriterOutput } from '@/ai/flows/adaptive-prompt-rewriter';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Textarea } from '../ui/textarea';
 import { Button } from '../ui/button';
@@ -22,9 +24,38 @@ import { personaList } from '@/lib/personas';
 import { Skeleton } from '../ui/skeleton';
 import { Badge } from '../ui/badge';
 import { trackCausalFlow, type CausalFlowTrackerOutput } from '@/ai/flows/causal-flow-tracker-flow';
-import type { AdaptivePromptRewriterOutput } from '@/ai/flows/adaptive-prompt-rewriter';
+import { cn } from '@/lib/utils';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+const Diff = require('diff');
 
 const ORCHESTRATOR_IDS = ['kairos-1', 'disruptor'];
+
+const DiffView = ({ string1, string2 }: { string1: string; string2: string }) => {
+    const differences = Diff.diffWords(string1, string2);
+    return (
+        <pre className="whitespace-pre-wrap text-sm leading-relaxed">
+            {differences.map((part: any, index: number) => {
+                const style = part.added ? 'bg-green-500/20 text-green-200 p-0.5 rounded-sm' 
+                            : part.removed ? 'bg-red-500/20 text-red-200 p-0.5 rounded-sm' 
+                            : 'text-muted-foreground';
+                return <span key={index} className={`${style} transition-colors duration-300`}>{part.value}</span>
+            })}
+        </pre>
+    );
+};
+
+const CritiqueSection = ({ icon: Icon, title, items, color }: { icon: React.ElementType, title: string, items: string[], color: string }) => (
+  <div className="py-2">
+    <h4 className={cn("font-semibold flex items-center gap-2 mb-2", color)}>
+      <Icon className="h-5 w-5" />
+      {title}
+    </h4>
+    <ul className="list-disc list-inside space-y-1 text-muted-foreground text-sm pl-2">
+      {items.map((item, index) => <li key={index}>{item}</li>)}
+    </ul>
+  </div>
+);
+
 
 export default function MultiAgentDashboard() {
   const { language } = useLanguage();
@@ -35,8 +66,11 @@ export default function MultiAgentDashboard() {
   const [selectedAgentIds, setSelectedAgentIds] = useState<Set<string>>(new Set(['helios', 'veritas', 'symbioz']));
   const [mission, setMission] = useLocalStorage<string>('mission-text', 'Développer un cadre pour le déploiement éthique de l\'IA dans les véhicules autonomes.');
   const [collaborationResult, setCollaborationResult] = useLocalStorage<AgentCollaborationOutput | null>("collaboration-result", null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isCollaborating, setIsCollaborating] = useState(false);
   const [isSuggesting, setIsSuggesting] = useState(false);
+  const [isRefining, setIsRefining] = useState(false);
+  const [critiqueResult, setCritiqueResult] = useState<StrategicSynthesisCritiqueOutput | null>(null);
+  const [refinedSummary, setRefinedSummary] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast();
   const [, setCausalFlows] = useLocalStorage<CausalFlowTrackerOutput['causalFlows']>('causal-flow-result', []);
@@ -115,8 +149,10 @@ export default function MultiAgentDashboard() {
       return;
     }
 
-    setIsLoading(true);
+    setIsCollaborating(true);
     setCollaborationResult(null);
+    setRefinedSummary(null);
+    setCritiqueResult(null);
 
     const agentListString = agents
       .filter(agent => finalSelectedIds.has(agent.id))
@@ -162,7 +198,7 @@ export default function MultiAgentDashboard() {
         description: (error as Error).message || t.dashboard.toast_fail_description[language],
       });
     } finally {
-      setIsLoading(false);
+      setIsCollaborating(false);
     }
   };
 
@@ -230,6 +266,78 @@ export default function MultiAgentDashboard() {
       setIsSuggesting(false);
     }
   };
+
+  const handleRefineSummary = async () => {
+      if (!collaborationResult?.executiveSummary) return;
+
+      setIsRefining(true);
+      setCritiqueResult(null);
+      setRefinedSummary(null);
+
+      try {
+          // Step 1: Get the critique
+          const critique = await strategicSynthesisCritique({
+              synthesisText: collaborationResult.executiveSummary,
+              scenario: mission,
+              model: selectedModel,
+              language,
+          });
+          setCritiqueResult(critique);
+          
+          // Step 2: Use the critique to rewrite the summary
+          const performanceLacunae = `
+  Based on a critical "Red Team" analysis, the following points were raised about the original summary. 
+  Your task is to rewrite the original summary to address these points. You must reinforce the identified strengths and mitigate the weaknesses. The new summary should be more robust, insightful, and actionable.
+
+  **Critical Analysis to Address:**
+  - Strengths to emphasize: ${critique.strengths.join('; ')}.
+  - Weaknesses to correct: ${critique.weaknesses.join('; ')}.
+  - Potential unintended consequences to consider or mention: ${critique.unintendedConsequences.join('; ')}.
+  - Practical implementation challenges to acknowledge: ${critique.implementationChallenges.join('; ')}.
+  - Strategic recommendations to integrate or reflect: ${critique.recommendations.join('; ')}.
+          `.trim();
+
+          const refinement = await adaptivePromptRewriter({
+              originalPrompt: collaborationResult.executiveSummary,
+              agentPerformance: performanceLacunae,
+              model: selectedModel,
+              language,
+          });
+          
+          setRefinedSummary(refinement.rewrittenPrompt);
+
+      } catch (error) {
+          console.error("Error refining summary:", error);
+          toast({
+              variant: "destructive",
+              title: t.dashboard.toast_refine_fail_title[language],
+              description: (error as Error).message || t.dashboard.toast_refine_fail_description[language],
+          });
+      } finally {
+          setIsRefining(false);
+      }
+  };
+
+  const handleAdoptRefinement = () => {
+      if (refinedSummary && collaborationResult) {
+          setCollaborationResult({
+              ...collaborationResult,
+              executiveSummary: refinedSummary,
+          });
+          toast({
+              title: t.dashboard.toast_refine_success_title[language],
+              description: t.dashboard.toast_refine_success_description[language],
+          });
+          setRefinedSummary(null);
+          setCritiqueResult(null);
+      }
+  };
+
+  const handleDiscardRefinement = () => {
+      setRefinedSummary(null);
+      setCritiqueResult(null);
+  };
+
 
   useEffect(() => {
     // This effect handles the hydration on mount. It runs only once on the client.
@@ -313,15 +421,15 @@ export default function MultiAgentDashboard() {
           </div>
           <ModelSelector selectedModel={selectedModel} onModelChange={setSelectedModel} />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Button onClick={handleSuggestTeam} disabled={isLoading || isSuggesting || !isHydrated} variant="outline">
+              <Button onClick={handleSuggestTeam} disabled={isCollaborating || isSuggesting || !isHydrated} variant="outline">
                 {isSuggesting ? (
                   <><Loader2 className="mr-2 animate-spin" /> {t.dashboard.suggest_team_loading[language]}</>
                 ) : (
                   <><WandSparkles className="mr-2" /> {t.dashboard.suggest_team_button[language]}</>
                 )}
               </Button>
-              <Button onClick={handleStartMission} disabled={isLoading || isSuggesting || !isHydrated}>
-                {isLoading ? (
+              <Button onClick={handleStartMission} disabled={isCollaborating || isSuggesting || !isHydrated}>
+                {isCollaborating ? (
                   <><Loader2 className="mr-2 animate-spin" /> {t.dashboard.start_button_loading[language]}</>
                 ) : (
                   <><Sparkles className="mr-2" /> {t.dashboard.start_button[language]} ({finalSelectedAgentCount} {t.dashboard.agents_selected[language]})</>
@@ -329,7 +437,7 @@ export default function MultiAgentDashboard() {
               </Button>
             </div>
 
-          {isLoading && (
+          {isCollaborating && (
             <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed rounded-lg">
                 <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
                 <p className="text-muted-foreground">{t.dashboard.loading_text[language]}</p>
@@ -339,7 +447,12 @@ export default function MultiAgentDashboard() {
           {isHydrated && collaborationResult && (
             <div className="space-y-4 animate-fade-in pt-4">
               <Separator />
-              <h3 className="font-headline text-xl">{t.dashboard.outcome_title[language]}</h3>
+              <h3 className="font-headline text-xl flex items-center gap-4">
+                {t.dashboard.outcome_title[language]}
+                 <Button onClick={handleRefineSummary} disabled={isCollaborating || isSuggesting || isRefining || !collaborationResult} size="sm" variant="outline">
+                    {isRefining ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t.dashboard.refine_summary_loading[language]}</> : <><WandSparkles className="mr-2 h-4 w-4" />{t.dashboard.refine_summary_button[language]}</>}
+                </Button>
+              </h3>
                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                 <div className="lg:col-span-3 space-y-6">
                   <Card>
@@ -350,6 +463,56 @@ export default function MultiAgentDashboard() {
                       <p className="whitespace-pre-wrap">{collaborationResult.executiveSummary}</p>
                     </CardContent>
                   </Card>
+                   
+                   {isRefining && 
+                    <div className="flex items-center justify-center text-muted-foreground p-8">
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" /> {t.dashboard.refine_summary_loading[language]}
+                    </div>
+                   }
+
+                   {refinedSummary && critiqueResult && (
+                      <div className="border-t-2 border-dashed border-primary/50 pt-6 mt-6 space-y-6 animate-fade-in">
+                          <h4 className="font-headline text-lg">{t.dashboard.refinement_dialog_title[language]}</h4>
+                          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                              <Card>
+                                  <CardHeader><CardTitle className="text-base">{t.dashboard.original_version[language]}</CardTitle></CardHeader>
+                                  <CardContent className="text-sm text-muted-foreground"><p>{collaborationResult.executiveSummary}</p></CardContent>
+                              </Card>
+                              <Card className="bg-primary/5 border-primary">
+                                  <CardHeader><CardTitle className="text-base">{t.dashboard.refined_version[language]}</CardTitle></CardHeader>
+                                  <CardContent className="text-sm font-medium"><p>{refinedSummary}</p></CardContent>
+                              </Card>
+                          </div>
+                          
+                          <Accordion type="multiple" className="w-full">
+                              <AccordionItem value="diff">
+                                  <AccordionTrigger>{t.dashboard.diff_view[language]}</AccordionTrigger>
+                                  <AccordionContent>
+                                      <Card><CardContent className="p-4"><DiffView string1={collaborationResult.executiveSummary} string2={refinedSummary} /></CardContent></Card>
+                                  </AccordionContent>
+                              </AccordionItem>
+                              <AccordionItem value="critique">
+                                  <AccordionTrigger>{t.dashboard.critique_analysis[language]}</AccordionTrigger>
+                                  <AccordionContent>
+                                    <div className="space-y-2 p-4 border rounded-lg bg-background/50">
+                                      <CritiqueSection icon={Check} title={t.dashboard.strengths[language]} items={critiqueResult.strengths} color="text-green-500" />
+                                      <CritiqueSection icon={AlertTriangle} title={t.dashboard.weaknesses[language]} items={critiqueResult.weaknesses} color="text-amber-500" />
+                                      <CritiqueSection icon={Route} title={t.dashboard.implementation_challenges[language]} items={critiqueResult.implementationChallenges} color="text-red-500" />
+                                      <CritiqueSection icon={Hammer} title={t.dashboard.unintended_consequences[language]} items={critiqueResult.unintendedConsequences} color="text-purple-500" />
+                                      <CritiqueSection icon={Lightbulb} title={t.dashboard.recommendations[language]} items={critiqueResult.recommendations} color="text-blue-500" />
+                                    </div>
+                                  </AccordionContent>
+                              </AccordionItem>
+                          </Accordion>
+
+                          <div className="flex justify-end gap-2">
+                              <Button variant="ghost" onClick={handleDiscardRefinement}>{t.dashboard.keep_original_button[language]}</Button>
+                              <Button onClick={handleAdoptRefinement}>{t.dashboard.adopt_refined_button[language]}</Button>
+                          </div>
+                      </div>
+                    )}
+
+
                    <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2"><BrainCircuit />{t.dashboard.reasoning_title[language]}</CardTitle>
