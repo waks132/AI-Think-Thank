@@ -92,7 +92,7 @@ export default function MultiAgentDashboard() {
     if (!agents || agents.length === 0) return undefined;
     return agents
       .filter(agent => ORCHESTRATOR_IDS.includes(agent.id))
-      .map(agent => `Role: ${agent.role}, Prompt: "${agent.prompt}"`)
+      .map(agent => `Role: ${agent.role}, Core Directive: "${agent.prompt}"`)
       .join(' | ');
   }, [agents]);
 
@@ -479,7 +479,7 @@ export default function MultiAgentDashboard() {
                                 <AlertDescription>
                                    <p className="mt-2">{t.dashboard.incomplete_contribution_description_p1[language]} <span className="font-semibold">{contributionAnalysis.missing.join(', ')}</span>.</p>
                                    <p className="mt-2 text-xs">{t.dashboard.incomplete_contribution_description_p2[language]}</p>
-                                </AlertDescription>
+                                 </AlertDescription>
                             </Alert>
                         ) : (
                             <div className="p-4 rounded-lg border bg-accent/50 flex items-center gap-3">
