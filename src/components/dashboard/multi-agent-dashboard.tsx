@@ -302,10 +302,20 @@ export default function MultiAgentDashboard() {
   - Practical implementation challenges to acknowledge: ${critique.implementationChallenges.join('; ')}.
   - Strategic recommendations to integrate or reflect: ${critique.recommendations.join('; ')}.
           `.trim();
+          
+          const finalSelectedIds = new Set(selectedAgentIds);
+          const orchestratorsInRoster = agents.filter(a => ORCHESTRATOR_IDS.includes(a.id));
+          orchestratorsInRoster.forEach(o => finalSelectedIds.add(o.id));
+
+          const agentContextString = agents
+            .filter(agent => finalSelectedIds.has(agent.id))
+            .map(agent => `- **Agent ID:** ${agent.id}\n  - **Agent Role:** ${agent.role}\n  - **Core Directive:** "${agent.prompt}"`)
+            .join('\n\n');
 
           const refinement = await adaptivePromptRewriter({
               originalPrompt: collaborationResult.executiveSummary,
               agentPerformance: performanceLacunae,
+              orchestratorContext: agentContextString,
               model: selectedModel,
               language,
           });
