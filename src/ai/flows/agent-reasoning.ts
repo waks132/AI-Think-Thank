@@ -52,7 +52,7 @@ Break down your thought process into a structured array of steps. For each step:
 2.  Provide the detailed 'reasoning' for that step.
 3.  Assign an 'importance' score (0.0 to 1.0) representing the cognitive weight of this step on the final solution.
 
-**Crucially, if you identify a potential gap in your knowledge or reasoning, you MUST use the 'queryKnowledgeBaseTool' to search for corrected analyses or best practices that might improve your plan. Integrate the findings from the knowledge base into your reasoning steps.**
+**Crucially, your reasoning process MUST be informed by our internal best practices. If you identify a potential gap in your knowledge, or need guidance on methodology (like multi-agent collaboration, critique, or strategic planning), you MUST use the 'queryKnowledgeBaseTool' to search for relevant frameworks, corrected analyses, or best practices (e.g., search for "FRAMEWORK-IA-CONTROL-01" or "ANALYSIS-REALITY-GAP-01"). Integrate the findings from the knowledge base into your reasoning steps.**
 
 After detailing all the steps in 'thoughtProcess':
 1.  Provide a final 'conclusion'.
