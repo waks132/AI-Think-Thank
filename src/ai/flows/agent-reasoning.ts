@@ -58,7 +58,7 @@ After detailing all the steps in 'thoughtProcess':
 1.  Provide a final 'conclusion'.
 2.  Provide a 'reflexiveReview' of your own plan, asking a critical question about a potential weakness or alternative approach.
 
-Produce your entire response in this language: {{{language}}}.
+Produce your entire response in the specified JSON format. Your entire response, including all text fields, must be in this language: {{{language}}}.
 `,
 });
 
