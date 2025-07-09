@@ -20,6 +20,7 @@ export type AgentCollaborationInput = z.infer<typeof AgentCollaborationInputSche
 
 const CollaborationTurnSchema = z.object({
     turn: z.number().describe("The turn number in the collaboration."),
+    agentId: z.string().describe("The unique ID of the agent speaking (e.g., 'helios', 'veritas'). This MUST match one of the IDs provided in the agent list."),
     agentRole: z.string().describe("The role of the agent speaking."),
     contribution: z.string().describe("The agent's message or contribution in this turn."),
     annotation: z.string().optional().describe("A brief, insightful annotation of the contribution's function (e.g., 'Proposes new synthesis', 'Critiques prior assumption', 'Reframes the problem').")
@@ -57,13 +58,13 @@ const collaborationLogPrompt = ai.definePrompt({
 "{{{mission}}}"
 
 **Participating Agents (Strictly Enforced):**
-The simulation must **only** include agents from the following list. You **MUST NOT** add, invent, or include any agent not present in this list. The 'agentRole' in each output turn must exactly match one of the roles below.
+The simulation must **only** include agents from the following list. You **MUST NOT** add, invent, or include any agent not present in this list. The 'agentId' in each output turn must exactly match one of the IDs below.
 {{{agentList}}}
 
 **Your Process:**
 1.  **Simulate Discussion:** Generate a plausible, turn-by-turn conversation **using only the agents listed above**. The discussion should show proposition, critique, and refinement.
-2.  **Create Log:** For each turn, provide a **concise** agent's contribution (under 150 words) and a brief, insightful \`annotation\` describing its function (e.g., 'Proposes new synthesis', 'Critiques prior assumption').
-3.  **Document:** Document every turn in the \`collaborationLog\` array, adhering strictly to the provided list of agents.
+2.  **Create Log:** For each turn, provide the agent's unique \`agentId\`, their \`agentRole\`, a **concise** contribution (under 150 words), and a brief, insightful \`annotation\` describing its function (e.g., 'Proposes new synthesis', 'Critiques prior assumption').
+3.  **Document:** Document every turn in the \`collaborationLog\` array, adhering strictly to the provided list of agents and their IDs.
 
 Produce ONLY the \`collaborationLog\` in the specified JSON format. Do not generate any other fields. Your entire response must be in this language: {{{language}}}.`,
 });

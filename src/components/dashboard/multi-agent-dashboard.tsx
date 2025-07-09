@@ -120,7 +120,7 @@ export default function MultiAgentDashboard() {
 
     const agentListString = agents
       .filter(agent => finalSelectedIds.has(agent.id))
-      .map(agent => `- **Agent Role:** ${agent.role}\n  **Core Directive:** "${agent.prompt}"`)
+      .map(agent => `- **Agent ID:** ${agent.id}\n  - **Agent Role:** ${agent.role}\n  - **Core Directive:** "${agent.prompt}"`)
       .join('\n\n');
 
     try {
@@ -136,7 +136,7 @@ export default function MultiAgentDashboard() {
         const missionStartTime = new Date();
         const newLogEntries: LogEntry[] = result.collaborationLog.map((log, index) => ({
           id: `${missionStartTime.toISOString()}-${log.turn}`,
-          agentId: agents.find(a => a.role === log.agentRole)?.id || 'unknown',
+          agentId: log.agentId,
           agentRole: log.agentRole,
           message: log.contribution,
           annotation: log.annotation,
