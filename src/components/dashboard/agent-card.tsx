@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Agent } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -31,6 +31,10 @@ export default function AgentCard({ agent, onPromptChange, isSelected, onSelecti
   const { toast } = useToast();
   const { language } = useLanguage();
   const Icon = agent.icon;
+
+  useEffect(() => {
+    setCurrentPrompt(agent.prompt);
+  }, [agent.prompt]);
 
   const handleSave = () => {
     onPromptChange(agent.id, currentPrompt);
@@ -115,7 +119,7 @@ export default function AgentCard({ agent, onPromptChange, isSelected, onSelecti
             id={`prompt-${agent.id}`}
             value={currentPrompt}
             onChange={handleTextChange}
-            className="min-h-[150px] flex-grow"
+            className={cn("flex-grow", isOrchestrator ? "min-h-[300px]" : "min-h-[150px]")}
             placeholder={`${t.agentCard.placeholder[language]} ${agent.role}...`}
             readOnly={isOrchestrator}
             disabled={isOrchestrator}
