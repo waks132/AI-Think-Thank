@@ -26,7 +26,7 @@ import { Badge } from "../ui/badge"
 import { Separator } from "../ui/separator"
 import { useLanguage } from "@/context/language-context"
 import { t } from "@/lib/i18n"
-import { personaList, personas } from "@/lib/personas"
+import { personaList } from "@/lib/personas"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { Label } from "../ui/label"
 import useLocalStorage from "@/hooks/use-local-storage"
@@ -79,7 +79,7 @@ export default function CognitiveClashSimulator() {
   });
 
   const watchPerspectives = form.watch('perspectives');
-  const getPersonaNameById = (id: string) => personaList.find(p => p.id === id)?.name[language] || id;
+  const getPersonaNameById = (id: string) => agentMap.get(id)?.role || id;
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true)
@@ -157,46 +157,49 @@ export default function CognitiveClashSimulator() {
             <div>
               <Label className="mb-4 flex items-center gap-2"><Users />{t.simulator.perspectives_label[language]}</Label>
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-4">
-                {fields.map((item, index) => (
-                  <div key={item.id} className={cn("space-y-4 p-4 border-2 rounded-lg relative", perspectiveColors[index % perspectiveColors.length])}>
-                    <FormField
-                      control={form.control}
-                      name={`perspectives.${index}.id`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t.simulator.perspective[language]} {index + 1}</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder={t.simulator.select_persona_placeholder[language]} />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {sortedPersonaList.map(p => 
-                                <SelectItem key={p.id} value={p.id}>{p.name[language]}</SelectItem>
-                              )}
-                            </SelectContent>
-                          </Select>
-                          <p className="text-xs text-muted-foreground pt-2 min-h-[50px]">
-                            {t.simulator.directive_placeholder[language]}
-                          </p>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                     {fields.length > 2 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="absolute top-2 right-2 h-6 w-6"
-                          onClick={() => remove(index)}
-                        >
-                          <XCircle className="h-5 w-5 text-muted-foreground" />
-                        </Button>
-                      )}
-                  </div>
-                ))}
+                {fields.map((item, index) => {
+                  const selectedId = form.watch(`perspectives.${index}.id`);
+                  return (
+                    <div key={item.id} className={cn("space-y-4 p-4 border-2 rounded-lg relative", perspectiveColors[index % perspectiveColors.length])}>
+                      <FormField
+                        control={form.control}
+                        name={`perspectives.${index}.id`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t.simulator.perspective[language]} {index + 1}</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t.simulator.select_persona_placeholder[language]} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {sortedPersonaList.map(p => 
+                                  <SelectItem key={p.id} value={p.id}>{p.name[language]}</SelectItem>
+                                )}
+                              </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground pt-2 min-h-[50px]">
+                              {agentMap.get(selectedId)?.prompt || t.simulator.directive_placeholder[language]}
+                            </p>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                       {fields.length > 2 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-2 right-2 h-6 w-6"
+                            onClick={() => remove(index)}
+                          >
+                            <XCircle className="h-5 w-5 text-muted-foreground" />
+                          </Button>
+                        )}
+                    </div>
+                  )
+                })}
               </div>
                <Button
                   type="button"

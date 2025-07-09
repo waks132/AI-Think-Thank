@@ -26,7 +26,7 @@ import { Badge } from "../ui/badge"
 import { Separator } from "../ui/separator"
 import { useLanguage } from "@/context/language-context"
 import { t } from "@/lib/i18n"
-import { personaList, personas } from "@/lib/personas"
+import { personaList } from "@/lib/personas"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { Label } from "../ui/label"
 import useLocalStorage from "@/hooks/use-local-storage"
@@ -55,8 +55,8 @@ export default function CognitiveClashSimulator() {
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const { toast } = useToast()
   const { language } = useLanguage();
-  const [storedAgents] = useLocalStorage<Agent[]>('agents', []);
-  const storedAgentMap = useMemo(() => new Map(storedAgents.map(a => [a.id, a])), [storedAgents]);
+  const [agents] = useLocalStorage<Agent[]>('agents', []);
+  const agentMap = useMemo(() => new Map(agents.map(a => [a.id, a])), [agents]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -79,6 +79,7 @@ export default function CognitiveClashSimulator() {
   });
 
   const watchPerspectives = form.watch('perspectives');
+  const getPersonaNameById = (id: string) => agentMap.get(id)?.role || id;
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true)
@@ -86,11 +87,11 @@ export default function CognitiveClashSimulator() {
     setCritiqueResult(null);
     try {
       const selectedPersonas = values.perspectives.map(p => {
-        const fullPersona = personas[p.id as keyof typeof personas];
-        const storedAgent = storedAgentMap.get(p.id);
+        const agent = agentMap.get(p.id);
+        if (!agent) throw new Error(`Agent with id ${p.id} not found.`);
         return {
-          name: fullPersona.name[language],
-          values: storedAgent ? storedAgent.prompt : fullPersona.values[language],
+          name: agent.role,
+          values: agent.prompt,
         };
       });
 
@@ -126,12 +127,8 @@ export default function CognitiveClashSimulator() {
       setIsLoading(false)
     }
   }
-
-  const getPersonaName = (id: string) => {
-    const persona = personaList.find(p => p.id === id);
-    return persona ? persona.name[language] : '';
-  }
-
+  
+  const sortedPersonaList = useMemo(() => [...personaList].sort((a,b) => a.name[language].localeCompare(b.name[language])), [language]);
 
   return (
     <Card>
@@ -160,46 +157,49 @@ export default function CognitiveClashSimulator() {
             <div>
               <Label className="mb-4 flex items-center gap-2"><Users />{t.simulator.perspectives_label[language]}</Label>
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-4">
-                {fields.map((item, index) => (
-                  <div key={item.id} className={cn("space-y-4 p-4 border-2 rounded-lg relative", perspectiveColors[index % perspectiveColors.length])}>
-                    <FormField
-                      control={form.control}
-                      name={`perspectives.${index}.id`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t.simulator.perspective[language]} {index + 1}</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder={t.simulator.select_persona_placeholder[language]} />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {personaList.map(p => 
-                                <SelectItem key={p.id} value={p.id}>{p.name[language]}</SelectItem>
-                              )}
-                            </SelectContent>
-                          </Select>
-                          <p className="text-xs text-muted-foreground pt-2 min-h-[50px]">
-                            {personaList.find(p => p.id === field.value)?.values[language] || t.simulator.directive_placeholder[language]}
-                          </p>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                     {fields.length > 2 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="absolute top-2 right-2 h-6 w-6"
-                          onClick={() => remove(index)}
-                        >
-                          <XCircle className="h-5 w-5 text-muted-foreground" />
-                        </Button>
-                      )}
-                  </div>
-                ))}
+                {fields.map((item, index) => {
+                  const selectedId = form.watch(`perspectives.${index}.id`);
+                  return (
+                    <div key={item.id} className={cn("space-y-4 p-4 border-2 rounded-lg relative", perspectiveColors[index % perspectiveColors.length])}>
+                      <FormField
+                        control={form.control}
+                        name={`perspectives.${index}.id`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t.simulator.perspective[language]} {index + 1}</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t.simulator.select_persona_placeholder[language]} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {sortedPersonaList.map(p => 
+                                  <SelectItem key={p.id} value={p.id}>{p.name[language]}</SelectItem>
+                                )}
+                              </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground pt-2 min-h-[50px]">
+                              {agentMap.get(selectedId)?.prompt || t.simulator.directive_placeholder[language]}
+                            </p>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                       {fields.length > 2 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-2 right-2 h-6 w-6"
+                            onClick={() => remove(index)}
+                          >
+                            <XCircle className="h-5 w-5 text-muted-foreground" />
+                          </Button>
+                        )}
+                    </div>
+                  )
+                })}
               </div>
                <Button
                   type="button"
@@ -280,7 +280,7 @@ export default function CognitiveClashSimulator() {
                         <AccordionContent>
                         <div className="space-y-6 max-h-[500px] overflow-y-auto p-4 border rounded-lg bg-background/50">
                             {result.simulationLog.map((turn) => {
-                                const perspectiveIndex = watchPerspectives.findIndex(p => getPersonaName(p.id) === turn.perspectiveName);
+                                const perspectiveIndex = watchPerspectives.findIndex(p => getPersonaNameById(p.id) === turn.perspectiveName);
                                 return (
                                     <div key={turn.turn} className="flex items-start gap-4 animate-fade-in">
                                         <div className={cn("flex-1 p-4 rounded-lg border-2", perspectiveColors[perspectiveIndex % perspectiveColors.length] || 'border-gray-500/50')}>

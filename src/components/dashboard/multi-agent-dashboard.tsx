@@ -179,9 +179,9 @@ export default function MultiAgentDashboard() {
       if (result && result.recommendedAgentIds) {
         if (result.recommendedAgentIds.length > 0) {
           const recommendedSet = new Set(result.recommendedAgentIds);
-          // Do not allow user to unselect orchestrators suggested by AI
-          const finalSet = new Set([...selectedAgentIds, ...recommendedSet]);
-          setSelectedAgentIds(finalSet);
+          // FIX: Replace the current selection with the AI's recommendation
+          // instead of adding to it.
+          setSelectedAgentIds(recommendedSet);
           
           toast({
             title: `${t.dashboard.toast_suggest_title[language]}: ${result.missionClassification}`,
