@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { Users, Loader2, Sparkles, FileText, BrainCircuit, ShieldCheck, MessageSquare, WandSparkles, Check, AlertTriangle, Route, Hammer, Lightbulb } from 'lucide-react';
+import { Users, Loader2, Sparkles, FileText, BrainCircuit, ShieldCheck, MessageSquare, WandSparkles, Check, AlertTriangle, Route, Hammer, Lightbulb, CheckCircle } from 'lucide-react';
 import AgentCard from './agent-card';
 import type { Agent, LogEntry, PromptVersion } from '@/lib/types';
 import useLocalStorage from '@/hooks/use-local-storage';
@@ -26,6 +26,7 @@ import { Badge } from '../ui/badge';
 import { trackCausalFlow, type CausalFlowTrackerOutput } from '@/ai/flows/causal-flow-tracker-flow';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 const Diff = require('diff');
 
 const ORCHESTRATOR_IDS = ['kairos-1', 'disruptor'];
@@ -72,6 +73,7 @@ export default function MultiAgentDashboard() {
   const [critiqueResult, setCritiqueResult] = useState<StrategicSynthesisCritiqueOutput | null>(null);
   const [refinedSummary, setRefinedSummary] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
+  const [contributionAnalysis, setContributionAnalysis] = useLocalStorage<{ participating: string[], missing: string[] } | null>("contribution-analysis", null);
   const { toast } = useToast();
   const [, setCausalFlows] = useLocalStorage<CausalFlowTrackerOutput['causalFlows']>('causal-flow-result', []);
 
@@ -153,6 +155,7 @@ export default function MultiAgentDashboard() {
     setCollaborationResult(null);
     setRefinedSummary(null);
     setCritiqueResult(null);
+    setContributionAnalysis(null);
 
     const agentListString = agents
       .filter(agent => finalSelectedIds.has(agent.id))
@@ -188,6 +191,21 @@ export default function MultiAgentDashboard() {
         });
 
         triggerCausalFlowAnalysis(newLogEntries);
+
+        const expectedAgentIds = new Set(finalSelectedIds);
+        const contributingAgentIds = new Set(result.collaborationLog.map(log => log.agentId));
+        
+        const missingAgentIds = [...expectedAgentIds].filter(id => !contributingAgentIds.has(id) && !ORCHESTRATOR_IDS.includes(id));
+        const participatingAgentRoles = [...contributingAgentIds]
+            .map(id => agents.find(a => a.id === id)?.role || id)
+            .filter(role => role !== 'KAIROS-1' && role !== 'PoliSynth Disruptor');
+
+        const missingAgentRoles = missingAgentIds.map(id => agents.find(a => a.id === id)?.role || id);
+
+        setContributionAnalysis({
+            participating: participatingAgentRoles,
+            missing: missingAgentRoles,
+        });
       }
 
     } catch (error) {
@@ -453,6 +471,45 @@ export default function MultiAgentDashboard() {
                     {isRefining ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t.dashboard.refine_summary_loading[language]}</> : <><WandSparkles className="mr-2 h-4 w-4" />{t.dashboard.refine_summary_button[language]}</>}
                 </Button>
               </h3>
+
+              {contributionAnalysis && (
+                <Card className="animate-fade-in" style={{ animationDelay: '200ms' }}>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                            <Users className="h-5 w-5" />
+                            {t.dashboard.analysis_title[language]}
+                        </CardTitle>
+                        <CardDescription>
+                            {t.dashboard.analysis_description[language]}
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {contributionAnalysis.missing.length > 0 ? (
+                            <Alert variant="destructive">
+                                <AlertTriangle className="h-4 w-4" />
+                                <AlertTitle>{t.dashboard.incomplete_contribution_title[language].replace('{count}', contributionAnalysis.missing.length.toString())}</AlertTitle>
+                                <AlertDescription>
+                                   <p className="mt-2">{t.dashboard.incomplete_contribution_description_p1[language]} <span className="font-semibold">{contributionAnalysis.missing.join(', ')}</span>.</p>
+                                   <p className="mt-2 text-xs">{t.dashboard.incomplete_contribution_description_p2[language]}</p>
+                                </AlertDescription>
+                            </Alert>
+                        ) : (
+                            <div className="p-4 rounded-lg border bg-accent/50 flex items-center gap-3">
+                                <CheckCircle className="h-5 w-5 text-secondary" />
+                                <div>
+                                    <h4 className="font-semibold">{t.dashboard.full_contribution_title[language]}</h4>
+                                    <p className="text-sm text-muted-foreground">{t.dashboard.full_contribution_description[language].replace('{count}', contributionAnalysis.participating.length.toString())}</p>
+                                </div>
+                            </div>
+                        )}
+                         <div className="mt-4">
+                            <p className="font-semibold text-sm">{t.dashboard.contributing_agents[language].replace('{count}', contributionAnalysis.participating.length.toString())}</p>
+                            <p className="text-sm text-muted-foreground">{contributionAnalysis.participating.length > 0 ? contributionAnalysis.participating.join(', ') : 'Aucun'}</p>
+                        </div>
+                    </CardContent>
+                </Card>
+              )}
+
                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                 <div className="lg:col-span-3 space-y-6">
                   <Card>
