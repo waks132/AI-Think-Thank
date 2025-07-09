@@ -60,9 +60,9 @@ export default function MultiAgentDashboard() {
   const { language } = useLanguage();
   const [isHydrated, setIsHydrated] = useState(false);
   const [agents, setAgents] = useLocalStorage<Agent[]>('agents', []);
+  const [selectedAgentIds, setSelectedAgentIds] = useState(new Set<string>());
   const [logs, setLogs] = useLocalStorage<LogEntry[]>('cognitive-logs', []);
   const [promptHistories, setPromptHistories] = useLocalStorage<Record<string, PromptVersion[]>>('prompt-histories', {});
-  const [selectedAgentIds, setSelectedAgentIds] = useState<Set<string>>(new Set(['helios', 'veritas', 'symbioz']));
   const [mission, setMission] = useLocalStorage<string>('mission-text', 'Développer un cadre pour le déploiement éthique de l\'IA dans les véhicules autonomes.');
   const [collaborationResult, setCollaborationResult] = useLocalStorage<AgentCollaborationOutput | null>("collaboration-result", null);
   const [isCollaborating, setIsCollaborating] = useState(false);
@@ -92,7 +92,7 @@ export default function MultiAgentDashboard() {
     if (!agents || agents.length === 0) return undefined;
     return agents
       .filter(agent => ORCHESTRATOR_IDS.includes(agent.id))
-      .map(agent => `Role: ${agent.role}, Core Directive: "${agent.prompt}"`)
+      .map(agent => `Core Directive: ${agent.role}, Core Directive: "${agent.prompt}"`)
       .join(' | ');
   }, [agents]);
 
@@ -346,39 +346,26 @@ export default function MultiAgentDashboard() {
 
 
   useEffect(() => {
-    // This effect handles the hydration on mount. It runs only once on the client.
-    const storedAgents = JSON.parse(window.localStorage.getItem('agents') || '[]') as Partial<Agent>[];
-    const storedAgentMap = new Map(storedAgents.map(a => a.id ? [a.id, a] : null).filter(Boolean) as [string, Partial<Agent>][]);
+    // This effect handles hydration and resets prompts and lineage to default values.
+    const defaultAgents = personaList.map(persona => ({
+      id: persona.id,
+      role: persona.name[language],
+      specialization: persona.specialization[language],
+      prompt: persona.values[language], // Always use the default prompt
+      icon: persona.icon,
+      lastPsiScore: null, // Also reset the score
+    }));
     
-    const hydratedAgents = personaList.map(persona => {
-      const storedAgent = storedAgentMap.get(persona.id);
-      
-      // Explicitly reconstruct the agent object to ensure data integrity
-      // and prevent non-serializable data from being malformed.
-      if (storedAgent) {
-        return {
-          id: persona.id,
-          prompt: storedAgent.prompt || persona.values[language],
-          lastPsiScore: storedAgent.lastPsiScore,
-          role: persona.name[language],
-          specialization: persona.specialization[language],
-          icon: persona.icon,
-        };
-      } else {
-        return {
-          id: persona.id,
-          role: persona.name[language],
-          specialization: persona.specialization[language],
-          prompt: persona.values[language],
-          icon: persona.icon,
-          lastPsiScore: null,
-        };
-      }
+    setAgents(defaultAgents);
+    setPromptHistories({}); // Clears the lineage history
+
+    toast({
+        title: t.dashboard.toast_reset_title[language],
+        description: t.dashboard.toast_reset_description[language],
     });
-    
-    setAgents(hydratedAgents);
+
     setIsHydrated(true);
-  }, [language, setAgents]);
+  }, [language, setAgents, setPromptHistories, toast]);
 
 
   const sortedAgents = useMemo(() => {

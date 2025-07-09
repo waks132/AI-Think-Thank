@@ -176,6 +176,8 @@ export const t = {
     full_contribution_title: { fr: 'Participation Complète', en: 'Full Participation' },
     full_contribution_description: { fr: 'Tous les {count} agents spécialisés sélectionnés ont contribué.', en: 'All {count} selected specialist agents have contributed.' },
     contributing_agents: { fr: 'Agents contributeurs ({count}) :', en: 'Contributing agents ({count}):' },
+    toast_reset_title: { fr: 'Réinitialisation Effectuée', en: 'Reset Complete' },
+    toast_reset_description: { fr: 'Les prompts des agents et l\'historique ont été réinitialisés à leurs valeurs par défaut.', en: 'Agent prompts and history have been reset to their default values.' },
   },
   agentCard: {
     psi_score: { fr: 'Score Psi', en: 'Psi Score' },
