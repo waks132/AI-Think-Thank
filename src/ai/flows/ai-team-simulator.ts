@@ -124,7 +124,7 @@ const cognitiveClashSimulatorFlow = ai.defineFlow(
     const response = await prompt(input, {
       model: input.model,
       config: { maxOutputTokens: 8192 },
-      retries: 3,
+      retries: 5,
     });
     return response.output!;
   }
