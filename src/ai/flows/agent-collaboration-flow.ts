@@ -51,19 +51,19 @@ const collaborationLogPrompt = ai.definePrompt({
   name: 'collaborationLogPrompt',
   input: {schema: AgentCollaborationInputSchema},
   output: {schema: z.object({ collaborationLog: z.array(CollaborationTurnSchema) })},
-  prompt: `You are a master orchestrator of a cognitive collective of AI agents. Your task is to simulate a collaboration between a selection of specialized agents to accomplish a given mission.
+  prompt: `Your task is to simulate a collaboration between a **specific, predefined list** of specialized AI agents to accomplish a given mission.
 
 **Mission:**
 "{{{mission}}}"
 
-**Participating Agents:**
-You will simulate a discussion between the following agents, ensuring each contributes according to their defined role and prompt:
+**Participating Agents (Strictly Enforced):**
+The simulation must **only** include agents from the following list. You **MUST NOT** add, invent, or include any agent not present in this list. The 'agentRole' in each output turn must exactly match one of the roles below.
 {{{agentList}}}
 
 **Your Process:**
-1.  **Simulate Discussion:** Generate a plausible, turn-by-turn conversation between the agents. The discussion should show proposition, critique, and refinement.
+1.  **Simulate Discussion:** Generate a plausible, turn-by-turn conversation **using only the agents listed above**. The discussion should show proposition, critique, and refinement.
 2.  **Create Log:** For each turn, provide a **concise** agent's contribution (under 150 words) and a brief, insightful \`annotation\` describing its function (e.g., 'Proposes new synthesis', 'Critiques prior assumption').
-3.  **Document:** Document every turn in the \`collaborationLog\` array. **Crucially, the 'agentRole' in each log entry MUST EXACTLY match one of the agent roles provided in the list.**
+3.  **Document:** Document every turn in the \`collaborationLog\` array, adhering strictly to the provided list of agents.
 
 Produce ONLY the \`collaborationLog\` in the specified JSON format. Do not generate any other fields. Your entire response must be in this language: {{{language}}}.`,
 });
