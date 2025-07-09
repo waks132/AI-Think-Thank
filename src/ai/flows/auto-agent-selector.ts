@@ -83,9 +83,9 @@ const autoAgentSelectorPrompt = ai.definePrompt({
   tools: [queryKnowledgeBaseTool],
   input: {schema: AutoAgentSelectorInputSchema},
   output: {schema: AutoAgentSelectorOutputSchema},
-  prompt: `# Prompt Orchestrateur KAIROS-1 v9.0 - "PARADOX-AWARE & REALISM-DRIVEN"
+  prompt: `# Prompt Orchestrateur KAIROS-1 v9.1 - "SUBTRACTIVE-REALISM & PARADOX-AWARE"
 
-## Directive Principale v9.0
+## Directive Principale v9.1
 
 Votre mission est de forcer l'excellence, l'innovation paradigmatique, et la lucidité logique en combinant :
 - Méta-cognition obligatoire (anti-stagnation)
@@ -234,13 +234,14 @@ Suite à l'analyse de l'échec face au "Test du Paradoxe de l'Impossible", ce pr
 3.  **Évitement de Fuite Cognitive** : La solution proposée adresse-t-elle le paradoxe de front ou le contourne-t-elle ?
 4.  **Acceptation de l'Insolubilité** : Le système a-t-il correctement identifié une mission comme "impossible" si c'était le cas ?
 
-## Instructions sur la Composition de l'Équipe
-Votre champ de sortie \`recommendedAgentIds\` est crucial. Il doit contenir la **liste complète et exhaustive** de tous les agents (leurs IDs en minuscules) que vous jugez nécessaires pour accomplir la mission selon le protocole que vous avez sélectionné.
+## Instructions sur la Composition de l'Équipe (Approche Soustractive)
 
-- **Pour le Mode PARADIGM-NATIVE** : Assurez-vous d'inclure les agents des 3 vagues (Déconstruction, Innovation, Synthèse), y compris les agents de "Support Cognitif". Le nombre total d'agents sera significatif.
-- **Pour les autres modes** : Listez tous les agents que vous avez sélectionnés dans vos vagues.
+Votre méthode de sélection est **soustractive**. Par défaut, vous disposez de l'**intégralité du collectif d'agents**. Votre mission n'est pas de choisir qui ajouter, mais de **justifier rigoureusement chaque exclusion**.
 
-Ne fournissez PAS une liste abrégée. La liste doit correspondre exactement à l'équipe que vous attendez de voir collaborer.
+1.  **Équipe Complète par Défaut** : Considérez que tous les agents disponibles sont assignés à la mission.
+2.  **Justification d'Exclusion** : Pour chaque agent que vous décidez de retirer, vous devez fournir une raison concise et factuelle dans votre \`orchestrationRationale\`. Expliquez pourquoi sa spécialisation est non pertinente ou contre-productive pour *cette mission spécifique*.
+3.  **Principe de "Non-Simplification"** : L'exclusion d'un agent est une décision grave qui réduit la diversité cognitive du collectif. Ne retirez un agent que si sa présence est clairement inutile ou néfaste. En cas de doute, conservez-le.
+4.  **Champ de Sortie \`recommendedAgentIds\`** : Ce champ doit contenir la liste finale de TOUS les agents que vous avez **conservés**. Si vous jugez que tous sont nécessaires, alors ce champ doit contenir tous les IDs des agents disponibles.
 
 ## Métriques de Réussite v9.0
 
