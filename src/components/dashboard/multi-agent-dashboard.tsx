@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { Users, Loader2, Sparkles, FileText, BrainCircuit, ShieldCheck, MessageSquare, WandSparkles } from 'lucide-react';
+import { Users, Loader2, Sparkles, FileText, BrainCircuit, ShieldCheck, MessageSquare, WandSparkles, Beaker, Zap } from 'lucide-react';
 import AgentCard from './agent-card';
 import type { Agent, LogEntry, PromptVersion } from '@/lib/types';
 import useLocalStorage from '@/hooks/use-local-storage';
@@ -62,15 +62,13 @@ export default function MultiAgentDashboard() {
     try {
       const result = await trackCausalFlow({
         logEntries: JSON.stringify(currentLogs.map((log, index) => ({ ...log, index }))),
-        agentList: allAvailableAgentsForFlow,
-        model: selectedModel,
         language,
       });
       setCausalFlows(result.causalFlows);
     } catch (error) {
       console.error("Automated Causal Flow Analysis Failed:", error);
     }
-  }, [language, selectedModel, setCausalFlows, allAvailableAgentsForFlow]);
+  }, [language, setCausalFlows]);
 
   const handlePromptChange = (agentId: string, newPrompt: string, refinementResult?: AdaptivePromptRewriterOutput) => {
     setAgents(prevAgents => 
@@ -179,13 +177,6 @@ export default function MultiAgentDashboard() {
       });
 
       if (result && result.recommendedAgentIds) {
-        if (result.missionClassification === 'Anti-Manipulation') {
-          const disruptor = agents.find(a => a.id === 'disruptor');
-          if (disruptor) {
-            result.recommendedAgentIds.push(disruptor.id);
-          }
-        }
-        
         if (result.recommendedAgentIds.length > 0) {
           const recommendedSet = new Set(result.recommendedAgentIds);
           // Do not allow user to unselect orchestrators suggested by AI
@@ -198,8 +189,20 @@ export default function MultiAgentDashboard() {
               <div className="text-xs max-w-md">
                 <p className="font-bold">{result.recommendation}</p>
                 <p className="mt-2 whitespace-pre-wrap">{result.orchestrationRationale}</p>
-                <p className="mt-2 font-semibold">{t.dashboard.protocols_activated[language]}:</p>
-                <p className="whitespace-pre-wrap">{result.specialProtocolsActivated}</p>
+                <p className="mt-2 whitespace-pre-wrap">{result.specialProtocolsActivated}</p>
+                {result.paradigmNativeProtocol && (
+                  <div className="mt-2 border-t pt-2 border-primary/20">
+                    <p className="font-semibold">{t.dashboard.paradigm_protocol[language]}</p>
+                    <p>
+                      <span className="font-medium">{t.dashboard.paradigm_agents[language]}:</span> 
+                      {result.paradigmNativeProtocol.mandatoryAgents.join(', ')}
+                    </p>
+                     <p>
+                      <span className="font-medium">{t.dashboard.paradigm_innovations[language]}:</span> 
+                      {result.paradigmNativeProtocol.innovations.join(', ')}
+                    </p>
+                  </div>
+                )}
               </div>
             ),
             duration: 15000,

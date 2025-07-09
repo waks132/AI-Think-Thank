@@ -142,6 +142,9 @@ export const t = {
     suggest_team_loading: { fr: 'Sélection IA...', en: 'AI Selecting...' },
     toast_suggest_title: { fr: 'Suggestion d\'Équipe IA', en: 'AI Team Suggestion' },
     protocols_activated: { fr: 'Protocoles Spéciaux Activés', en: 'Special Protocols Activated' },
+    paradigm_protocol: { fr: 'Protocole Paradigm-Native', en: 'Paradigm-Native Protocol' },
+    paradigm_agents: { fr: 'Agents Obligatoires', en: 'Mandatory Agents' },
+    paradigm_innovations: { fr: 'Innovations', en: 'Innovations' },
   },
   agentCard: {
     psi_score: { fr: 'Score Psi', en: 'Psi Score' },
