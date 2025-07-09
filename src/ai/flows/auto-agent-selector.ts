@@ -10,6 +10,8 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
+const ORCHESTRATOR_IDS = ['kairos-1', 'disruptor'];
+
 const AgentInfoSchema = z.object({
   id: z.string().describe('The unique identifier for the agent.'),
   role: z.string().describe("The agent's designated role or name."),
@@ -224,9 +226,9 @@ const autoAgentSelectorFlow = ai.defineFlow(
     outputSchema: AutoAgentSelectorOutputSchema,
   },
   async (input) => {
-    // KAIROS-1 is the orchestrator and shouldn't be part of the selection pool for the LLM,
-    // as it is the LLM's persona.
-    const selectableAgents = input.agents.filter(agent => agent.id !== 'kairos-1');
+    // KAIROS-1 and other orchestrators should not be part of the selection pool for the LLM,
+    // as KAIROS-1 is the LLM's persona.
+    const selectableAgents = input.agents.filter(agent => !ORCHESTRATOR_IDS.includes(agent.id));
     
     const response = await autoAgentSelectorPrompt({...input, agents: selectableAgents}, {model: input.model});
     return response.output!;
