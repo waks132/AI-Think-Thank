@@ -2,7 +2,7 @@
 /**
  * @fileOverview A flow to orchestrate a collaboration between multiple AI agents on a given mission.
  *
- * - runAgentCollaboration - Simulates a discussion between selected agents to achieve a goal.
+ * - runAgentCollaboration - Constructs and analyzes a discussion between selected agents to achieve a goal.
  * - AgentCollaborationInput - The input type for the runAgentCollaboration function.
  * - AgentCollaborationOutput - The return type for the runAgentCollaboration function.
  */
@@ -50,26 +50,24 @@ const agentCollaborationPrompt = ai.definePrompt({
   name: 'agentCollaborationPrompt',
   input: {schema: AgentCollaborationInputSchema},
   output: {schema: AgentCollaborationOutputSchema},
-  prompt: `You are a master orchestrator of a cognitive collective of AI agents. Your task is to simulate and analyze a collaboration to achieve a given mission.
+  prompt: `You are a master orchestrator of a cognitive collective of AI agents. Your primary task is to generate a plausible, multi-turn collaboration that demonstrates how a selected team of agents would solve a given mission.
 
 **Mission:**
 "{{{mission}}}"
 
-**Participating Agents (Strictly Enforced):**
-The simulation must **only** include agents from the following list. You **MUST NOT** add, invent, or include any agent not present in this list. Every turn in the collaboration log must feature an agent from this roster.
+**Participating Agents:**
+The collaboration log you generate MUST feature contributions from **every single agent** listed below. No agent should be omitted. The simulation must ONLY use agents from this roster.
 {{{agentList}}}
 
 **Your Comprehensive Process:**
 
-1.  **Internal Simulation:** Mentally simulate a plausible, multi-turn conversation between the specified agents. Ensure that agents with critical or META roles (like VERITAS, PARADIGM-SHIFT, NYX) play a significant part. The discussion should demonstrate proposition, robust critique, and refinement, leading to a concrete outcome.
+1.  **Construct the Collaboration Log:** Generate a plausible, multi-turn \`collaborationLog\`. The dialogue should show proposition, robust critique, and refinement, leading to a concrete outcome. **Crucially, every single agent from the 'Participating Agents' list must have at least one meaningful contribution in the log.** Ensure agents with critical or META roles (like VERITAS, PARADIGM-SHIFT, NYX) play a significant part in driving the conversation towards a solution.
 
-2.  **Synthesize Final Outcome:** Based on your internal simulation, produce a comprehensive \`executiveSummary\`. This should be the final, actionable output that accomplishes the mission, formatted as a structured plan with clear headings and bullet points. **Do not just summarize the conversation; extract and formalize the final proposed solution.**
+2.  **Synthesize Final Outcome:** Based on the collaboration you have constructed, produce a comprehensive \`executiveSummary\`. This should be the final, actionable output that accomplishes the mission, formatted as a structured plan with clear headings and bullet points. **Do not just summarize the conversation; extract and formalize the final proposed solution.**
 
-3.  **Provide Detailed Reasoning:** Explain the \`reasoning\` behind the collaboration. Detail the key contributions of each agent, how conflicts were resolved (or not), and how the final summary was synthesized from the dialogue you simulated.
+3.  **Provide Detailed Reasoning:** Explain the \`reasoning\` behind the collaboration's flow. Detail the key contributions of each agent, how conflicts were resolved, and how the final summary was synthesized from the dialogue you constructed.
 
-4.  **Generate a Collaboration Log:** Document the key moments of your internal simulation in the \`collaborationLog\`. Each entry should represent a significant turn, including the agent's unique \`agentId\`, their \`agentRole\`, a concise \`contribution\`, and a brief, insightful \`annotation\` describing its function (e.g., 'Proposes new synthesis', 'Critiques prior assumption', 'Reframes the problem'). **Ensure all key agents from the roster have a voice in the log.**
-
-5.  **Validate the Outcome:** As the orchestrator, score the final output from 0.0 to 1.0 on the criteria defined in the \`validationGrid\`. Provide a holistic assessment of the collective intelligence performance based on the simulated outcome.
+4.  **Validate the Outcome:** As the orchestrator, score the final output from 0.0 to 1.0 on the criteria defined in the \`validationGrid\`. Provide a holistic assessment of the collective intelligence performance based on the simulated outcome.
 
 Produce your entire response in the specified JSON format, filling all fields of the output schema. Your entire response, including all text fields, must be in this language: {{{language}}}.`,
 });
