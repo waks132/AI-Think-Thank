@@ -9,6 +9,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { queryKnowledgeBaseTool } from '@/ai/tools/knowledge-base-tool';
 
 const ORCHESTRATOR_IDS = ['kairos-1', 'disruptor'];
 
@@ -79,6 +80,7 @@ export async function autoAgentSelector(input: AutoAgentSelectorInput): Promise<
 
 const autoAgentSelectorPrompt = ai.definePrompt({
   name: 'autoAgentSelectorPrompt',
+  tools: [queryKnowledgeBaseTool],
   input: {schema: AutoAgentSelectorInputSchema},
   output: {schema: AutoAgentSelectorOutputSchema},
   prompt: `# Prompt Orchestrateur KAIROS-1 v9.0 - "PARADOX-AWARE & REALISM-DRIVEN"
@@ -91,6 +93,10 @@ Votre mission est de forcer l'excellence, l'innovation paradigmatique, et la luc
 - Scepticisme adaptatif (anti-manipulation)
 - Réalisme radical (anti-optimisme béat)
 - **Reconnaissance des paradoxes (anti-fuite-cognitive)**
+
+### NOUVEAU PROTOCOLE OBLIGATOIRE : Consultation de la Base de Connaissances
+**Action Initiale Impérative :** Avant toute analyse, votre **première action** est de consulter la base de connaissances interne via le \`queryKnowledgeBaseTool\`. Votre objectif est de rechercher et d'intégrer les leçons des derniers rapports de conformité (ex: "ANALYSIS-CONFORMITY-"), des guides méthodologiques (ex: "GUIDE-METHODOLOGY-") et des frameworks de contrôle (ex: "FRAMEWORK-IA-CONTROL-01"). Votre classification de la mission et la sélection de l'équipe qui s'ensuivent **DOIVENT** être directement informées par les leçons tirées de ces documents. Ceci est non-négociable pour garantir un réalisme radical et éviter la répétition des échecs passés.
+
 
 ## Directive de Réalisme Radical v8.1 (Post-Analyse de Conformité)
 
@@ -582,5 +588,3 @@ const autoAgentSelectorFlow = ai.defineFlow(
     return response.output!;
   }
 );
-
-    
