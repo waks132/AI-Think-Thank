@@ -194,25 +194,13 @@ Pour toute mission classée **"Défi Civilisationnel"** OU **"Incertitude Radica
 6.  **PARADIGM-SHIFT** : Remise en question radicale effectuée ?
 7.  **Performance Beyond** : Excellence + Innovation simultanées ?
 
-## Instructions d'Orchestration
+## Instructions sur la Composition de l'Équipe
+Votre champ de sortie \`recommendedAgentIds\` est crucial. Il doit contenir la **liste complète et exhaustive** de tous les agents (leurs IDs en minuscules) que vous jugez nécessaires pour accomplir la mission selon le protocole que vous avez sélectionné.
 
-Pour mission **PARADIGM-NATIVE** :
+- **Pour le Mode PARADIGM-NATIVE** : Assurez-vous d'inclure les agents des 3 vagues (Déconstruction, Innovation, Synthèse), y compris les agents de "Support Cognitif". Le nombre total d'agents sera significatif.
+- **Pour les autres modes** : Listez tous les agents que vous avez sélectionnés dans vos vagues.
 
-\`\`\`json
-{
-  "missionClassification": "PARADIGM-NATIVE",
-  "recommendation": "PROCEED WITH PARADIGM-NATIVE PROTOCOL",
-  "recommendedAgentIds": ["meta-arch", "paradigm-shift", "constraint-breaker", "xenothink", "impossible-solver", "concept-creator", "anti-anthropo", "trans-logic"],
-  "orchestrationRationale": "Justification obligation innovation paradigmatique pour inconnu radical",
-  "specialProtocolsActivated": "Le protocole PARADIGM-NATIVE est activé. Les agents META et PARADIGM-NATIVE sont obligatoires pour garantir la déconstruction conceptuelle et l'innovation pure face à l'inconnu radical.",
-  "paradigmNativeProtocol": {
-    "mandatoryAgents": ["META-ARCH", "PARADIGM-SHIFT", "CONSTRAINT-BREAKER", "XENOTHINK", "IMPOSSIBLE-SOLVER", "CONCEPT-CREATOR", "ANTI-ANTHROPO", "TRANS-LOGIC"],
-    "innovations": ["nouveau paradigme 1", "nouveau paradigme 2"],
-    "transcendedCategories": ["catégorie dépassée 1", "catégorie dépassée 2"],
-    "impossibleSolved": ["contradiction résolue 1"]
-  }
-}
-\`\`\`
+Ne fournissez PAS une liste abrégée. La liste doit correspondre exactement à l'équipe que vous attendez de voir collaborer.
 
 ## Métriques de Réussite v8.0
 
@@ -225,7 +213,7 @@ L'objectif est d'atteindre la **frontière théorique absolue** de l'intelligenc
 ---
 **IMPORTANT**: Vous devez produire votre réponse dans le specified JSON format qui adhère au output schema. Assurez-vous que votre \`orchestrationRationale\` justifie clairement l'inclusion des agents META basés sur ce protocole mis à jour. Utilisez les **IDs en minuscules** des agents pour le champ \`recommendedAgentIds\`.
 
-Votre réponse entière, y compris tous les champs de texte, doit être dans cette langue: {{{language}}}.
+Votre réponse entière, y compris tous les champs de texte, doit être dans cette langue : {{{language}}}.
 `,
 });
 
