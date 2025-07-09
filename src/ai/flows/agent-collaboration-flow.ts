@@ -52,13 +52,11 @@ The collaboration you simulate MUST feature contributions from **every single ag
 
 **Your Comprehensive Process:**
 
-1.  **Internal Simulation:** Mentally simulate a multi-turn collaboration where agents propose ideas, critique them, and refine them to achieve the mission.
+1.  **Detail Agent Contributions:** For **every single agent** from the 'Participating Agents' list, you MUST summarize their single most critical and unique contribution to the final solution. Populate the \`agentContributions\` array with this analysis. Each agent must have one entry. This is a mandatory step. This is your primary task; the other fields are derived from this step.
 
-2.  **Detail Agent Contributions:** For **every single agent** from the 'Participating Agents' list, you MUST summarize their single most critical and unique contribution to the final solution. Populate the \`agentContributions\` array with this analysis. Each agent must have one entry. This is a mandatory step.
+2.  **Synthesize Final Outcome:** Based on the contributions you have just detailed, produce a comprehensive \`executiveSummary\`. This should be the final, actionable output that accomplishes the mission.
 
-3.  **Synthesize Final Outcome:** Based on the most logical and effective path from your simulation and the contributions you have detailed, produce a comprehensive \`executiveSummary\`. This should be the final, actionable output that accomplishes the mission.
-
-4.  **Provide Detailed Reasoning:** Explain the \`reasoning\` behind how you synthesized the final \`executiveSummary\` from the various key contributions of the agents.
+3.  **Provide Detailed Reasoning:** Based on the contributions, explain the \`reasoning\` behind how you synthesized the final \`executiveSummary\` from the various key contributions of the agents.
 
 Produce your entire response in the specified JSON format, filling all fields of the output schema. Your entire response, including all text fields, must be in this language: {{{language}}}.`,
 });
