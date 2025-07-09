@@ -485,6 +485,56 @@ export default function MultiAgentDashboard() {
                 </Card>
               )}
 
+              {collaborationResult?.conformityCheck && (
+                <Card className="animate-fade-in mt-6" style={{ animationDelay: '300ms' }}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <ShieldCheck className="h-5 w-5" />
+                      {t.dashboard.conformity_check_title[language]}
+                    </CardTitle>
+                    <CardDescription>
+                      {t.dashboard.conformity_check_description[language]}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      {collaborationResult.conformityCheck.isCompliant ? (
+                        <CheckCircle className="h-5 w-5 text-secondary" />
+                      ) : (
+                        <AlertTriangle className="h-5 w-5 text-destructive" />
+                      )}
+                      <span className="font-semibold">
+                        {collaborationResult.conformityCheck.isCompliant
+                          ? t.dashboard.conformity_compliant[language]
+                          : t.dashboard.conformity_non_compliant[language]}
+                      </span>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-1">{t.dashboard.conformity_summary[language]}</h4>
+                      <p className="text-muted-foreground">{collaborationResult.conformityCheck.summary}</p>
+                    </div>
+                    {collaborationResult.conformityCheck.realityCheckSummary && (
+                      <div>
+                        <h4 className="font-semibold mb-1">{t.dashboard.reality_check_summary[language]}</h4>
+                        <p className="text-muted-foreground">{collaborationResult.conformityCheck.realityCheckSummary}</p>
+                      </div>
+                    )}
+                     <div>
+                      <h4 className="font-semibold mb-1">{t.dashboard.applied_methodologies[language]}</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {collaborationResult.conformityCheck.appliedMethodologies.map(method => (
+                          <Badge variant="outline" key={method}>{method}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-1">{t.dashboard.reports_consulted[language]}</h4>
+                       <p className="text-xs text-muted-foreground font-mono">{collaborationResult.conformityCheck.reportsConsulted.join(', ')}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                 <div className="lg:col-span-3 space-y-6">
                   <Card>
