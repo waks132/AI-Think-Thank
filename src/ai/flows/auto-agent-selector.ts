@@ -230,7 +230,7 @@ const autoAgentSelectorFlow = ai.defineFlow(
     // as KAIROS-1 is the LLM's persona.
     const selectableAgents = input.agents.filter(agent => !ORCHESTRATOR_IDS.includes(agent.id));
     
-    const response = await autoAgentSelectorPrompt({...input, agents: selectableAgents}, {model: input.model});
+    const response = await autoAgentSelectorPrompt({...input, agents: selectableAgents}, {model: input.model, retries: 3});
     return response.output!;
   }
 );

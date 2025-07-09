@@ -92,7 +92,7 @@ const autoCurationFlow = ai.defineFlow(
     outputSchema: AutoCurationOutputSchema,
   },
   async (input) => {
-    const response = await autoCurationPrompt(input, {model: input.model});
+    const response = await autoCurationPrompt(input, {model: input.model, retries: 3});
     return response.output!;
   }
 );

@@ -71,7 +71,8 @@ const agentCollaborationFlow = ai.defineFlow(
   async (input) => {
     const response = await agentCollaborationPrompt(input, {
       model: input.model,
-      config: { maxOutputTokens: 8192 }
+      config: { maxOutputTokens: 8192 },
+      retries: 3,
     });
     
     const output = response.output;
