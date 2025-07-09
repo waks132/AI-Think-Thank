@@ -33,11 +33,23 @@ const ConformityCheckSchema = z.object({
   summary: z.string().describe("A brief summary explaining how the executive summary avoids past mistakes and respects the control framework's rules found in the consulted documents."),
 });
 
+const DynamicsMatrixEntrySchema = z.object({
+  agents: z.array(z.string()).describe("The agents involved in the dynamic (e.g., ['VERITAS', 'PROMETHEUS'])."),
+  tension: z.string().describe("The identified point of conceptual tension or contradiction between the agents."),
+  resolution: z.string().describe("How the tension was resolved or synthesized into a more robust concept, creating a superior outcome."),
+});
+
+const CollaborativeDynamicsMatrixSchema = z.object({
+    summary: z.string().describe("A brief summary of the overall collaborative dynamic, highlighting its productivity."),
+    matrix: z.array(DynamicsMatrixEntrySchema).describe("The detailed matrix analyzing the most important productive tensions and their resolutions.")
+});
+
 const AgentCollaborationOutputSchema = z.object({
   executiveSummary: z.string().describe('A structured executive summary of the final proposed framework or solution, formatted with clear headings and bullet points.'),
   reasoning: z.string().describe('A step-by-step reasoning explaining how the final synthesis was achieved by integrating the different agent contributions.'),
   agentContributions: z.array(AgentContributionSchema).describe("A list detailing the key contribution of EACH participating agent. Every agent from the input list must be represented here."),
   conformityCheck: ConformityCheckSchema.describe("The result of the mandatory conformity check against the internal knowledge base."),
+  dynamicsAnalysis: CollaborativeDynamicsMatrixSchema.optional().describe("An analysis of the collaborative dynamics, including productive tensions and their resolutions, based on the principles of the 'Collaborative Dynamics Matrix' methodology."),
 });
 export type AgentCollaborationOutput = z.infer<typeof AgentCollaborationOutputSchema>;
 
@@ -66,11 +78,13 @@ The collaboration you simulate MUST feature contributions from **every single ag
 2.  **MANDATORY CONFORMITY CHECK (METHODOLOGY-DRIVEN):** Before writing the final summary, you MUST ensure compliance with our internal frameworks. This is not a box-ticking exercise; you must demonstrate a deep understanding of the *methodologies* and *principles* within the knowledge base.
     *   **Use the \`queryKnowledgeBaseTool\`** to search for relevant conformity reports, methodology guides, and post-mortems (e.g., search for documents with IDs like "ANALYSIS-CONFORMITY-...", "FRAMEWORK-IA-CONTROL-...", or "GUIDE-METHODOLOGY-...").
     *   **Analyze the findings in depth.** Your goal is to understand the *'why'* behind past failures (e.g., lack of realism, missing "Red Team", vague financing, ignoring political facts) and the core principles of mandatory procedures. You must apply the *methodologies* from the reports, not just list facts.
-    *   **Populate the \`conformityCheck\` field:** List the document IDs you consulted and write a detailed summary explaining how your proposed solution *embodies the successful principles* and *explicitly avoids the root causes of documented errors*. Show, don't just tell.
+    *   **Populate the \`conformityCheck\` field:** List the document IDs you consulted and write a detailed summary explaining how your proposed solution *embodies the successful principles* and *explicitly avoids the root causes of documented errors*.
 
 3.  **Synthesize Final Outcome:** Based on the agent contributions AND your deep conformity analysis, produce a comprehensive \`executiveSummary\`. This summary MUST be realistic, actionable, and demonstrably compliant with the lessons learned from the knowledge base.
 
-4.  **Provide Detailed Reasoning:** Based on the contributions, explain the \`reasoning\` behind how you synthesized the final \`executiveSummary\` from the various key contributions of the agents, explicitly mentioning how the conformity check shaped the final outcome.
+4.  **Analyze Collaborative Dynamics (Meta-Cognitive Step):** After simulating the debate, reflect on the process itself. Use the principles from the 'Collaborative Dynamics Matrix' methodology (you can find this in the knowledge base, e.g., in document \`GUIDE-METHODOLOGY-EVOLUTION-01\`). Analyze the most significant intellectual tensions that arose and how they were resolved to produce a superior outcome. A productive tension is a disagreement or contradiction that, once resolved, leads to a better, more robust idea. Populate the \`dynamicsAnalysis\` field with this meta-analysis. This step is crucial for systemic learning.
+
+5.  **Provide Detailed Reasoning:** Based on the contributions, explain the \`reasoning\` behind how you synthesized the final \`executiveSummary\` from the various key contributions of the agents, explicitly mentioning how the conformity check and the dynamics analysis shaped the final outcome.
 
 Produce your entire response in the specified JSON format, filling all fields of the output schema. Your entire response, including all text fields, must be in this language: {{{language}}}.`,
 });
