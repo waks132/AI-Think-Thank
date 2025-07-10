@@ -161,7 +161,14 @@ const autoAgentSelectorFlow = ai.defineFlow(
     // Prevent orchestrators from being in the list of selectable agents for the model
     const selectableAgents = input.agents.filter(agent => !ORCHESTRATOR_IDS.includes(agent.id));
     
-    const response = await autoAgentSelectorPrompt({...input, agents: selectableAgents}, {model: input.model, retries: 10});
-    return response.output!;
+    let response = await autoAgentSelectorPrompt({...input, agents: selectableAgents}, {model: input.model, retries: 10});
+
+    // Exclude paradigmNativeProtocol if not required by mission classification
+    if (response.output?.missionClassification !== "PARADIGM-NATIVE" && response.output?.missionClassification !== "Scepticisme + PARADIGM-NATIVE") {
+      const { paradigmNativeProtocol, ...rest } = response.output;
+      return rest as AutoAgentSelectorOutput; // Cast to ensure correct type after destructuring
+    }
+
+    return response.output as AutoAgentSelectorOutput;
   }
 );
