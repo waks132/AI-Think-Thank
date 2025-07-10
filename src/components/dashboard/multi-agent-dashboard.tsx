@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { Users, Loader2, Sparkles, FileText, BrainCircuit, ShieldCheck, MessageSquare, WandSparkles, Check, AlertTriangle, Hammer, Lightbulb, CheckCircle, GitBranch } from 'lucide-react';
+import { Users, Loader2, Sparkles, FileText, BrainCircuit, ShieldCheck, MessageSquare, WandSparkles, Check, AlertTriangle, Hammer, Lightbulb, CheckCircle, GitBranch, Zap, Layers, Infinity, Bot } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import AgentCard from './agent-card';
 import type { Agent, AgentContribution, LogEntry, PromptVersion } from '@/lib/types';
@@ -220,27 +220,47 @@ export default function MultiAgentDashboard() {
       if (result && result.recommendedAgentIds) {
         if (result.recommendedAgentIds.length > 0) {
           setSelectedAgentIds(new Set(result.recommendedAgentIds));
-          
           toast({
-            title: `${t.dashboard.toast_suggest_title[language]}: ${result.missionClassification}`,
+            title: t.dashboard.toast_suggest_title[language],
             description: (
-              <div className="text-xs max-w-md">
-                <p className="font-bold">{result.recommendation}</p>
-                <p className="mt-2 whitespace-pre-wrap">{result.orchestrationRationale}</p>
-                {result.paradigmNativeProtocol && (
-                  <div className="mt-2 border-t pt-2 border-primary/20">
-                    <p className="font-semibold">{result.paradigmNativeProtocol.mandatoryAgents.length > 0 ? t.dashboard.paradigm_protocol_vagues.title[language] : ''}</p>
-                    {result.paradigmNativeProtocol.mandatoryAgents.length > 0 && 
-                      <div>
-                        <p className="font-medium">{t.dashboard.paradigm_protocol_vagues.vague1_title[language]}</p>
-                        <p className="text-xs">{t.dashboard.paradigm_protocol_vagues.vague1_agents[language]}: {result.paradigmNativeProtocol.mandatoryAgents.join(', ')}</p>
-                      </div>
-                    }
-                  </div>
-                )}
-              </div>
+              <Card className="mt-4 max-w-lg border-primary bg-background/80">
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Bot />
+                    <span>{t.dashboard.toast_suggest_title[language]}: <Badge variant="secondary">{result.missionClassification}</Badge></span>
+                  </CardTitle>
+                  <CardDescription className="font-bold text-foreground">{result.recommendation}</CardDescription>
+                </CardHeader>
+                <CardContent className="text-xs space-y-4">
+                  <p className="text-muted-foreground">{result.orchestrationRationale}</p>
+                  
+                  {result.paradigmNativeProtocol && (
+                    <div className="border-t pt-3 space-y-2">
+                      <h4 className="font-semibold text-foreground">{t.dashboard.paradigm_protocol.title[language]}</h4>
+                      <ul className="space-y-1 text-muted-foreground list-disc list-inside pl-2">
+                        {result.paradigmNativeProtocol.mandatoryAgents.length > 0 && 
+                          <li><strong className="text-foreground">{t.dashboard.paradigm_protocol.agents[language]}:</strong> {result.paradigmNativeProtocol.mandatoryAgents.join(', ')}</li>
+                        }
+                        {result.paradigmNativeProtocol.innovations.length > 0 && 
+                          <li><strong className="text-foreground">{t.dashboard.paradigm_protocol.innovations[language]}:</strong> {result.paradigmNativeProtocol.innovations.join(', ')}</li>
+                        }
+                         {result.paradigmNativeProtocol.transcendedCategories.length > 0 && 
+                          <li><strong className="text-foreground">{t.dashboard.paradigm_protocol.categories[language]}:</strong> {result.paradigmNativeProtocol.transcendedCategories.join(', ')}</li>
+                        }
+                         {result.paradigmNativeProtocol.impossibleSolved.length > 0 && 
+                          <li><strong className="text-foreground">{t.dashboard.paradigm_protocol.solved[language]}:</strong> {result.paradigmNativeProtocol.impossibleSolved.join(', ')}</li>
+                        }
+                      </ul>
+                    </div>
+                  )}
+
+                  {result.specialProtocolsActivated && 
+                    <p><strong className="text-foreground">{t.dashboard.special_protocols[language]}:</strong> {result.specialProtocolsActivated}</p>
+                  }
+                </CardContent>
+              </Card>
             ),
-            duration: 15000,
+            duration: 20000,
           });
         } else {
            setSelectedAgentIds(new Set());
