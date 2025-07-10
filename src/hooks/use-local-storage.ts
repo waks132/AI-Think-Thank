@@ -3,11 +3,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-// Helper function to check if a value is a Set
-function isSet<T>(value: any): value is Set<T> {
-  return value instanceof Set;
-}
-
 function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
   const [storedValue, setStoredValue] = useState<T>(() => {
     if (typeof window === 'undefined') {
@@ -17,13 +12,10 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val
       const item = window.localStorage.getItem(key);
       if (item) {
         const parsedItem = JSON.parse(item);
-        // If the initial value was a Set, rehydrate the parsed array back into a Set.
-        if (isSet(initialValue)) {
-           // Ensure the parsed item is an array before creating a Set from it.
-          if (Array.isArray(parsedItem)) {
-            return new Set(parsedItem) as T;
+        if (initialValue instanceof Array) {
+           if (Array.isArray(parsedItem)) {
+            return parsedItem as T;
           }
-          // If the stored value is corrupted (not an array), return the initial value.
           return initialValue;
         }
         return parsedItem;
@@ -40,12 +32,7 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val
       setStoredValue(prevValue => {
         const valueToStore = value instanceof Function ? value(prevValue) : value;
         if (typeof window !== 'undefined') {
-          // If the value is a Set, convert it to an array before stringifying.
-          if (isSet(valueToStore)) {
-            window.localStorage.setItem(key, JSON.stringify(Array.from(valueToStore)));
-          } else {
-            window.localStorage.setItem(key, JSON.stringify(valueToStore));
-          }
+          window.localStorage.setItem(key, JSON.stringify(valueToStore));
         }
         return valueToStore;
       });
@@ -60,10 +47,9 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val
         try {
           if (e.newValue) {
             const parsedItem = JSON.parse(e.newValue);
-             // If the initial value was a Set, rehydrate the parsed array back into a Set.
-            if (isSet(initialValue)) {
+            if (initialValue instanceof Array) {
               if (Array.isArray(parsedItem)) {
-                setStoredValue(new Set(parsedItem));
+                setStoredValue(parsedItem as T);
               }
             } else {
               setStoredValue(parsedItem);

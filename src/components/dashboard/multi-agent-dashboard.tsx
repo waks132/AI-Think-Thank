@@ -71,8 +71,8 @@ export default function MultiAgentDashboard() {
     }))
   );
   
-  const [selectedAgentIds, setSelectedAgentIds] = useLocalStorage<Set<string>>('selected-agent-ids', 
-    new Set(personaList.filter(p => !ORCHESTRATOR_IDS.includes(p.id)).map(p => p.id))
+  const [selectedAgentIds, setSelectedAgentIds] = useLocalStorage<string[]>('selected-agent-ids', 
+    personaList.filter(p => !ORCHESTRATOR_IDS.includes(p.id)).map(p => p.id)
   );
 
   const [logs, setLogs] = useLocalStorage<LogEntry[]>('cognitive-logs', []);
@@ -133,12 +133,12 @@ export default function MultiAgentDashboard() {
       } else {
         newSet.delete(agentId);
       }
-      return newSet;
+      return Array.from(newSet);
     });
   };
 
   const handleStartMission = async () => {
-    const selectedAgents = agents.filter(agent => selectedAgentIds.has(agent.id));
+    const selectedAgents = agents.filter(agent => new Set(selectedAgentIds).has(agent.id));
     const orchestrators = agents.filter(agent => ORCHESTRATOR_IDS.includes(agent.id));
     const agentsForMission = [...selectedAgents, ...orchestrators];
 
@@ -229,7 +229,7 @@ export default function MultiAgentDashboard() {
 
       if (result && result.recommendedAgentIds) {
         if (result.recommendedAgentIds.length > 0) {
-          setSelectedAgentIds(new Set(result.recommendedAgentIds));
+          setSelectedAgentIds(result.recommendedAgentIds);
           
           toast({
             title: `${t.dashboard.toast_suggest_title[language]}: ${result.missionClassification}`,
@@ -253,7 +253,7 @@ export default function MultiAgentDashboard() {
             duration: 15000,
           });
         } else {
-           setSelectedAgentIds(new Set());
+           setSelectedAgentIds([]);
            toast({
             variant: "destructive",
             title: `${t.dashboard.toast_suggest_title[language]}: ${result.missionClassification}`,
@@ -296,7 +296,7 @@ export default function MultiAgentDashboard() {
           });
           setCritiqueResult(critique);
           
-          const selectedAgents = agents.filter(agent => selectedAgentIds.has(agent.id) || ORCHESTRATOR_IDS.includes(agent.id));
+          const selectedAgents = agents.filter(agent => new Set(selectedAgentIds).has(agent.id) || ORCHESTRATOR_IDS.includes(agent.id));
           const agentContextString = selectedAgents
             .map(agent => `- **Agent ID:** ${agent.id}\n  - **Agent Role:** ${agent.role}\n  - **Core Directive:** "${agent.prompt}"`)
             .join('\n\n');
@@ -364,14 +364,13 @@ export default function MultiAgentDashboard() {
       prevAgents.map(agent => {
         const persona = personaMap.get(agent.id);
         if (persona) {
+          const isUnchanged = agent.prompt === persona.values.fr || agent.prompt === persona.values.en;
           return {
             ...agent,
             role: persona.name[language],
             specialization: persona.specialization[language],
-            // Only reset prompt if it hasn't been changed by the user
-            prompt: agent.prompt === persona.values.fr || agent.prompt === persona.values.en 
-                    ? persona.values[language] 
-                    : agent.prompt,
+            prompt: isUnchanged ? persona.values[language] : agent.prompt,
+            icon: persona.icon, // Ensure icon is always correctly assigned
           };
         }
         return agent;
@@ -691,7 +690,7 @@ export default function MultiAgentDashboard() {
                 key={agent.id} 
                 agent={agent} 
                 onPromptChange={handlePromptChange} 
-                isSelected={isOrchestrator || selectedAgentIds.has(agent.id)}
+                isSelected={isOrchestrator || new Set(selectedAgentIds).has(agent.id)}
                 onSelectionChange={handleAgentSelectionChange}
                 selectedModel={selectedModel}
                 isOrchestrator={isOrchestrator}
