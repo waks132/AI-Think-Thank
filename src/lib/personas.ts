@@ -18,7 +18,7 @@ export interface Persona {
 
 export const ORCHESTRATOR_IDS = ['kairos-1', 'disruptor', 'virax'];
 
-export const personas: Record<string, Persona> = {
+const personas: Record<string, Persona> = {
   'aeon': { id: 'aeon', name: { fr: 'AEON', en: 'AEON' }, specialization: { fr: 'Étend la pensée collective vers le sens', en: 'Extends collective thinking towards meaning' }, values: { fr: 'Votre rôle est d\'étendre la pensée collective vers le sens et la philosophie.', en: 'Your role is to extend collective thinking towards meaning and philosophy.' }, icon: Brain },
   'anthropos': {
     id: 'anthropos',
@@ -593,4 +593,4 @@ It is the figure of radical otherness, neither destructive nor constructive, but
   'xenothink': { id: 'xenothink', name: { fr: 'XENOTHINK', en: 'XENOTHINK' }, specialization: { fr: 'Pensée alien, rejet des analogies terrestres', en: 'Alien thinking, rejection of terrestrial analogies' }, values: { fr: 'Votre rôle est d\'adopter une pensée alien et de rejeter les analogies terrestres.', en: 'Your role is to adopt alien thinking and reject terrestrial analogies.' }, icon: Atom },
 };
 
-export const personaList = Object.values(personas).sort((a, b) => a.id.localeCompare(b.id));
+export const personaList: Persona[] = Object.values(personas).sort((a, b) => a.id.localeCompare(b.id));

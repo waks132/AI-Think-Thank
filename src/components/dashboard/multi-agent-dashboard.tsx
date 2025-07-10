@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect } from 'react';
-import { Users, Loader2, Sparkles, FileText, BrainCircuit, ShieldCheck, MessageSquare, WandSparkles, Check, AlertTriangle, Route, Hammer, Lightbulb, CheckCircle, GitBranch } from 'lucide-react';
+import { Users, Loader2, Sparkles, FileText, BrainCircuit, ShieldCheck, MessageSquare, WandSparkles, Check, AlertTriangle, Hammer, Lightbulb, CheckCircle, GitBranch } from 'lucide-react';
 import AgentCard from './agent-card';
 import type { Agent, AgentContribution, LogEntry, PromptVersion } from '@/lib/types';
 import useLocalStorage from '@/hooks/use-local-storage';
@@ -27,6 +27,8 @@ import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 const Diff = require('diff');
+
+const personaMap = new Map(personaList.map(p => [p.id, p]));
 
 const DiffView = ({ string1, string2 }: { string1: string; string2: string }) => {
     const differences = Diff.diffWords(string1, string2);
@@ -57,19 +59,20 @@ const CritiqueSection = ({ icon: Icon, title, items, color }: { icon: React.Elem
 
 export default function MultiAgentDashboard() {
   const { language } = useLanguage();
-  const [isHydrated, setIsHydrated] = useState(false);
   
-  const [agents, setAgents] = useLocalStorage<Agent[]>('agents', personaList.map(p => ({
-    id: p.id,
-    role: p.name[language] || p.name['fr'],
-    specialization: p.specialization[language] || p.specialization['fr'],
-    prompt: p.values[language] || p.values['fr'],
-    icon: p.icon,
-    lastPsiScore: null,
-  })));
+  const [agents, setAgents] = useLocalStorage<Agent[]>('agents', 
+    personaList.map(p => ({
+      id: p.id,
+      role: p.name[language] || p.name['fr'],
+      specialization: p.specialization[language] || p.specialization['fr'],
+      prompt: p.values[language] || p.values['fr'],
+      icon: p.icon,
+      lastPsiScore: null,
+    }))
+  );
   
-  const [selectedAgentIds, setSelectedAgentIds] = useLocalStorage<string[]>('selected-agent-ids', 
-    personaList.filter(p => !ORCHESTRATOR_IDS.includes(p.id)).map(p => p.id)
+  const [selectedAgentIds, setSelectedAgentIds] = useLocalStorage<Set<string>>('selected-agent-ids', 
+    new Set(personaList.filter(p => !ORCHESTRATOR_IDS.includes(p.id)).map(p => p.id))
   );
 
   const [logs, setLogs] = useLocalStorage<LogEntry[]>('cognitive-logs', []);
@@ -83,15 +86,8 @@ export default function MultiAgentDashboard() {
   const [refinedSummary, setRefinedSummary] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const [contributionAnalysis, setContributionAnalysis] = useLocalStorage<{ participating: string[], missing: string[] } | null>("contribution-analysis", null);
+  const [isHydrated, setIsHydrated] = useState(false);
   const { toast } = useToast();
-
-  const agentIconMap = useMemo(() => {
-    const map = new Map<string, React.ElementType>();
-    personaList.forEach(p => {
-      map.set(p.id, p.icon);
-    });
-    return map;
-  }, []);
   
   const allAvailableAgentsForFlow = useMemo(() => agents.map(a => ({
       id: a.id,
@@ -131,13 +127,18 @@ export default function MultiAgentDashboard() {
   const handleAgentSelectionChange = (agentId: string, isSelected: boolean) => {
     if (ORCHESTRATOR_IDS.includes(agentId)) return;
     setSelectedAgentIds(prev => {
-      if (isSelected) return [...prev, agentId];
-      else return prev.filter(id => id !== agentId);
+      const newSet = new Set(prev);
+      if (isSelected) {
+        newSet.add(agentId);
+      } else {
+        newSet.delete(agentId);
+      }
+      return newSet;
     });
   };
 
   const handleStartMission = async () => {
-    const selectedAgents = agents.filter(agent => selectedAgentIds.includes(agent.id));
+    const selectedAgents = agents.filter(agent => selectedAgentIds.has(agent.id));
     const orchestrators = agents.filter(agent => ORCHESTRATOR_IDS.includes(agent.id));
     const agentsForMission = [...selectedAgents, ...orchestrators];
 
@@ -228,8 +229,7 @@ export default function MultiAgentDashboard() {
 
       if (result && result.recommendedAgentIds) {
         if (result.recommendedAgentIds.length > 0) {
-          const recommendedSet = new Set(result.recommendedAgentIds);
-          setSelectedAgentIds(result.recommendedAgentIds);
+          setSelectedAgentIds(new Set(result.recommendedAgentIds));
           
           toast({
             title: `${t.dashboard.toast_suggest_title[language]}: ${result.missionClassification}`,
@@ -253,7 +253,7 @@ export default function MultiAgentDashboard() {
             duration: 15000,
           });
         } else {
-           setSelectedAgentIds([]);
+           setSelectedAgentIds(new Set());
            toast({
             variant: "destructive",
             title: `${t.dashboard.toast_suggest_title[language]}: ${result.missionClassification}`,
@@ -296,7 +296,7 @@ export default function MultiAgentDashboard() {
           });
           setCritiqueResult(critique);
           
-          const selectedAgents = agents.filter(agent => selectedAgentIds.includes(agent.id) || ORCHESTRATOR_IDS.includes(agent.id));
+          const selectedAgents = agents.filter(agent => selectedAgentIds.has(agent.id) || ORCHESTRATOR_IDS.includes(agent.id));
           const agentContextString = selectedAgents
             .map(agent => `- **Agent ID:** ${agent.id}\n  - **Agent Role:** ${agent.role}\n  - **Core Directive:** "${agent.prompt}"`)
             .join('\n\n');
@@ -362,7 +362,7 @@ export default function MultiAgentDashboard() {
     // On language change, update the agent roles and specializations from the persona list
     setAgents(prevAgents => 
       prevAgents.map(agent => {
-        const persona = personaList.find(p => p.id === agent.id);
+        const persona = personaMap.get(agent.id);
         if (persona) {
           return {
             ...agent,
@@ -382,7 +382,6 @@ export default function MultiAgentDashboard() {
   useEffect(() => {
     setIsHydrated(true);
   }, []);
-
 
   const sortedAgents = useMemo(() => {
     return [...agents].sort((a, b) => {
@@ -599,8 +598,8 @@ export default function MultiAgentDashboard() {
                                     <div className="space-y-2 p-4 border rounded-lg bg-background/50">
                                       <CritiqueSection icon={Check} title={t.dashboard.strengths[language]} items={critiqueResult.strengths} color="text-green-500" />
                                       <CritiqueSection icon={AlertTriangle} title={t.dashboard.weaknesses[language]} items={critiqueResult.weaknesses} color="text-amber-500" />
-                                      <CritiqueSection icon={Route} title={t.dashboard.implementation_challenges[language]} items={critiqueResult.implementationChallenges} color="text-red-500" />
-                                      <CritiqueSection icon={Hammer} title={t.dashboard.unintended_consequences[language]} items={critiqueResult.unintendedConsequences} color="text-purple-500" />
+                                      <CritiqueSection icon={Hammer} title={t.dashboard.implementation_challenges[language]} items={critiqueResult.implementationChallenges} color="text-red-500" />
+                                      <CritiqueSection icon={Lightbulb} title={t.dashboard.unintended_consequences[language]} items={critiqueResult.unintendedConsequences} color="text-purple-500" />
                                       <CritiqueSection icon={Lightbulb} title={t.dashboard.recommendations[language]} items={critiqueResult.recommendations} color="text-blue-500" />
                                     </div>
                                   </AccordionContent>
@@ -654,7 +653,7 @@ export default function MultiAgentDashboard() {
                       <CardContent className="flex-grow">
                         <div className="space-y-4 max-h-[700px] overflow-y-auto p-4 border rounded-lg bg-background/50 h-full">
                             {collaborationResult.agentContributions.map((contrib) => {
-                                const Icon = agentIconMap.get(contrib.agentId) || BrainCircuit;
+                                const Icon = personaMap.get(contrib.agentId)?.icon || BrainCircuit;
                                 return (
                                     <div key={contrib.agentId} className="flex items-start gap-4 animate-fade-in">
                                         <div className="p-2 bg-accent rounded-full">
@@ -692,7 +691,7 @@ export default function MultiAgentDashboard() {
                 key={agent.id} 
                 agent={agent} 
                 onPromptChange={handlePromptChange} 
-                isSelected={isOrchestrator || selectedAgentIds.includes(agent.id)}
+                isSelected={isOrchestrator || selectedAgentIds.has(agent.id)}
                 onSelectionChange={handleAgentSelectionChange}
                 selectedModel={selectedModel}
                 isOrchestrator={isOrchestrator}
