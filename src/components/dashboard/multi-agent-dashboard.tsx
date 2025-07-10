@@ -376,7 +376,7 @@ export default function MultiAgentDashboard() {
             role: persona.name[language],
             specialization: persona.specialization[language],
             prompt: isUnchanged ? persona.values[language] : agent.prompt,
-            icon: persona.icon, // Ensure icon is always correctly assigned
+            icon: persona.icon,
           };
         }
         return agent;
@@ -653,10 +653,10 @@ export default function MultiAgentDashboard() {
                       </CardHeader>
                       <CardContent className="flex-grow">
                         <div className="space-y-4 max-h-[700px] overflow-y-auto p-4 border rounded-lg bg-background/50 h-full">
-                            {collaborationResult.agentContributions.map((contrib) => {
+                            {collaborationResult.agentContributions.map((contrib, index) => {
                                 const Icon = personaMap.get(contrib.agentId)?.icon || BrainCircuit;
                                 return (
-                                    <div key={contrib.agentId} className="flex items-start gap-4 animate-fade-in">
+                                    <div key={`${contrib.agentId}-${index}`} className="flex items-start gap-4 animate-fade-in">
                                         <div className="p-2 bg-accent rounded-full">
                                             <Icon className="h-5 w-5 text-accent-foreground" />
                                         </div>
@@ -728,5 +728,3 @@ export default function MultiAgentDashboard() {
     </div>
   );
 }
-
-    
