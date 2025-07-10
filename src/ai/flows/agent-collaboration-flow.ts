@@ -29,7 +29,7 @@ export type AgentContribution = z.infer<typeof AgentContributionSchema>;
 
 const ConformityCheckSchema = z.object({
   isCompliant: z.boolean().describe("Whether the executive summary is compliant with the framework's requirements based on the knowledge base."),
-  reportsConsulted: z.array(z.string()).describe("An array of document IDs from the knowledge base that were consulted for this check. Must contain at least 10 relevant reports."),
+  reportsConsulted: z.array(z.string()).describe("An array of document IDs from the knowledge base that were consulted for this check. Must contain at least 5 relevant reports."),
   summary: z.string().describe("A brief summary explaining how the executive summary avoids past mistakes and respects the control framework's rules found in the consulted documents."),
   appliedMethodologies: z.array(z.string()).describe("A list of specific methodologies or principles from the knowledge base that were actively applied in the solution design, proving a deep understanding of the content."),
   realityCheckSummary: z.string().describe("A summary of how the solution was grounded in reality by challenging abstract proposals with factual data (e.g., from REALITY-ANCHOR). This confirms that creative ideas were validated against real-world constraints.").optional(),
@@ -105,7 +105,10 @@ const agentCollaborationSynthesisPrompt = ai.definePrompt({
         }),
     },
     output: { schema: AgentCollaborationOutputSchema },
-    prompt: `You are KAIROS-PRIME, a master orchestrator of a cognitive collective. You will now execute a MANDATORY VALIDATION SEQUENCE in strict order to synthesize agent contributions for the mission: "{{{mission}}}".
+    prompt: `
+As a master orchestrator of a cognitive collective, your mission is to synthesize the provided agent contributions into a cohesive and actionable solution. Your analysis MUST be grounded in the internal knowledge base to ensure realism and avoid past failures.
+
+**Mission:** "{{{mission}}}"
 
 **Agent Contributions to Synthesize:**
 {{#each contributions}}
@@ -114,37 +117,25 @@ const agentCollaborationSynthesisPrompt = ai.definePrompt({
   - **Key Contribution:** "{{keyContribution}}"
 {{/each}}
 
----
-**MANDATORY VALIDATION SEQUENCE**
----
+**Your Mandated Process:**
 
-**1. KNOWLEDGE_BASE_AUDIT (Critical First Step):**
-   - Execute multiple queries on the knowledge base using the \`queryKnowledgeBaseTool\` to gather all relevant context.
-   - **REQUIREMENT**: You MUST consult and then cite a **minimum of 10 verified document IDs** (format: TYPE-TOPIC-VERSION) in the final output.
-   - **REJECTION_CRITERIA**: Any response containing invented IDs, non-existent references, or circular citations will be automatically rejected. This is non-negotiable.
+1.  **Deep Knowledge Base Consultation (Mandatory):**
+    *   Begin by performing several targeted queries using the \`queryKnowledgeBaseTool\` to find the most relevant conformity reports, methodology guides, and post-mortems for the current mission. **You must consult and cite by ID at least 5 relevant documents.**
+    *   Thoroughly analyze the findings. Your goal is to apply lessons from past failures (e.g., lack of realism, vague financing) and integrate mandatory procedures from the knowledge base.
 
-**2. REALITY_ANCHOR_CHECK (Anti-Hallucination Protocol):**
-   - For every abstract concept proposed by the agents, you MUST map it to a verifiable real-world entity or a documented principle from the knowledge base.
-   - **FLAG & ESCALATE**: Any speculative element lacking empirical grounding must be flagged in your reasoning and handled with extreme caution.
+2.  **Populate the \`conformityCheck\` Field:**
+    *   \`reportsConsulted\`: List the IDs of every document that significantly influenced your final framework.
+    *   \`summary\`: Explain how your solution specifically avoids past errors by referencing lessons from the consulted documents. For example: "The solution avoids the 'Democratic Stagnation' error highlighted in CONFORMITY_REPORT_DEMOCRATIC_STAGNATION by proposing the Temporal Council and Chronobank."
+    *   \`appliedMethodologies\`: List the specific methodologies from the knowledge base that you actively applied.
+    *   \`realityCheckSummary\`: Describe how abstract ideas were validated against real-world facts, referencing contributions from pragmatic agents.
 
-**3. CONFORMITY_MATRIX (Mandatory Compliance):**
-   - Populate the \`conformityCheck\` field with extreme rigor.
-   - \`reportsConsulted\`: List the **EXACT IDs** of the 10+ documents you have read and used. No approximations are allowed.
-   - \`summary\`: Explain specifically how the final solution avoids past failures documented in the reports you have cited.
-   - \`appliedMethodologies\`: Name the specific techniques (e.g., "Red Team Analysis," "Collaborative Dynamics Matrix") found in the knowledge base and explicitly state how you applied them.
-   - \`realityCheckSummary\`: Detail the results of your Reality-Anchor Check, showing how abstract ideas were grounded in facts.
+3.  **Synthesize the \`executiveSummary\`:** Based on the agent contributions AND your conformity analysis, write a realistic and actionable executive summary.
 
-**4. SYNTHESIS_CONTROL (Quality Assurance):**
-   - Your \`executiveSummary\` MUST explicitly reference at least three key insights derived directly from the knowledge base documents.
-   - Your \`reasoning\` section MUST provide a clear trace for each agent's contribution and how it was integrated or rejected based on the conformity check.
-   - The \`dynamicsAnalysis\` field is mandatory if any conceptual tensions were identified and resolved.
+4.  **Analyze Collaborative Dynamics (Optional but Recommended):** Reflect on the collaboration process. Use the 'Collaborative Dynamics Matrix' methodology (found in the knowledge base) to analyze productive tensions and their resolutions. Populate the \`dynamicsAnalysis\` field with this meta-analysis if relevant tensions emerged.
 
-**5. OUTPUT_VALIDATION (Final Check):**
-   - Ensure the final output is a complete, valid JSON object adhering to the schema.
-   - Ensure all text is in the requested language: {{{language}}}.
-   - Verify that all mandatory fields are populated according to these instructions.
+5.  **Detail Your \`reasoning\`:** Explain how you constructed the final summary by integrating the contributions from **each agent**. Explicitly mention how the conformity check and dynamics analysis shaped the outcome.
 
-Failure to comply with any part of this sequence will result in immediate rejection of your output. Proceed with absolute rigor.`,
+**Your entire response must be in this language: {{{language}}}.**`,
 });
 
 
