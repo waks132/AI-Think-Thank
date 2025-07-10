@@ -10,8 +10,6 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { queryKnowledgeBaseTool } from '@/ai/tools/knowledge-base-tool';
-import { strategicSynthesisCritique } from './strategic-synthesis-critique';
-import { adaptivePromptRewriter } from './adaptive-prompt-rewriter';
 
 const AgentCollaborationInputSchema = z.object({
   mission: z.string().describe('The overall mission or task for the agents to collaborate on.'),
@@ -31,7 +29,7 @@ export type AgentContribution = z.infer<typeof AgentContributionSchema>;
 
 const ConformityCheckSchema = z.object({
   isCompliant: z.boolean().describe("Whether the executive summary is compliant with the framework's requirements based on the knowledge base."),
-  reportsConsulted: z.array(z.string()).describe("An array of document IDs from the knowledge base that were consulted for this check."),
+  reportsConsulted: z.array(z.string()).describe("An array of document IDs from the knowledge base that were consulted for this check. Must contain at least 5 relevant reports."),
   summary: z.string().describe("A brief summary explaining how the executive summary avoids past mistakes and respects the control framework's rules found in the consulted documents."),
   appliedMethodologies: z.array(z.string()).describe("A list of specific methodologies or principles from the knowledge base that were actively applied in the solution design, proving a deep understanding of the content."),
   realityCheckSummary: z.string().describe("A summary of how the solution was grounded in reality by challenging abstract proposals with factual data (e.g., from REALITY-ANCHOR). This confirms that creative ideas were validated against real-world constraints.").optional(),
@@ -61,41 +59,84 @@ export async function runAgentCollaboration(input: AgentCollaborationInput): Pro
   return agentCollaborationFlow(input);
 }
 
-const agentCollaborationPrompt = ai.definePrompt({
-  name: 'agentCollaborationPrompt',
+
+const agentContributionGeneratorPrompt = ai.definePrompt({
+  name: 'agentContributionGeneratorPrompt',
+  input: {
+    schema: z.object({
+      mission: z.string(),
+      agent: z.object({
+        id: z.string(),
+        role: z.string(),
+        prompt: z.string(),
+      }),
+      language: z.enum(['fr', 'en']),
+    }),
+  },
+  output: {
+    schema: z.object({
+      keyContribution: z.string(),
+      contributionType: z.enum(['Proposition', 'Critique', 'Synthèse', 'Analyse', 'Questionnement', 'Enrichissement']),
+    }),
+  },
+  prompt: `You are an AI agent simulator. Your task is to generate a single, critical contribution for one agent based on its role, its core directive (prompt), and the overall mission.
+  The contribution must be concise, specific, and directly relevant to the mission. It should represent the agent's unique perspective and expertise.
+
+  **Mission:**
+  "{{{mission}}}"
+
+  **Agent to Simulate:**
+  - **Agent Role:** {{{agent.role}}}
+  - **Core Directive:** "{{{agent.prompt}}}"
+
+  Generate the key contribution and its type in the specified JSON format. Your response must be in this language: {{{language}}}.`,
+});
+
+
+const agentCollaborationSynthesisPrompt = ai.definePrompt({
+  name: 'agentCollaborationSynthesisPrompt',
   tools: [queryKnowledgeBaseTool],
-  input: {schema: AgentCollaborationInputSchema},
+  input: {
+    schema: z.object({
+      mission: z.string(),
+      agentList: z.string(),
+      contributions: z.array(AgentContributionSchema),
+      language: z.enum(['fr', 'en']),
+    }),
+  },
   output: {schema: AgentCollaborationOutputSchema},
-  prompt: `You are a master orchestrator of a cognitive collective of AI agents. Your primary task is to determine the optimal solution for a given mission by simulating a collaboration between a selected team of agents. Your work must be deeply informed by the collective's past learnings to avoid repeating mistakes.
+  prompt: `You are a master orchestrator of a cognitive collective of AI agents. Your primary task is to synthesize the contributions of a team of agents into an optimal solution for a given mission. Your work must be deeply informed by the collective's past learnings to avoid repeating mistakes.
 
 **Mission:**
 "{{{mission}}}"
 
-**Participating Agents:**
-The collaboration you simulate MUST feature contributions from **every single agent** listed below. No agent should be omitted. The simulation must ONLY use agents from this roster.
-{{{agentList}}}
+**Participating Agents & Their Contributions:**
+{{#each contributions}}
+- **Agent:** {{agentRole}} (ID: {{agentId}})
+  - **Contribution Type:** {{contributionType}}
+  - **Key Contribution:** "{{keyContribution}}"
+{{/each}}
+
 
 **Your Comprehensive Process:**
 
-1.  **Simulate Collaboration & Detail Agent Contributions:** For **every single agent** from the 'Participating Agents' list, you MUST summarize their single most critical and unique contribution to the final solution. Populate the \`agentContributions\` array with this analysis. Each agent must have one entry. **Crucially, ensure that proposals from creative or abstract agents (e.g., CONCEPT-CREATOR, XENOTHINK) are systematically challenged by pragmatic agents (e.g., STRATO, KRONOS, REALITY-ANCHOR) to ground them in reality.**
-
-2.  **MANDATORY CONFORMITY AND REALITY CHECK (DEEP KNOWLEDGE BASE INTEGRATION):** This is a critical step. Before writing the final summary, you MUST ground your analysis in our collective's past learnings to avoid repeating mistakes. This is not a superficial check; it requires deep integration.
+1.  **MANDATORY CONFORMITY AND REALITY CHECK (DEEP KNOWLEDGE BASE INTEGRATION):** This is a critical step. Before writing the final summary, you MUST ground your analysis in our collective's past learnings to avoid repeating mistakes. This is not a superficial check; it requires deep integration.
     *   **Step 2.1 - Comprehensive Consultation:** Your first action is to perform a broad query using the \`queryKnowledgeBaseTool\` to get a list of ALL available documents. Use a generic query like "list all" or "all documents" to see everything.
-    *   **Step 2.2 - Targeted Analysis:** Review the full list of documents. Then, based on the specific challenges of the current mission, perform several targeted queries with the \`queryKnowledgeBaseTool\` to find the most relevant conformity reports, methodology guides, post-mortems, and critical analyses.
+    *   **Step 2.2 - Targeted Analysis:** Review the full list of documents. Then, based on the specific challenges of the current mission, perform several targeted queries with the \`queryKnowledgeBaseTool\` to find the most relevant conformity reports, methodology guides, post-mortems, and critical analyses. You MUST consult at least 5 relevant documents.
     *   **Step 2.3 - Synthesize and Apply:** Analyze the findings from your queries in depth. Your goal is to understand the *'why'* behind past failures (e.g., lack of realism, missing "Red Team", vague financing, ignoring political facts) and the core principles of mandatory procedures. You must actively apply these lessons to the current mission.
     *   **Step 2.4 - Populate the \`conformityCheck\` field:**
-        *   In \`reportsConsulted\`, you MUST list the document IDs for **every single document that you found relevant and that had a direct and significant influence** on your final framework. A short list (e.g., only 1-5 reports) will be considered a failure to comply. Your list must be comprehensive and reflect the depth of your research. Do not omit any influential report. Do not list documents you merely scanned but did not use.
+        *   In \`reportsConsulted\`, you MUST list the document IDs for **every single document (at least 5) that you found relevant and that had a direct and significant influence** on your final framework. A short list will be considered a failure to comply. Do not list documents you merely scanned but did not use.
         *   In the \`summary\` field, you must explain how your solution avoids past errors *by referencing specific lessons from the consulted documents*.
         *   In \`appliedMethodologies\`, list the specific methodologies or principles from the knowledge base that were actively applied in the solution design, proving a deep understanding of the content.
         *   **In \`realityCheckSummary\`, describe how abstract ideas were tested against real-world facts, referencing contributions from pragmatic agents like REALITY-ANCHOR.**
 
-3.  **Synthesize Final Outcome:** Based on the agent contributions AND your deep conformity analysis, produce a comprehensive \`executiveSummary\`. This summary MUST be realistic, actionable, and demonstrably compliant with the lessons learned from the knowledge base.
+2.  **Synthesize Final Outcome:** Based on the agent contributions AND your deep conformity analysis, produce a comprehensive \`executiveSummary\`. This summary MUST be realistic, actionable, and demonstrably compliant with the lessons learned from the knowledge base.
 
-4.  **Analyze Collaborative Dynamics (Meta-Cognitive Step):** After simulating the debate, reflect on the process itself. Use the principles from the 'Collaborative Dynamics Matrix' methodology (you can find this in the knowledge base, e.g., in document \`GUIDE-METHODOLOGY-EVOLUTION-01\`). Analyze the most significant intellectual tensions that arose and how they were resolved to produce a superior outcome. A productive tension is a disagreement or contradiction that, once resolved, leads to a better, more robust idea. Populate the \`dynamicsAnalysis\` field with this meta-analysis. This step is crucial for systemic learning.
+3.  **Analyze Collaborative Dynamics (Meta-Cognitive Step):** After reviewing the contributions, reflect on the process itself. Use the principles from the 'Collaborative Dynamics Matrix' methodology (you can find this in the knowledge base, e.g., in document \`GUIDE-METHODOLOGY-EVOLUTION-01\`). Analyze the most significant intellectual tensions that arose and how they were resolved to produce a superior outcome. A productive tension is a disagreement or contradiction that, once resolved, leads to a better, more robust idea. Populate the \`dynamicsAnalysis\` field with this meta-analysis. This step is crucial for systemic learning.
 
-5.  **Provide Detailed Reasoning:** Based on the contributions, explain the \`reasoning\` behind how you synthesized the final \`executiveSummary\` from the various key contributions of the agents, explicitly mentioning how the conformity check and the dynamics analysis shaped the final outcome.
+4.  **Provide Detailed Reasoning:** Based on the contributions, explain the \`reasoning\` behind how you synthesized the final \`executiveSummary\` from the various key contributions of the agents, explicitly mentioning how the conformity check and the dynamics analysis shaped the final outcome.
 
-Produce your entire response in the specified JSON format, filling all fields of the output schema. Your entire response, including all text fields, must be in this language: {{{language}}}.`,
+Produce your entire response in the specified JSON format, filling all fields of the output schema, using the provided contributions. Your entire response, including all text fields, must be in this language: {{{language}}}.`,
 });
 
 
@@ -106,49 +147,57 @@ const agentCollaborationFlow = ai.defineFlow(
     outputSchema: AgentCollaborationOutputSchema,
   },
   async (input) => {
-    // Step 1: Initial collaboration
-    const initialResponse = await agentCollaborationPrompt(input, {
-      model: input.model,
-      config: { maxOutputTokens: 8192 },
-      retries: 10,
-    });
-    
-    const initialOutput = initialResponse.output;
-    if (!initialOutput) {
-        throw new Error("Failed to generate initial agent collaboration result.");
+    // Step 1: Parse the agent list to get individual agent data
+    const agentDataRegex = /- \*\*Agent ID:\*\*\s*(.*?)\s*- \*\*Agent Role:\*\*\s*(.*?)\s*- \*\*Core Directive:\*\*\s*"(.*?)"/gs;
+    const agentsToSimulate = [];
+    let match;
+    while ((match = agentDataRegex.exec(input.agentList)) !== null) {
+      agentsToSimulate.push({
+        id: match[1].trim(),
+        role: match[2].trim(),
+        prompt: match[3].trim(),
+      });
     }
 
-    // Step 2: Red Team critique of the initial summary
-    const critique = await strategicSynthesisCritique({
-        synthesisText: initialOutput.executiveSummary,
-        scenario: input.mission,
-        model: input.model,
-        language: input.language,
+    // Step 2: Generate contributions for each agent individually
+    const contributions: AgentContribution[] = await Promise.all(
+      agentsToSimulate.map(async (agent) => {
+        const contributionResult = await agentContributionGeneratorPrompt({
+          mission: input.mission,
+          agent: agent,
+          language: input.language,
+        });
+        const contributionOutput = contributionResult.output;
+        if (!contributionOutput) {
+          throw new Error(`Failed to generate contribution for agent ${agent.role}`);
+        }
+        return {
+          agentId: agent.id,
+          agentRole: agent.role,
+          ...contributionOutput,
+        };
+      })
+    );
+
+    // Step 3: Synthesize the results
+    const synthesisResult = await agentCollaborationSynthesisPrompt({
+      mission: input.mission,
+      agentList: input.agentList,
+      contributions: contributions,
+      language: input.language,
+    }, {
+      model: input.model,
+      config: { maxOutputTokens: 8192 },
     });
 
-    // Step 3: Refine the summary based on the critique
-    const performanceLacunae = `
-      Based on an initial critical "Red Team" analysis, the following points were raised about the summary. 
-      Your task is to rewrite the original summary to address these points. You must reinforce the identified strengths and mitigate the weaknesses. The new summary should be more robust, insightful, and actionable.
-      **Critical Analysis to Address:**
-      - Strengths to emphasize: ${critique.strengths.join('; ')}.
-      - Weaknesses to correct: ${critique.weaknesses.join('; ')}.
-      - Potential unintended consequences to consider or mention: ${critique.unintendedConsequences.join('; ')}.
-      - Practical implementation challenges to acknowledge: ${critique.implementationChallenges.join('; ')}.
-      - Strategic recommendations to integrate or reflect: ${critique.recommendations.join('; ')}.
-    `.trim();
+    const finalOutput = synthesisResult.output;
+    if (!finalOutput) {
+        throw new Error("Failed to generate the final synthesis.");
+    }
+    
+    // Ensure the contributions from the generation step are in the final output
+    finalOutput.agentContributions = contributions;
 
-    const refinement = await adaptivePromptRewriter({
-        originalPrompt: initialOutput.executiveSummary,
-        agentPerformance: performanceLacunae,
-        model: input.model,
-        language: input.language,
-    });
-
-    // Return the refined output, keeping the rest of the initial output
-    return {
-        ...initialOutput,
-        executiveSummary: refinement.rewrittenPrompt,
-    };
+    return finalOutput;
   }
 );

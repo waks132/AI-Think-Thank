@@ -50,6 +50,8 @@ export default function AgentCard({ agent, onPromptChange, isSelected, onSelecti
     try {
       const result = await adaptivePromptRewriter({
         originalPrompt: currentPrompt,
+        agentRole: agent.role,
+        agentSpecialization: agent.specialization,
         agentPerformance: "The current prompt could be clearer, more specific, and provide more actionable guidance to fulfill its role effectively. It should be refined for better performance.",
         model: selectedModel,
         language: language,

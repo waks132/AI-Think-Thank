@@ -59,7 +59,12 @@ export default function MultiAgentDashboard() {
   const { language } = useLanguage();
   const [isHydrated, setIsHydrated] = useState(false);
   const [agents, setAgents] = useLocalStorage<Agent[]>('agents', []);
-  const [selectedAgentIds, setSelectedAgentIds] = useState(new Set<string>());
+  
+  // Default to all non-orchestrator agents selected
+  const [selectedAgentIds, setSelectedAgentIds] = useLocalStorage<Set<string>>('selected-agent-ids', new Set(
+      personaList.filter(p => !ORCHESTRATOR_IDS.includes(p.id)).map(p => p.id)
+  ));
+
   const [logs, setLogs] = useLocalStorage<LogEntry[]>('cognitive-logs', []);
   const [promptHistories, setPromptHistories] = useLocalStorage<Record<string, PromptVersion[]>>('prompt-histories', {});
   const [mission, setMission] = useLocalStorage<string>('mission-text', 'Développer un cadre pour le déploiement éthique de l\'IA dans les véhicules autonomes.');
@@ -98,7 +103,7 @@ export default function MultiAgentDashboard() {
   const handlePromptChange = (agentId: string, newPrompt: string, refinementResult?: AdaptivePromptRewriterOutput) => {
     setAgents(prevAgents => 
       prevAgents.map(agent => 
-        agent.id === agentId ? { ...agent, prompt: newPrompt, lastPsiScore: refinementResult?.psiScore ?? agent.lastPsiScore } : agent
+        agent.id === agentId ? { ...agent, prompt: newPrompt, lastPsiScore: refinementResult?.psiScore ?? agent.lastPsiScore, specialization: agent.specialization } : agent
       )
     );
 
@@ -127,11 +132,9 @@ export default function MultiAgentDashboard() {
   };
 
   const handleStartMission = async () => {
-    const finalSelectedIds = new Set(selectedAgentIds);
-    const orchestratorsInRoster = agents.filter(a => ORCHESTRATOR_IDS.includes(a.id));
-    orchestratorsInRoster.forEach(o => finalSelectedIds.add(o.id));
+    const selectedAgents = agents.filter(agent => selectedAgentIds.has(agent.id) || ORCHESTRATOR_IDS.includes(agent.id));
 
-    if (finalSelectedIds.size < 2) {
+    if (selectedAgents.filter(a => !ORCHESTRATOR_IDS.includes(a.id)).length < 2) {
       toast({
         variant: 'destructive',
         title: t.dashboard.toast_select_title[language],
@@ -146,8 +149,7 @@ export default function MultiAgentDashboard() {
     setCritiqueResult(null);
     setContributionAnalysis(null);
 
-    const agentListString = agents
-      .filter(agent => finalSelectedIds.has(agent.id))
+    const agentListString = selectedAgents
       .map(agent => `- **Agent ID:** ${agent.id}\n  - **Agent Role:** ${agent.role}\n  - **Core Directive:** "${agent.prompt}"`)
       .join('\n\n');
 
@@ -179,13 +181,14 @@ export default function MultiAgentDashboard() {
           description: t.dashboard.toast_log_description[language],
         });
 
-        const expectedAgentIds = new Set(finalSelectedIds);
+        const expectedAgentIds = new Set(selectedAgents.map(a => a.id));
         const contributingAgentIds = new Set(result.agentContributions.map(log => log.agentId));
         
         const missingAgentIds = [...expectedAgentIds].filter(id => !contributingAgentIds.has(id) && !ORCHESTRATOR_IDS.includes(id));
         const participatingAgentRoles = [...contributingAgentIds]
             .map(id => agents.find(a => a.id === id)?.role || id)
-            .filter(role => role !== 'KAIROS-1' && role !== 'PoliSynth Disruptor');
+            .filter(role => !ORCHESTRATOR_IDS.includes(agents.find(a => a.role === role)?.id || ''));
+
 
         const missingAgentRoles = missingAgentIds.map(id => agents.find(a => a.id === id)?.role || id);
 
@@ -230,15 +233,13 @@ export default function MultiAgentDashboard() {
                 <p className="mt-2 whitespace-pre-wrap">{result.orchestrationRationale}</p>
                 {result.paradigmNativeProtocol && (
                   <div className="mt-2 border-t pt-2 border-primary/20">
-                    <p className="font-semibold">{t.dashboard.paradigm_protocol[language]}</p>
-                    <p>
-                      <span className="font-medium">{t.dashboard.paradigm_agents[language]}:</span> 
-                      {result.paradigmNativeProtocol.mandatoryAgents.join(', ')}
-                    </p>
-                     <p>
-                      <span className="font-medium">{t.dashboard.paradigm_innovations[language]}:</span> 
-                      {result.paradigmNativeProtocol.innovations.join(', ')}
-                    </p>
+                    <p className="font-semibold">{result.paradigmNativeProtocol.mandatoryAgents.length > 0 ? t.dashboard.paradigm_protocol_vagues[language].title : ''}</p>
+                    {result.paradigmNativeProtocol.mandatoryAgents.length > 0 && 
+                      <div>
+                        <p className="font-medium">{t.dashboard.paradigm_protocol_vagues.vague1_title[language]}</p>
+                        <p className="text-xs">{t.dashboard.paradigm_protocol_vagues.vague1_agents[language]}: {result.paradigmNativeProtocol.mandatoryAgents.join(', ')}</p>
+                      </div>
+                    }
                   </div>
                 )}
               </div>
@@ -289,7 +290,11 @@ export default function MultiAgentDashboard() {
           });
           setCritiqueResult(critique);
           
-          // Step 2: Use the critique to rewrite the summary
+          const selectedAgents = agents.filter(agent => selectedAgentIds.has(agent.id) || ORCHESTRATOR_IDS.includes(agent.id));
+          const agentContextString = selectedAgents
+            .map(agent => `- **Agent ID:** ${agent.id}\n  - **Agent Role:** ${agent.role}\n  - **Core Directive:** "${agent.prompt}"`)
+            .join('\n\n');
+
           const performanceLacunae = `
   Based on a critical "Red Team" analysis, the following points were raised about the original summary. 
   Your task is to rewrite the original summary to address these points. You must reinforce the identified strengths and mitigate the weaknesses. The new summary should be more robust, insightful, and actionable.
@@ -302,17 +307,10 @@ export default function MultiAgentDashboard() {
   - Strategic recommendations to integrate or reflect: ${critique.recommendations.join('; ')}.
           `.trim();
           
-          const finalSelectedIds = new Set(selectedAgentIds);
-          const orchestratorsInRoster = agents.filter(a => ORCHESTRATOR_IDS.includes(a.id));
-          orchestratorsInRoster.forEach(o => finalSelectedIds.add(o.id));
-
-          const agentContextString = agents
-            .filter(agent => finalSelectedIds.has(agent.id))
-            .map(agent => `- **Agent ID:** ${agent.id}\n  - **Agent Role:** ${agent.role}\n  - **Core Directive:** "${agent.prompt}"`)
-            .join('\n\n');
-
           const refinement = await adaptivePromptRewriter({
               originalPrompt: collaborationResult.executiveSummary,
+              agentRole: "Synthèse Collective",
+              agentSpecialization: "Synthétiser les contributions de multiples agents pour produire un résumé exécutif cohérent et percutant.",
               agentPerformance: performanceLacunae,
               orchestratorContext: agentContextString,
               model: selectedModel,
@@ -355,47 +353,42 @@ export default function MultiAgentDashboard() {
 
 
   useEffect(() => {
-    // This effect handles hydration and resets prompts and lineage to default values.
+    // Hydration effect
     const defaultAgents = personaList.map(persona => ({
       id: persona.id,
       role: persona.name[language],
       specialization: persona.specialization[language],
-      prompt: persona.values[language], // Always use the default prompt
+      prompt: persona.values[language],
       icon: persona.icon,
-      lastPsiScore: null, // Also reset the score
+      lastPsiScore: null,
     }));
     
-    setAgents(defaultAgents);
-    setPromptHistories({}); // Clears the lineage history
-
-    toast({
-        title: t.dashboard.toast_reset_title[language],
-        description: t.dashboard.toast_reset_description[language],
-    });
+    // On initial load, set the agents if they are not already set or if the language is different
+    // from the first agent's name language (heuristic for language change)
+    if (agents.length === 0 || agents[0].role !== personaList[0].name[language]) {
+      setAgents(defaultAgents);
+      setPromptHistories({}); // Clear lineage on reset/language change
+    }
 
     setIsHydrated(true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language, setAgents, setPromptHistories]);
+  }, [language, agents, setAgents, setPromptHistories]);
 
 
   const sortedAgents = useMemo(() => {
       if (!isHydrated) {
         return personaList.map(p => ({
-          id: p.id,
+          ...p,
           role: p.name[language],
           specialization: p.specialization[language],
           prompt: p.values[language],
-          icon: p.icon,
           lastPsiScore: null,
         }));
       }
       const agentMap = new Map(agents.map(a => [a.id, a]));
       return personaList.map(p => {
           const storedAgent = agentMap.get(p.id);
-          const Icon = agentIconMap.get(p.id);
           return {
               ...p,
-              icon: Icon,
               role: storedAgent?.role || p.name[language],
               specialization: storedAgent?.specialization || p.specialization[language],
               prompt: storedAgent?.prompt || p.values[language],
@@ -408,7 +401,7 @@ export default function MultiAgentDashboard() {
           if (!aIsOrchestrator && bIsOrchestrator) return 1;
           return a.id.localeCompare(b.id);
       });
-  }, [isHydrated, agents, language, agentIconMap]);
+  }, [isHydrated, agents, language]);
   
   const finalSelectedAgentCount = useMemo(() => {
     if (!isHydrated) return 0;
