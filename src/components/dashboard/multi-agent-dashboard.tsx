@@ -350,7 +350,7 @@ export default function MultiAgentDashboard() {
 
   useEffect(() => {
     // Only run this on the client, after hydration
-    if (!isHydrated) {
+    if (!isHydrated && agents.length === 0) {
         setAgents(personaList.map(p => ({
             id: p.id,
             role: p.name[language] || p.name['fr'],
@@ -359,30 +359,43 @@ export default function MultiAgentDashboard() {
             icon: p.icon,
             lastPsiScore: null,
         })));
-        setIsHydrated(true);
     }
-  }, [isHydrated, language, setAgents]);
+    setIsHydrated(true);
+  }, [isHydrated, language, agents, setAgents]);
 
 
   useEffect(() => {
-    // On language change, update the agent roles and specializations from the persona list
-    setAgents(prevAgents => 
-      prevAgents.map(agent => {
+    // On language change, update agent roles, specializations, and default prompts.
+    // Preserve user-modified prompts.
+    setAgents(prevAgents => {
+      // Create a set of all default prompts for easy lookup
+      const allDefaultPrompts = new Set<string>();
+      personaList.forEach(p => {
+        allDefaultPrompts.add(p.values.fr);
+        allDefaultPrompts.add(p.values.en);
+      });
+
+      return prevAgents.map(agent => {
         const persona = personaMap.get(agent.id);
         if (persona) {
-          const isUnchanged = agent.prompt === persona.values.fr || agent.prompt === persona.values.en;
+          // If the agent's current prompt is a default one, translate it.
+          // Otherwise, keep the user's custom prompt.
+          const isDefaultPrompt = allDefaultPrompts.has(agent.prompt);
+          const newPrompt = isDefaultPrompt ? persona.values[language] : agent.prompt;
+
           return {
             ...agent,
             role: persona.name[language],
             specialization: persona.specialization[language],
-            prompt: isUnchanged ? persona.values[language] : agent.prompt,
+            prompt: newPrompt,
             icon: persona.icon,
           };
         }
         return agent;
-      })
-    );
-  }, [language, setAgents]);
+      });
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language]);
 
   const sortedAgents = useMemo(() => {
     return [...agents].sort((a, b) => {
