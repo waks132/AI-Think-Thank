@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Users, Loader2, Sparkles, FileText, BrainCircuit, ShieldCheck, MessageSquare, WandSparkles, Check, AlertTriangle, Route, Hammer, Lightbulb, CheckCircle } from 'lucide-react';
 import AgentCard from './agent-card';
 import type { Agent, AgentContribution, LogEntry, PromptVersion } from '@/lib/types';
@@ -58,9 +58,16 @@ const CritiqueSection = ({ icon: Icon, title, items, color }: { icon: React.Elem
 export default function MultiAgentDashboard() {
   const { language } = useLanguage();
   const [isHydrated, setIsHydrated] = useState(false);
-  const [agents, setAgents] = useLocalStorage<Agent[]>('agents', []);
   
-  // Default to all non-orchestrator agents selected
+  const [agents, setAgents] = useLocalStorage<Agent[]>('agents', personaList.map(p => ({
+    id: p.id,
+    role: p.name[language],
+    specialization: p.specialization[language],
+    prompt: p.values[language],
+    icon: p.icon,
+    lastPsiScore: null,
+  })));
+  
   const [selectedAgentIds, setSelectedAgentIds] = useLocalStorage<Set<string>>('selected-agent-ids', new Set(
       personaList.filter(p => !ORCHESTRATOR_IDS.includes(p.id)).map(p => p.id)
   ));
@@ -132,9 +139,11 @@ export default function MultiAgentDashboard() {
   };
 
   const handleStartMission = async () => {
-    const selectedAgents = agents.filter(agent => selectedAgentIds.has(agent.id) || ORCHESTRATOR_IDS.includes(agent.id));
+    const selectedAgents = agents.filter(agent => selectedAgentIds.has(agent.id));
+    const orchestrators = agents.filter(agent => ORCHESTRATOR_IDS.includes(agent.id));
+    const agentsForMission = [...selectedAgents, ...orchestrators];
 
-    if (selectedAgents.filter(a => !ORCHESTRATOR_IDS.includes(a.id)).length < 2) {
+    if (selectedAgents.length < 2) {
       toast({
         variant: 'destructive',
         title: t.dashboard.toast_select_title[language],
@@ -149,7 +158,7 @@ export default function MultiAgentDashboard() {
     setCritiqueResult(null);
     setContributionAnalysis(null);
 
-    const agentListString = selectedAgents
+    const agentListString = agentsForMission
       .map(agent => `- **Agent ID:** ${agent.id}\n  - **Agent Role:** ${agent.role}\n  - **Core Directive:** "${agent.prompt}"`)
       .join('\n\n');
 
@@ -181,13 +190,12 @@ export default function MultiAgentDashboard() {
           description: t.dashboard.toast_log_description[language],
         });
 
-        const expectedAgentIds = new Set(selectedAgents.map(a => a.id));
+        const expectedAgentIds = new Set(agentsForMission.map(a => a.id));
         const contributingAgentIds = new Set(result.agentContributions.map(log => log.agentId));
         
-        const missingAgentIds = [...expectedAgentIds].filter(id => !contributingAgentIds.has(id) && !ORCHESTRATOR_IDS.includes(id));
+        const missingAgentIds = [...expectedAgentIds].filter(id => !contributingAgentIds.has(id));
         const participatingAgentRoles = [...contributingAgentIds]
             .map(id => agents.find(a => a.id === id)?.role || id)
-            .filter(role => !ORCHESTRATOR_IDS.includes(agents.find(a => a.role === role)?.id || ''));
 
 
         const missingAgentRoles = missingAgentIds.map(id => agents.find(a => a.id === id)?.role || id);
@@ -353,55 +361,40 @@ export default function MultiAgentDashboard() {
 
 
   useEffect(() => {
-    // Hydration effect
-    const defaultAgents = personaList.map(persona => ({
-      id: persona.id,
-      role: persona.name[language],
-      specialization: persona.specialization[language],
-      prompt: persona.values[language],
-      icon: persona.icon,
-      lastPsiScore: null,
-    }));
-    
-    // On initial load, set the agents if they are not already set or if the language is different
-    // from the first agent's name language (heuristic for language change)
-    if (agents.length === 0 || agents[0].role !== personaList[0].name[language]) {
-      setAgents(defaultAgents);
-      setPromptHistories({}); // Clear lineage on reset/language change
-    }
+    // On language change, update the agent roles and specializations from the persona list
+    setAgents(prevAgents => 
+      prevAgents.map(agent => {
+        const persona = personaList.find(p => p.id === agent.id);
+        if (persona) {
+          return {
+            ...agent,
+            role: persona.name[language],
+            specialization: persona.specialization[language],
+            // Only reset prompt if it hasn't been changed by the user
+            prompt: agent.prompt === persona.values.fr || agent.prompt === persona.values.en 
+                    ? persona.values[language] 
+                    : agent.prompt,
+          };
+        }
+        return agent;
+      })
+    );
+  }, [language, setAgents]);
 
+  useEffect(() => {
     setIsHydrated(true);
-  }, [language, agents, setAgents, setPromptHistories]);
+  }, []);
 
 
   const sortedAgents = useMemo(() => {
-      if (!isHydrated) {
-        return personaList.map(p => ({
-          ...p,
-          role: p.name[language],
-          specialization: p.specialization[language],
-          prompt: p.values[language],
-          lastPsiScore: null,
-        }));
-      }
-      const agentMap = new Map(agents.map(a => [a.id, a]));
-      return personaList.map(p => {
-          const storedAgent = agentMap.get(p.id);
-          return {
-              ...p,
-              role: storedAgent?.role || p.name[language],
-              specialization: storedAgent?.specialization || p.specialization[language],
-              prompt: storedAgent?.prompt || p.values[language],
-              lastPsiScore: storedAgent?.lastPsiScore ?? null
-          };
-      }).sort((a, b) => {
-          const aIsOrchestrator = ORCHESTRATOR_IDS.includes(a.id);
-          const bIsOrchestrator = ORCHESTRATOR_IDS.includes(b.id);
-          if (aIsOrchestrator && !bIsOrchestrator) return -1;
-          if (!aIsOrchestrator && bIsOrchestrator) return 1;
-          return a.id.localeCompare(b.id);
-      });
-  }, [isHydrated, agents, language]);
+    return [...agents].sort((a, b) => {
+        const aIsOrchestrator = ORCHESTRATOR_IDS.includes(a.id);
+        const bIsOrchestrator = ORCHESTRATOR_IDS.includes(b.id);
+        if (aIsOrchestrator && !bIsOrchestrator) return -1;
+        if (!aIsOrchestrator && bIsOrchestrator) return 1;
+        return a.id.localeCompare(b.id);
+    });
+  }, [agents]);
   
   const finalSelectedAgentCount = useMemo(() => {
     if (!isHydrated) return 0;
@@ -635,34 +628,54 @@ export default function MultiAgentDashboard() {
                 </div>
 
                 <div className="lg:col-span-2 space-y-6">
-                    {collaborationResult.agentContributions && collaborationResult.agentContributions.length > 0 && (
-                      <Card className="h-full flex flex-col">
-                        <CardHeader>
-                           <CardTitle className="flex items-center gap-2 text-lg font-headline"><MessageSquare />{t.dashboard.key_contributions_title[language]}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex-grow">
-                          <div className="space-y-4 max-h-[700px] overflow-y-auto p-4 border rounded-lg bg-background/50 h-full">
-                              {collaborationResult.agentContributions.map((contrib) => {
-                                  const Icon = agentIconMap.get(contrib.agentId) || BrainCircuit;
-                                  return (
-                                      <div key={contrib.agentId} className="flex items-start gap-4 animate-fade-in">
-                                          <div className="p-2 bg-accent rounded-full">
-                                              <Icon className="h-5 w-5 text-accent-foreground" />
-                                          </div>
-                                          <div className="flex-1">
-                                              <div className="flex items-baseline justify-between">
-                                                  <p className="font-semibold text-primary">{contrib.agentRole}</p>
-                                                  <Badge variant="secondary" className="text-xs">{contrib.contributionType}</Badge>
-                                              </div>
-                                              <p className="text-sm text-foreground/90">{contrib.keyContribution}</p>
-                                          </div>
-                                      </div>
-                                  );
-                              })}
-                          </div>
+                  {collaborationResult.dynamicsAnalysis && (
+                    <Card>
+                        <CardHeader><CardTitle className="flex items-center gap-2 text-lg font-headline"><GitBranch />{t.simulator.influence_title[language]}</CardTitle></CardHeader>
+                        <CardContent>
+                            <div className="space-y-4">
+                                <p className="text-sm text-muted-foreground italic">{collaborationResult.dynamicsAnalysis.summary}</p>
+                                <Separator />
+                                <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                                    {collaborationResult.dynamicsAnalysis.matrix.map((link, index) => (
+                                        <div key={index} className="p-3 rounded-lg border bg-background/70">
+                                            <p className="font-semibold text-primary">{link.agents.join(' ↔ ')}</p>
+                                            <p className="text-sm mt-1"><span className="font-medium text-amber-500">{t.dashboard.tension_point[language]}:</span> {link.tension}</p>
+                                            <p className="text-sm mt-1"><span className="font-medium text-secondary">{t.dashboard.resolution[language]}:</span> {link.resolution}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </CardContent>
-                      </Card>
-                    )}
+                    </Card>
+                  )}
+                  {collaborationResult.agentContributions && collaborationResult.agentContributions.length > 0 && (
+                    <Card className="h-full flex flex-col">
+                      <CardHeader>
+                          <CardTitle className="flex items-center gap-2 text-lg font-headline"><MessageSquare />{t.dashboard.key_contributions_title[language]}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="flex-grow">
+                        <div className="space-y-4 max-h-[700px] overflow-y-auto p-4 border rounded-lg bg-background/50 h-full">
+                            {collaborationResult.agentContributions.map((contrib) => {
+                                const Icon = agentIconMap.get(contrib.agentId) || BrainCircuit;
+                                return (
+                                    <div key={contrib.agentId} className="flex items-start gap-4 animate-fade-in">
+                                        <div className="p-2 bg-accent rounded-full">
+                                            <Icon className="h-5 w-5 text-accent-foreground" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="flex items-baseline justify-between">
+                                                <p className="font-semibold text-primary">{contrib.agentRole}</p>
+                                                <Badge variant="secondary" className="text-xs">{contrib.contributionType}</Badge>
+                                            </div>
+                                            <p className="text-sm text-foreground/90">{contrib.keyContribution}</p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               </div>
             </div>

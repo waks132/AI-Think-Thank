@@ -172,7 +172,7 @@ export const t = {
     analysis_description: { fr: 'Vérification des agents qui ont réellement contribué à la mission.', en: 'Verification of which agents actually contributed to the mission.' },
     incomplete_contribution_title: { fr: 'Contribution Incomplète ({count} agents manquants)', en: 'Incomplete Contribution ({count} missing agents)' },
     incomplete_contribution_description_p1: { fr: 'Les agents suivants étaient sélectionnés mais n\'ont pas contribué à la discussion :', en: 'The following agents were selected but did not contribute to the discussion:' },
-    incomplete_contribution_description_p2: { fr: 'Cela confirme votre doute. Le modèle d\'IA a probablement ignoré une partie des participants en raison de la complexité de la tâche. Seuls les agents listés ci-dessous ont réellement participé.', en: 'This confirms your doubt. The AI model likely ignored some participants due to the complexity of the task. Only the agents listed below actually participated.' },
+    incomplete_contribution_description_p2: { fr: 'Le modèle d\'IA a probablement ignoré une partie des participants en raison de la complexité de la tâche. Seuls les agents listés ci-dessous ont réellement participé.', en: 'The AI model likely ignored some participants due to the complexity of the task. Only the agents listed below actually participated.' },
     full_contribution_title: { fr: 'Participation Complète', en: 'Full Participation' },
     full_contribution_description: { fr: 'Tous les {count} agents spécialisés sélectionnés ont contribué.', en: 'All {count} selected specialist agents have contributed.' },
     contributing_agents: { fr: 'Agents contributeurs ({count}) :', en: 'Contributing agents ({count}):' },
@@ -186,6 +186,13 @@ export const t = {
     reality_check_summary: { fr: 'Résumé de l\'Ancrage Réel (Reality-Check)', en: 'Reality Check Summary' },
     applied_methodologies: { fr: 'Méthodologies Appliquées', en: 'Applied Methodologies' },
     reports_consulted: { fr: 'Rapports Consultés', en: 'Reports Consulted' },
+    paradigm_protocol_vagues: {
+      title: { fr: 'Protocole Paradigm-Native - Vagues d\'Agents', en: 'Paradigm-Native Protocol - Agent Waves' },
+      vague1_title: { fr: 'Vague 1: Déconstruction Paradigmatique', en: 'Wave 1: Paradigmatic Deconstruction' },
+      vague1_agents: { fr: 'Agents Méta', en: 'Meta Agents' },
+    },
+    tension_point: {fr: 'Point de tension', en: 'Tension Point'},
+    resolution: {fr: 'Résolution', en: 'Resolution'},
   },
   agentCard: {
     psi_score: { fr: 'Score Psi', en: 'Psi Score' },
