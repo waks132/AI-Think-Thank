@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { Users, Loader2, Sparkles, FileText, BrainCircuit, ShieldCheck, MessageSquare, WandSparkles, Check, AlertTriangle, Hammer, Lightbulb, CheckCircle, GitBranch, Zap, Layers, Infinity, Bot } from 'lucide-react';
+import { Users, Loader2, Sparkles, FileText, BrainCircuit, ShieldCheck, MessageSquare, WandSparkles, Check, AlertTriangle, Hammer, Lightbulb, CheckCircle, GitBranch, Zap, Layers, Infinity, Bot, ChevronsRight, Atom, Compass, Shield } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import AgentCard from './agent-card';
 import type { Agent, AgentContribution, LogEntry, PromptVersion } from '@/lib/types';
@@ -30,7 +30,7 @@ const Diff = require('diff');
 
 const personaMap = new Map(personaList.map(p => [p.id, p]));
 
-const DiffView = ({ string1, string2 }: { string1: string; string2: string }) => {
+const DiffView = ({ string1, string2 }: { string1: string; string2:string }) => {
     const differences = Diff.diffWords(string1, string2);
     return (
         <pre className="whitespace-pre-wrap text-sm leading-relaxed">
@@ -223,34 +223,27 @@ export default function MultiAgentDashboard() {
           toast({
             title: t.dashboard.toast_suggest_title[language],
             description: (
-              <Card className="mt-4 max-w-lg border-primary bg-background/80">
+              <Card className="mt-4 max-w-lg border-primary bg-background/80 font-body">
                 <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
+                  <CardTitle className="text-base flex items-center gap-2 font-headline">
                     <Bot />
                     <span>{t.dashboard.toast_suggest_title[language]}: <Badge variant="secondary">{result.missionClassification}</Badge></span>
                   </CardTitle>
                   <CardDescription className="font-bold text-foreground">{result.recommendation}</CardDescription>
                 </CardHeader>
-                <CardContent className="text-xs space-y-4">
+                <CardContent className="text-sm space-y-4">
                   <p className="text-muted-foreground">{result.orchestrationRationale}</p>
                   
-                  {result.paradigmNativeProtocol && (
-                    <div className="border-t pt-3 space-y-2">
-                      <h4 className="font-semibold text-foreground">{t.dashboard.paradigm_protocol.title[language]}</h4>
-                      <ul className="space-y-1 text-muted-foreground list-disc list-inside pl-2">
-                        {result.paradigmNativeProtocol.mandatoryAgents.length > 0 && 
-                          <li><strong className="text-foreground">{t.dashboard.paradigm_protocol.agents[language]}:</strong> {result.paradigmNativeProtocol.mandatoryAgents.join(', ')}</li>
-                        }
-                        {result.paradigmNativeProtocol.innovations.length > 0 && 
-                          <li><strong className="text-foreground">{t.dashboard.paradigm_protocol.innovations[language]}:</strong> {result.paradigmNativeProtocol.innovations.join(', ')}</li>
-                        }
-                         {result.paradigmNativeProtocol.transcendedCategories.length > 0 && 
-                          <li><strong className="text-foreground">{t.dashboard.paradigm_protocol.categories[language]}:</strong> {result.paradigmNativeProtocol.transcendedCategories.join(', ')}</li>
-                        }
-                         {result.paradigmNativeProtocol.impossibleSolved.length > 0 && 
-                          <li><strong className="text-foreground">{t.dashboard.paradigm_protocol.solved[language]}:</strong> {result.paradigmNativeProtocol.impossibleSolved.join(', ')}</li>
-                        }
-                      </ul>
+                  {result.paradigmNativeProtocol?.waveOrchestration && result.paradigmNativeProtocol.waveOrchestration.length > 0 && (
+                    <div className="border-t border-primary/20 pt-3 mt-3 space-y-4">
+                      <h4 className="font-semibold text-foreground font-headline flex items-center gap-2"><ChevronsRight />{t.dashboard.paradigm_protocol.wave_orchestration_title[language]}</h4>
+                       {result.paradigmNativeProtocol.waveOrchestration.map((wave, index) => (
+                          <div key={index} className="pl-2">
+                              <p className="font-semibold text-primary">{wave.name}</p>
+                              <p className="text-xs text-muted-foreground italic mb-1">{wave.purpose}</p>
+                              <p className="text-xs text-foreground/90">{wave.agents.join(', ')}</p>
+                          </div>
+                       ))}
                     </div>
                   )}
 
@@ -268,7 +261,7 @@ export default function MultiAgentDashboard() {
             variant: "destructive",
             title: `${t.dashboard.toast_suggest_title[language]}: ${result.missionClassification}`,
             description: (
-              <div className="text-xs max-w-md">
+              <div className="text-sm max-w-md">
                 <p className="font-bold">{result.recommendation}</p>
                 <p className="mt-2 whitespace-pre-wrap">{result.orchestrationRationale}</p>
               </div>

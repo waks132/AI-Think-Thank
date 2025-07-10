@@ -152,6 +152,7 @@ export const t = {
       innovations: { fr: 'Innovations', en: 'Innovations' },
       categories: { fr: 'Catégories Transcendées', en: 'Transcended Categories' },
       solved: { fr: 'Contradictions Résolues', en: 'Contradictions Solved' },
+      wave_orchestration_title: { fr: 'Orchestration par Vagues', en: 'Wave Orchestration' }
     },
     refine_summary_button: { fr: 'Affiner le Résumé', en: 'Refine Summary' },
     refine_summary_loading: { fr: 'Raffinement...', en: 'Refining...' },

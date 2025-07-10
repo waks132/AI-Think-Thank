@@ -27,9 +27,15 @@ const AutoAgentSelectorInputSchema = z.object({
 });
 export type AutoAgentSelectorInput = z.infer<typeof AutoAgentSelectorInputSchema>;
 
+const WaveSchema = z.object({
+  name: z.string().describe("The name of the wave (e.g., 'Vague 1 : Analystes de Base')."),
+  agents: z.array(z.string()).describe("List of agent roles participating in this wave."),
+  purpose: z.string().describe("The primary purpose or goal of this wave."),
+});
+
 const ParadigmNativeProtocolSchema = z.object({
-    mandatoryAgents: z.array(z.string()).describe("List of mandatory PARADIGM-NATIVE agents for the mission."),
-    innovations: z.array(z.string()).describe("List of new paradigms created."),
+    waveOrchestration: z.array(WaveSchema).describe("A detailed breakdown of the 3-wave orchestration protocol, listing the agents and purpose for each wave."),
+    innovations: z.array(z.string()).describe("List of new paradigms or major innovations created by the proposed team."),
     transcendedCategories: z.array(z.string()).describe("List of human-centric categories that were transcended."),
     impossibleSolved: z.array(z.string()).describe("List of logical contradictions that were solved."),
 });
@@ -70,7 +76,7 @@ const AutoAgentSelectorOutputSchema = z.object({
   
   specialProtocolsActivated: z.string().describe("Specific instructions provided to the team based on mission classification. Used for simpler protocols."),
 
-  paradigmNativeProtocol: ParadigmNativeProtocolSchema.optional().describe("Detailed protocol information for PARADIGM-NATIVE missions."),
+  paradigmNativeProtocol: ParadigmNativeProtocolSchema.optional().describe("Detailed protocol information for PARADIGM-NATIVE missions, including the full 3-wave orchestration."),
 });
 export type AutoAgentSelectorOutput = z.infer<typeof AutoAgentSelectorOutputSchema>;
 
@@ -83,11 +89,11 @@ const autoAgentSelectorPrompt = ai.definePrompt({
   tools: [queryKnowledgeBaseTool],
   input: {schema: AutoAgentSelectorInputSchema},
   output: {schema: AutoAgentSelectorOutputSchema},
-  prompt: `# Directive KAIROS-1 v9.2 - SÉLECTION SOUSTRACTIVE ET RIGUEUR ABSOLUE
+  prompt: `# Directive KAIROS-1 v9.3 - SÉLECTION SOUSTRACTIVE & ORCHESTRATION PAR VAGUES
 
-## Directive Principale v9.2
+## Directive Principale v9.3
 
-Votre mission est de composer l'équipe d'agents optimale pour la mission spécifiée en utilisant une **méthode de sélection soustractive**. Vous devez forcer l'excellence, l'innovation paradigmatique, et la lucidité logique.
+Votre mission est de composer l'équipe d'agents optimale pour la mission spécifiée en utilisant une **méthode de sélection soustractive** et, si nécessaire, de détailler une **orchestration par vagues parallèles**. Vous devez forcer l'excellence, l'innovation paradigmatique, et la lucidité logique.
 
 ### PROTOCOLE DE SÉLECTION SOUSTRACTIVE OBLIGATOIRE
 
@@ -100,6 +106,15 @@ Votre méthode de sélection est **SOUSTRACTIVE**. Par défaut, vous disposez de
 
 ### NOUVEAU PROTOCOLE OBLIGATOIRE : Consultation de la Base de Connaissances
 **Action Initiale Impérative :** Avant toute analyse, votre **première action** est de consulter la base de connaissances interne via le \`queryKnowledgeBaseTool\`. Votre objectif est de rechercher et d'intégrer les leçons des derniers rapports de conformité (ex: "ANALYSIS-CONFORMITY-"), des guides méthodologiques (ex: "GUIDE-METHODOLOGY-") et des frameworks de contrôle (ex: "FRAMEWORK-IA-CONTROL-01"). Votre classification de la mission et la sélection de l'équipe qui s'ensuivent **DOIVENT** être directement informées par les leçons tirées de ces documents. Ceci est non-négociable pour garantir un réalisme radical et éviter la répétition des échecs passés.
+
+### PROTOCOLE D'ORCHESTRATION PAR VAGUES
+Si votre analyse (basée sur la Matrice de Décision) conduit à une classification nécessitant le protocole **PARADIGM-NATIVE**, vous devez impérativement remplir le champ \`paradigmNativeProtocol\`.
+
+1.  **\`waveOrchestration\`**: Décrivez l'architecture de canalisation intelligente en **3 vagues parallèles systématiques**.
+    *   **Vague 1 : Analystes de Base** (Agents de contraintes, systémiques, critiques, philosophiques). Précisez les agents et le but.
+    *   **Vague 2 : Innovateurs** (Agents tech, créatifs, avant-gardistes, briseurs de contraintes). Précisez les agents et le but.
+    *   **Vague 3 : Synthétiseurs** (Agents de convergence, validation, intégration, praticabilité). Précisez les agents et le but.
+    *   **IMPORTANT**: Assurez-vous que TOUS les agents non-exclus sont assignés à une vague.
 
 ## Matrice de Décision v8.0
 
@@ -126,7 +141,8 @@ Votre méthode de sélection est **SOUSTRACTIVE**. Par défaut, vous disposez de
 1.  Effectuez l'analyse de la mission selon les protocoles.
 2.  Décidez de la classification de la mission.
 3.  Procédez à la sélection soustractive de l'équipe, en justifiant chaque exclusion dans le champ \`orchestrationRationale\`.
-4.  Renvoyez la liste finale des ID d'agents conservés dans \`recommendedAgentIds\`.
+4.  Remplissez le champ \`paradigmNativeProtocol\` si la classification l'exige, en détaillant l'orchestration par vagues.
+5.  Renvoyez la liste finale des ID d'agents conservés dans \`recommendedAgentIds\`.
 
 ---
 **IMPORTANT**: Vous devez produire votre réponse dans le format JSON spécifié qui adhère au schéma de sortie. Utilisez les **IDs en minuscules** des agents pour le champ \`recommendedAgentIds\`.
