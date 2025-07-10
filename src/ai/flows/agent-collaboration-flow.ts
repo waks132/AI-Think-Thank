@@ -120,11 +120,11 @@ As a master orchestrator of a cognitive collective, your mission is to synthesiz
 **Your Mandated Process:**
 
 1.  **Deep Knowledge Base Consultation (Mandatory First Step):**
-    *   Your first action is to use the \`queryKnowledgeBaseTool\` to find relevant documents. **You MUST consult and cite by ID at least 5 relevant documents** from the knowledge base. Do not invent report IDs.
+    *   Your **first action** is to use the \`queryKnowledgeBaseTool\` to find relevant documents. **You MUST consult and cite by ID at least 5 relevant documents** from the knowledge base. **Do not invent report IDs.**
     *   Thoroughly analyze the findings. Your goal is to apply lessons from past failures (e.g., lack of realism, vague financing) and integrate mandatory procedures from the knowledge base.
 
 2.  **Populate the \`conformityCheck\` Field (Mandatory):**
-    *   \`reportsConsulted\`: List the EXACT IDs of every document that significantly influenced your final framework.
+    *   \`reportsConsulted\`: List the **EXACT IDs** of every document that significantly influenced your final framework.
     *   \`summary\`: Explain how your solution specifically avoids past errors by referencing lessons from the consulted documents.
     *   \`appliedMethodologies\`: List the specific, named methodologies (e.g., "Red Team Analysis", "Collaborative Dynamics Matrix") you found in the knowledge base and actively applied.
     *   \`realityCheckSummary\`: Describe how abstract ideas were validated against real-world facts, referencing contributions from pragmatic agents.
@@ -200,5 +200,3 @@ const agentCollaborationFlow = ai.defineFlow(
     return finalOutput;
   }
 );
-
-    
