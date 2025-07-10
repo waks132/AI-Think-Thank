@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Loader2, Save, WandSparkles } from 'lucide-react';
+import { Loader2, Save, WandSparkles, BrainCircuit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '../ui/checkbox';
 import { cn } from '@/lib/utils';
@@ -14,7 +14,7 @@ import { adaptivePromptRewriter, type AdaptivePromptRewriterOutput } from '@/ai/
 import { Badge } from '../ui/badge';
 import { useLanguage } from '@/context/language-context';
 import { t } from '@/lib/i18n';
-import { ORCHESTRATOR_IDS } from '@/lib/personas';
+import { ORCHESTRATOR_IDS, personaMap } from '@/lib/personas';
 
 interface AgentCardProps {
   agent: Agent;
@@ -26,12 +26,14 @@ interface AgentCardProps {
   orchestratorContext?: string;
 }
 
-export default function AgentCard({ agent, onPromptChange, isSelected, onSelectionChange, selectedModel, isOrchestrator, orchestratorContext }: AgentCardProps) {
+function AgentCard({ agent, onPromptChange, isSelected, onSelectionChange, selectedModel, isOrchestrator, orchestratorContext }: AgentCardProps) {
   const [currentPrompt, setCurrentPrompt] = useState(agent.prompt);
   const [isRefining, setIsRefining] = useState(false);
   const { toast } = useToast();
   const { language } = useLanguage();
-  const Icon = agent.icon;
+  
+  const persona = personaMap.get(agent.id);
+  const Icon = persona?.Icon || BrainCircuit;
 
   useEffect(() => {
     setCurrentPrompt(agent.prompt);
@@ -91,7 +93,7 @@ export default function AgentCard({ agent, onPromptChange, isSelected, onSelecti
       <CardHeader className="flex flex-row items-start gap-4">
         <div className="flex flex-col items-center gap-4">
           <div className="p-3 bg-accent rounded-lg">
-            <Icon className="h-6 w-6 text-accent-foreground" />
+            {Icon && <Icon className="h-6 w-6 text-accent-foreground" />}
           </div>
           {!isOrchestrator && (
             <Checkbox 
@@ -142,3 +144,5 @@ export default function AgentCard({ agent, onPromptChange, isSelected, onSelecti
     </Card>
   );
 }
+
+export default AgentCard;

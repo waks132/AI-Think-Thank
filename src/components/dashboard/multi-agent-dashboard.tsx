@@ -348,36 +348,44 @@ export default function MultiAgentDashboard() {
   };
 
   const syncAgents = useCallback(() => {
-      setAgents(currentAgents => {
-        const currentAgentMap = new Map(currentAgents.map(a => [a.id, a]));
-        
-        const updatedAgents: Agent[] = personaList.map(persona => {
-          const existingAgent = currentAgentMap.get(persona.id);
-          const isOrchestrator = ORCHESTRATOR_IDS.includes(persona.id);
-          
-          let prompt = persona.values[language]; // Default to the official prompt for the current language
-          if (existingAgent && !isOrchestrator) {
-            // For non-orchestrators, check if the existing prompt is a default one.
-            const isDefaultFR = existingAgent.prompt === persona.values.fr;
-            const isDefaultEN = existingAgent.prompt === persona.values.en;
-            // If it's not a default prompt, it's a user-customized prompt, so keep it.
-            if (!isDefaultFR && !isDefaultEN) {
-              prompt = existingAgent.prompt;
-            }
-          }
-
-          return {
-            id: persona.id,
-            role: persona.name[language],
-            specialization: persona.specialization[language],
-            prompt: prompt,
-            Icon: persona.Icon,
-            lastPsiScore: existingAgent?.lastPsiScore ?? null,
-          };
-        });
-        return updatedAgents;
+    setAgents(currentAgents => {
+      const currentAgentMap = new Map(currentAgents.map(a => [a.id, a]));
+      const personaIdSet = new Set(personaList.map(p => p.id));
+  
+      // Filter out deleted agents from localStorage
+      const relevantAgents = currentAgents.filter(a => personaIdSet.has(a.id));
+      const relevantAgentMap = new Map(relevantAgents.map(a => [a.id, a]));
+  
+      const updatedAgents: Agent[] = personaList.map(persona => {
+        const existingAgent = relevantAgentMap.get(persona.id);
+        const isOrchestrator = ORCHESTRATOR_IDS.includes(persona.id);
+  
+        let prompt;
+        // Orchestrators always get the latest prompt from the code
+        if (isOrchestrator) {
+          prompt = persona.values[language];
+        } else if (existingAgent) {
+          // Check if the existing prompt is a default one. If so, update it.
+          // If not, it's a user-customized prompt, so keep it.
+          const isDefaultFR = existingAgent.prompt === persona.values.fr;
+          const isDefaultEN = existingAgent.prompt === persona.values.en;
+          prompt = (isDefaultFR || isDefaultEN) ? persona.values[language] : existingAgent.prompt;
+        } else {
+          // New agent, use the default prompt for the current language
+          prompt = persona.values[language];
+        }
+  
+        return {
+          id: persona.id,
+          role: persona.name[language],
+          specialization: persona.specialization[language],
+          prompt: prompt,
+          lastPsiScore: existingAgent?.lastPsiScore ?? null,
+        };
       });
-    }, [setAgents, language]);
+      return updatedAgents;
+    });
+  }, [setAgents, language]);
 
   useEffect(() => {
     if (!isHydrated) {
@@ -464,9 +472,8 @@ export default function MultiAgentDashboard() {
           )}
 
           {isHydrated && collaborationResult && (
-            <div className="space-y-4 animate-fade-in pt-4">
-              <Separator />
-              <div className="flex items-center justify-between">
+             <div className="space-y-6 animate-fade-in pt-6 border-t">
+              <div className="flex flex-wrap items-center justify-between gap-4">
                 <h3 className="font-headline text-xl flex items-center gap-4">
                   {t.dashboard.outcome_title[language]}
                 </h3>
@@ -475,116 +482,26 @@ export default function MultiAgentDashboard() {
                 </Button>
               </div>
 
-              {contributionAnalysis && (
-                <Card className="animate-fade-in" style={{ animationDelay: '200ms' }}>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-lg">
-                            <Users className="h-5 w-5" />
-                            {t.dashboard.analysis_title[language]}
-                        </CardTitle>
-                        <CardDescription>
-                            {t.dashboard.analysis_description[language]}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {contributionAnalysis.missing.length > 0 ? (
-                            <Alert variant="destructive">
-                                <AlertTriangle className="h-4 w-4" />
-                                <AlertTitle>{t.dashboard.incomplete_contribution_title[language].replace('{count}', contributionAnalysis.missing.length.toString())}</AlertTitle>
-                                <AlertDescription>
-                                   <p className="mt-2">{t.dashboard.incomplete_contribution_description_p1[language]} <span className="font-semibold">{contributionAnalysis.missing.join(', ')}</span>.</p>
-                                   <p className="mt-2 text-xs">{t.dashboard.incomplete_contribution_description_p2[language]}</p>
-                                 </AlertDescription>
-                            </Alert>
-                        ) : (
-                            <div className="p-4 rounded-lg border bg-accent/50 flex items-center gap-3">
-                                <CheckCircle className="h-5 w-5 text-secondary" />
-                                <div>
-                                    <h4 className="font-semibold">{t.dashboard.full_contribution_title[language]}</h4>
-                                    <p className="text-sm text-muted-foreground">{t.dashboard.full_contribution_description[language].replace('{count}', contributionAnalysis.participating.length.toString())}</p>
-                                </div>
-                            </div>
-                        )}
-                         <div className="mt-4">
-                            <p className="font-semibold text-sm">{t.dashboard.contributing_agents[language].replace('{count}', contributionAnalysis.participating.length.toString())}</p>
-                            <p className="text-sm text-muted-foreground">{contributionAnalysis.participating.length > 0 ? contributionAnalysis.participating.join(', ') : 'Aucun'}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-              )}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-              {collaborationResult?.conformityCheck && (
-                <Card className="animate-fade-in mt-6" style={{ animationDelay: '300ms' }}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <ShieldCheck className="h-5 w-5" />
-                      {t.dashboard.conformity_check_title[language]}
-                    </CardTitle>
-                    <CardDescription>
-                      {t.dashboard.conformity_check_description[language]}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      {collaborationResult.conformityCheck.isCompliant ? (
-                        <CheckCircle className="h-5 w-5 text-secondary" />
-                      ) : (
-                        <AlertTriangle className="h-5 w-5 text-destructive" />
-                      )}
-                      <span className="font-semibold">
-                        {collaborationResult.conformityCheck.isCompliant
-                          ? t.dashboard.conformity_compliant[language]
-                          : t.dashboard.conformity_non_compliant[language]}
-                      </span>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold mb-1">{t.dashboard.conformity_summary[language]}</h4>
-                      <p className="text-muted-foreground">{collaborationResult.conformityCheck.summary}</p>
-                    </div>
-                    {collaborationResult.conformityCheck.realityCheckSummary && (
-                      <div>
-                        <h4 className="font-semibold mb-1">{t.dashboard.reality_check_summary[language]}</h4>
-                        <p className="text-muted-foreground">{collaborationResult.conformityCheck.realityCheckSummary}</p>
+                {/* Main Content Column */}
+                <div className="lg:col-span-2 space-y-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><FileText />{t.dashboard.summary_title[language]}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="whitespace-pre-wrap">{collaborationResult.executiveSummary}</p>
+                      </CardContent>
+                    </Card>
+
+                    {isRefining && (
+                      <div className="flex items-center justify-center text-muted-foreground p-8">
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" /> {t.dashboard.refine_summary_loading[language]}
                       </div>
                     )}
-                     <div>
-                      <h4 className="font-semibold mb-1">{t.dashboard.applied_methodologies[language]}</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {collaborationResult.conformityCheck.appliedMethodologies.map(method => (
-                          <Badge variant="outline" key={method}>{method}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold mb-1">{t.dashboard.reports_consulted[language]}</h4>
-                       <div className="flex flex-wrap gap-2">
-                        {collaborationResult.conformityCheck.reportsConsulted.map(reportId => (
-                          <Badge variant="outline" key={reportId} className="font-mono text-xs">{reportId}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
 
-               <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                <div className="lg:col-span-3 space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2"><FileText />{t.dashboard.summary_title[language]}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="whitespace-pre-wrap">{collaborationResult.executiveSummary}</p>
-                    </CardContent>
-                  </Card>
-                   
-                   {isRefining && 
-                    <div className="flex items-center justify-center text-muted-foreground p-8">
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" /> {t.dashboard.refine_summary_loading[language]}
-                    </div>
-                   }
-
-                   {refinedSummary && critiqueResult && (
+                    {refinedSummary && critiqueResult && (
                       <div className="border-t-2 border-dashed border-primary/50 pt-6 mt-6 space-y-6 animate-fade-in">
                           <h4 className="font-headline text-lg">{t.dashboard.refinement_dialog_title[language]}</h4>
                           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -637,55 +554,112 @@ export default function MultiAgentDashboard() {
                   </Card>
                 </div>
 
-                <div className="lg:col-span-2 space-y-6">
-                  {collaborationResult.dynamicsAnalysis && (
-                    <Card>
-                        <CardHeader><CardTitle className="flex items-center gap-2 text-lg font-headline"><GitBranch />{t.simulator.influence_title[language]}</CardTitle></CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
-                                <p className="text-sm text-muted-foreground italic">{collaborationResult.dynamicsAnalysis.summary}</p>
-                                <Separator />
-                                <div className="space-y-4 max-h-[600px] overflow-y-auto">
-                                    {collaborationResult.dynamicsAnalysis.matrix.map((link, index) => (
-                                        <div key={index} className="p-3 rounded-lg border bg-background/70">
-                                            <p className="font-semibold text-primary">{link.agents.join(' ↔ ')}</p>
-                                            <p className="text-sm mt-1"><span className="font-medium text-amber-500">{t.dashboard.tension_point[language]}:</span> {link.tension}</p>
-                                            <p className="text-sm mt-1"><span className="font-medium text-secondary">{t.dashboard.resolution[language]}:</span> {link.resolution}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                {/* Sidebar Column */}
+                <div className="lg:col-span-1 space-y-6">
+                   {contributionAnalysis && (
+                      <Card className="animate-fade-in">
+                          <CardHeader>
+                              <CardTitle className="flex items-center gap-2 text-lg">
+                                  <Users className="h-5 w-5" />
+                                  {t.dashboard.analysis_title[language]}
+                              </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                              {contributionAnalysis.missing.length > 0 ? (
+                                  <Alert variant="destructive">
+                                      <AlertTriangle className="h-4 w-4" />
+                                      <AlertTitle>{t.dashboard.incomplete_contribution_title[language].replace('{count}', contributionAnalysis.missing.length.toString())}</AlertTitle>
+                                      <AlertDescription>
+                                        <p className="mt-2 text-xs">{t.dashboard.incomplete_contribution_description_p1[language]} <span className="font-semibold">{contributionAnalysis.missing.join(', ')}</span>.</p>
+                                      </AlertDescription>
+                                  </Alert>
+                              ) : (
+                                  <div className="p-4 rounded-lg border bg-accent/50 flex items-center gap-3">
+                                      <CheckCircle className="h-5 w-5 text-secondary" />
+                                      <div>
+                                          <h4 className="font-semibold">{t.dashboard.full_contribution_title[language]}</h4>
+                                          <p className="text-sm text-muted-foreground">{t.dashboard.full_contribution_description[language].replace('{count}', contributionAnalysis.participating.length.toString())}</p>
+                                      </div>
+                                  </div>
+                              )}
+                          </CardContent>
+                      </Card>
+                    )}
+
+                    {collaborationResult?.conformityCheck && (
+                      <Card className="animate-fade-in">
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2 text-lg">
+                            <ShieldCheck className="h-5 w-5" />
+                            {t.dashboard.conformity_check_title[language]}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4 text-sm">
+                          <div className="flex items-center gap-2">
+                            {collaborationResult.conformityCheck.isCompliant ? (
+                              <CheckCircle className="h-5 w-5 text-secondary" />
+                            ) : (
+                              <AlertTriangle className="h-5 w-5 text-destructive" />
+                            )}
+                            <span className="font-semibold">
+                              {collaborationResult.conformityCheck.isCompliant
+                                ? t.dashboard.conformity_compliant[language]
+                                : t.dashboard.conformity_non_compliant[language]}
+                            </span>
+                          </div>
+                          <p className="text-muted-foreground text-xs">{collaborationResult.conformityCheck.summary}</p>
                         </CardContent>
-                    </Card>
-                  )}
-                  {collaborationResult.agentContributions && collaborationResult.agentContributions.length > 0 && (
-                    <Card className="h-full flex flex-col">
-                      <CardHeader>
-                          <CardTitle className="flex items-center gap-2 text-lg font-headline"><MessageSquare />{t.dashboard.key_contributions_title[language]}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="flex-grow">
-                        <div className="space-y-4 max-h-[700px] overflow-y-auto p-4 border rounded-lg bg-background/50 h-full">
-                            {collaborationResult.agentContributions.map((contrib, index) => {
-                                const Icon = personaMap.get(contrib.agentId)?.Icon || BrainCircuit;
-                                return (
-                                    <div key={contrib.agentId + '-' + index} className="flex items-start gap-4 animate-fade-in">
-                                        <div className="p-2 bg-accent rounded-full">
-                                            <Icon className="h-5 w-5 text-accent-foreground" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="flex items-baseline justify-between">
-                                                <p className="font-semibold text-primary">{contrib.agentRole}</p>
-                                                <Badge variant="secondary" className="text-xs">{contrib.contributionType}</Badge>
-                                            </div>
-                                            <p className="text-sm text-foreground/90">{contrib.keyContribution}</p>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
+                      </Card>
+                    )}
+
+                    {collaborationResult.dynamicsAnalysis && (
+                      <Card>
+                          <CardHeader><CardTitle className="flex items-center gap-2 text-lg font-headline"><GitBranch />{t.simulator.influence_title[language]}</CardTitle></CardHeader>
+                          <CardContent>
+                              <div className="space-y-4">
+                                  <p className="text-sm text-muted-foreground italic">{collaborationResult.dynamicsAnalysis.summary}</p>
+                                  <Separator />
+                                  <div className="space-y-4 max-h-[400px] overflow-y-auto">
+                                      {collaborationResult.dynamicsAnalysis.matrix.map((link, index) => (
+                                          <div key={index} className="p-3 rounded-lg border bg-background/70">
+                                              <p className="font-semibold text-primary">{link.agents.join(' ↔ ')}</p>
+                                              <p className="text-xs mt-1"><span className="font-medium text-amber-500">{t.dashboard.tension_point[language]}:</span> {link.tension}</p>
+                                              <p className="text-xs mt-1"><span className="font-medium text-secondary">{t.dashboard.resolution[language]}:</span> {link.resolution}</p>
+                                          </div>
+                                      ))}
+                                  </div>
+                              </div>
+                          </CardContent>
+                      </Card>
+                    )}
+                    {collaborationResult.agentContributions && collaborationResult.agentContributions.length > 0 && (
+                      <Card className="h-full flex flex-col">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-lg font-headline"><MessageSquare />{t.dashboard.key_contributions_title[language]}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex-grow">
+                          <div className="space-y-4 max-h-[500px] overflow-y-auto p-2 border rounded-lg bg-background/50 h-full">
+                              {collaborationResult.agentContributions.map((contrib, index) => {
+                                  const Icon = personaMap.get(contrib.agentId)?.Icon || BrainCircuit;
+                                  return (
+                                      <div key={contrib.agentId + '-' + index} className="flex items-start gap-4 animate-fade-in p-2">
+                                          <div className="p-2 bg-accent rounded-full">
+                                              <Icon className="h-5 w-5 text-accent-foreground" />
+                                          </div>
+                                          <div className="flex-1">
+                                              <div className="flex items-baseline justify-between">
+                                                  <p className="font-semibold text-primary">{contrib.agentRole}</p>
+                                                  <Badge variant="secondary" className="text-xs">{contrib.contributionType}</Badge>
+                                              </div>
+                                              <p className="text-sm text-foreground/90">{contrib.keyContribution}</p>
+                                          </div>
+                                      </div>
+                                  );
+                              })}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
                 </div>
               </div>
             </div>

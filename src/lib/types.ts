@@ -1,4 +1,3 @@
-import type { LucideIcon } from 'lucide-react';
 import type { AgentContribution } from './ai/flows/agent-collaboration-flow';
 
 export interface Agent {
@@ -6,7 +5,6 @@ export interface Agent {
   role: string;
   specialization: string;
   prompt: string;
-  icon: LucideIcon;
   lastPsiScore?: number | null;
 }
 
