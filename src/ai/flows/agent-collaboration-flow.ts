@@ -29,9 +29,8 @@ export type AgentContribution = z.infer<typeof AgentContributionSchema>;
 
 const ConformityCheckSchema = z.object({
   isCompliant: z.boolean().describe("Whether the executive summary is compliant with the framework's requirements based on the knowledge base."),
-  reportsConsulted: z.array(z.string()).describe("An array of document IDs from the knowledge base that were consulted for this check. Must contain at least 5 relevant reports."),
+  reportsConsulted: z.array(z.string()).describe("An array of document IDs from the knowledge base that were consulted for this check. Must contain at least 7 relevant reports."),
   summary: z.string().describe("A brief summary explaining how the executive summary avoids past mistakes and respects the control framework's rules found in the consulted documents."),
-  appliedMethodologies: z.array(z.string()).describe("A list of specific methodologies or principles from the knowledge base that were actively applied in the solution design, proving a deep understanding of the content."),
   realityCheckSummary: z.string().describe("A summary of how the solution was grounded in reality by challenging abstract proposals with factual data (e.g., from REALITY-ANCHOR). This confirms that creative ideas were validated against real-world constraints.").optional(),
 });
 
@@ -119,14 +118,14 @@ As a master orchestrator of a cognitive collective, your mission is to synthesiz
 
 **Your Mandated Process:**
 
-1.  **Deep Knowledge Base Consultation (Mandatory):**
-    *   Begin by performing several targeted queries using the \`queryKnowledgeBaseTool\` to find the most relevant conformity reports, methodology guides, and post-mortems for the current mission. **You must consult and cite by ID at least 5 relevant documents.**
-    *   Thoroughly analyze the findings. Your goal is to apply lessons from past failures (e.g., lack of realism, vague financing) and integrate mandatory procedures from the knowledge base.
+1.  **Deep Knowledge Base Consultation (OBLIGATOIRE):**
+    *   Your first action is to conduct a broad query of the knowledge base to get a sense of ALL available documents.
+    *   Then, perform several targeted queries using the \`queryKnowledgeBaseTool\` to find the most relevant conformity reports, methodology guides, and post-mortems for the current mission. **You must consult and cite by ID at least 7 relevant documents.**
+    *   Thoroughly analyze the findings. Your goal is to apply lessons from past failures and integrate mandatory procedures from the knowledge base.
 
 2.  **Populate the \`conformityCheck\` Field:**
     *   \`reportsConsulted\`: List the IDs of every document that significantly influenced your final framework.
-    *   \`summary\`: Explain how your solution specifically avoids past errors by referencing lessons from the consulted documents. For example: "The solution avoids the 'Democratic Stagnation' error highlighted in CONFORMITY_REPORT_DEMOCRATIC_STAGNATION by proposing the Temporal Council and Chronobank."
-    *   \`appliedMethodologies\`: List the specific methodologies from the knowledge base that you actively applied.
+    *   \`summary\`: Explain concisely how your solution specifically avoids past errors by referencing lessons from the consulted documents. For example: "This solution avoids past errors by ensuring realistic financing through a progressive tax (unlike the vague funding in past plans). It mitigates inequality risks by integrating stakeholder analyses and redistributing resources, addressing failures highlighted in conformity_report_social_unrest_2042. Continuous evaluation mechanisms are included to prevent the kind of catastrophic scenarios seen previously."
     *   \`realityCheckSummary\`: Describe how abstract ideas were validated against real-world facts, referencing contributions from pragmatic agents.
 
 3.  **Synthesize the \`executiveSummary\`:** Based on the agent contributions AND your conformity analysis, write a realistic and actionable executive summary.
