@@ -5,7 +5,7 @@ import {
   Compass, Shield, Brain, Layers, BookOpen, Search, Drama, Milestone,
   Zap, MessageSquare, Palette, Recycle, Code, Mic, Anchor, GitBranch,
   Hourglass, Network, Flame, Hammer, Atom, Infinity, Blocks, UserX, Sigma,
-  Landmark, Handshake, Timer, Biohazard, Target, Gauge, Bot, WandSparkles
+  Landmark, Handshake, Timer, Biohazard, Target, Gauge, Bot
 } from 'lucide-react';
 
 export interface Persona {
