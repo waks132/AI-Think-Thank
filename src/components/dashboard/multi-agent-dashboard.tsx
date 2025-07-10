@@ -656,7 +656,7 @@ export default function MultiAgentDashboard() {
                             {collaborationResult.agentContributions.map((contrib, index) => {
                                 const Icon = personaMap.get(contrib.agentId)?.icon || BrainCircuit;
                                 return (
-                                    <div key={`${contrib.agentId}-${index}`} className="flex items-start gap-4 animate-fade-in">
+                                    <div key={contrib.agentId + '-' + index} className="flex items-start gap-4 animate-fade-in">
                                         <div className="p-2 bg-accent rounded-full">
                                             <Icon className="h-5 w-5 text-accent-foreground" />
                                         </div>
