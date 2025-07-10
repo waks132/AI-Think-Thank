@@ -29,7 +29,7 @@ export type AgentContribution = z.infer<typeof AgentContributionSchema>;
 
 const ConformityCheckSchema = z.object({
   isCompliant: z.boolean().describe("Whether the executive summary is compliant with the framework's requirements based on the knowledge base."),
-  reportsConsulted: z.array(z.string()).describe("An array of document IDs from the knowledge base that were consulted for this check. Must contain at least 5 relevant reports."),
+  reportsConsulted: z.array(z.string()).describe("An array of document IDs from the knowledge base that were consulted for this check. Must contain at least 10 relevant reports."),
   summary: z.string().describe("A brief summary explaining how the executive summary avoids past mistakes and respects the control framework's rules found in the consulted documents."),
   appliedMethodologies: z.array(z.string()).describe("A list of specific methodologies or principles from the knowledge base that were actively applied in the solution design, proving a deep understanding of the content."),
   realityCheckSummary: z.string().describe("A summary of how the solution was grounded in reality by challenging abstract proposals with factual data (e.g., from REALITY-ANCHOR). This confirms that creative ideas were validated against real-world constraints.").optional(),
@@ -119,7 +119,7 @@ const agentCollaborationSynthesisPrompt = ai.definePrompt({
 **Your Mandated Process (Non-Negotiable):**
 
 1.  **Deep Knowledge Base Consultation (Mandatory First Step):**
-    *   Your **first action** is to use the \`queryKnowledgeBaseTool\` to find relevant documents. **You MUST consult and cite by ID at least 5 relevant documents** from the knowledge base (e.g., 'ANALYSIS-REALITY-GAP-01', 'FRAMEWORK-IA-CONTROL-01'). **Do not invent report IDs.**
+    *   Your **first action** is to use the \`queryKnowledgeBaseTool\` to find relevant documents. **You MUST consult and cite by ID at least 10 relevant documents** from the knowledge base (e.g., 'ANALYSIS-REALITY-GAP-01', 'FRAMEWORK-IA-CONTROL-01'). **Do not invent report IDs.**
     *   Thoroughly analyze the findings. Your goal is to apply lessons from past failures (e.g., lack of realism, vague financing) and integrate mandatory procedures from the knowledge base.
 
 2.  **Populate the \`conformityCheck\` Field (Mandatory):**
@@ -130,7 +130,7 @@ const agentCollaborationSynthesisPrompt = ai.definePrompt({
 
 3.  **Synthesize the \`executiveSummary\`:** Based on the agent contributions AND your rigorous conformity analysis, write a realistic and actionable executive summary.
 
-4.  **Analyze Collaborative Dynamics (Optional but Recommended):** Reflect on the collaboration process. If you identified productive tensions and resolutions, populate the \`dynamicsAnalysis\` field.
+4.  **Analyze Collaborative Dynamics (Optional but Recommended):** Reflect on the collaboration process. If you identified productive tensions and their resolutions, populate the \`dynamicsAnalysis\` field.
 
 5.  **Detail Your \`reasoning\`:** Explain how you constructed the final summary by integrating the contributions from **each agent**. Explicitly mention how the conformity check and dynamics analysis shaped the outcome.
 
