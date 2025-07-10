@@ -16,6 +16,8 @@ export interface Persona {
   icon: LucideIcon;
 }
 
+export const ORCHESTRATOR_IDS = ['kairos-1', 'disruptor'];
+
 export const personas: Record<string, Persona> = {
   'aeon': { id: 'aeon', name: { fr: 'AEON', en: 'AEON' }, specialization: { fr: 'Étend la pensée collective vers le sens', en: 'Extends collective thinking towards meaning' }, values: { fr: 'Votre rôle est d\'étendre la pensée collective vers le sens et la philosophie.', en: 'Your role is to extend collective thinking towards meaning and philosophy.' }, icon: Brain },
   'anthropos': {
@@ -304,7 +306,7 @@ Phase 1: Briefing Stratégique
 ├── Allocation ressources cognitives
 └── Métriques de succès
 
-Phase 2: Coordination Exploration
+Phase 2: Exploration Coordination
 ├── Mission PoliSynth (analyse systémique)
 ├── Missions agents spécialisés selon besoins
 ├── Validation croisée des hypothèses

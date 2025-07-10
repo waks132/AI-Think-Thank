@@ -20,14 +20,13 @@ import { availableModels } from '@/lib/models';
 import { Progress } from '../ui/progress';
 import { useLanguage } from '@/context/language-context';
 import { t } from '@/lib/i18n';
-import { personaList } from '@/lib/personas';
+import { personaList, ORCHESTRATOR_IDS } from '@/lib/personas';
 import { Skeleton } from '../ui/skeleton';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 const Diff = require('diff');
-
-const ORCHESTRATOR_IDS = ['kairos-1', 'disruptor'];
 
 const DiffView = ({ string1, string2 }: { string1: string; string2: string }) => {
     const differences = Diff.diffWords(string1, string2);
@@ -380,14 +379,36 @@ export default function MultiAgentDashboard() {
 
 
   const sortedAgents = useMemo(() => {
-      return [...agents].sort((a, b) => {
+      if (!isHydrated) {
+        return personaList.map(p => ({
+          id: p.id,
+          role: p.name[language],
+          specialization: p.specialization[language],
+          prompt: p.values[language],
+          icon: p.icon,
+          lastPsiScore: null,
+        }));
+      }
+      const agentMap = new Map(agents.map(a => [a.id, a]));
+      return personaList.map(p => {
+          const storedAgent = agentMap.get(p.id);
+          const Icon = agentIconMap.get(p.id);
+          return {
+              ...p,
+              icon: Icon,
+              role: storedAgent?.role || p.name[language],
+              specialization: storedAgent?.specialization || p.specialization[language],
+              prompt: storedAgent?.prompt || p.values[language],
+              lastPsiScore: storedAgent?.lastPsiScore ?? null
+          };
+      }).sort((a, b) => {
           const aIsOrchestrator = ORCHESTRATOR_IDS.includes(a.id);
           const bIsOrchestrator = ORCHESTRATOR_IDS.includes(b.id);
           if (aIsOrchestrator && !bIsOrchestrator) return -1;
           if (!aIsOrchestrator && bIsOrchestrator) return 1;
           return a.id.localeCompare(b.id);
       });
-  }, [agents]);
+  }, [isHydrated, agents, language, agentIconMap]);
   
   const finalSelectedAgentCount = useMemo(() => {
     if (!isHydrated) return 0;

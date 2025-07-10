@@ -14,6 +14,7 @@ import { adaptivePromptRewriter, type AdaptivePromptRewriterOutput } from '@/ai/
 import { Badge } from '../ui/badge';
 import { useLanguage } from '@/context/language-context';
 import { t } from '@/lib/i18n';
+import { ORCHESTRATOR_IDS } from '@/lib/personas';
 
 interface AgentCardProps {
   agent: Agent;
