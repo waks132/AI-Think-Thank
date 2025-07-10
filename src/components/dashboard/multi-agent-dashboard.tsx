@@ -229,7 +229,7 @@ export default function MultiAgentDashboard() {
                 <p className="mt-2 whitespace-pre-wrap">{result.orchestrationRationale}</p>
                 {result.paradigmNativeProtocol && (
                   <div className="mt-2 border-t pt-2 border-primary/20">
-                    <p className="font-semibold">{result.paradigmNativeProtocol.mandatoryAgents.length > 0 ? t.dashboard.paradigm_protocol_vagues[language].title : ''}</p>
+                    <p className="font-semibold">{result.paradigmNativeProtocol.mandatoryAgents.length > 0 ? t.dashboard.paradigm_protocol_vagues.title[language] : ''}</p>
                     {result.paradigmNativeProtocol.mandatoryAgents.length > 0 && 
                       <div>
                         <p className="font-medium">{t.dashboard.paradigm_protocol_vagues.vague1_title[language]}</p>
