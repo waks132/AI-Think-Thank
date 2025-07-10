@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Users, Loader2, Sparkles, FileText, BrainCircuit, ShieldCheck, MessageSquare, WandSparkles, Check, AlertTriangle, Hammer, Lightbulb, CheckCircle, GitBranch } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import AgentCard from './agent-card';
 import type { Agent, AgentContribution, LogEntry, PromptVersion } from '@/lib/types';
 import useLocalStorage from '@/hooks/use-local-storage';
@@ -25,7 +26,6 @@ import { Skeleton } from '../ui/skeleton';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
-import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 const Diff = require('diff');
 
 const personaMap = new Map(personaList.map(p => [p.id, p]));
@@ -60,19 +60,11 @@ const CritiqueSection = ({ icon: Icon, title, items, color }: { icon: React.Elem
 export default function MultiAgentDashboard() {
   const { language } = useLanguage();
   
-  const [agents, setAgents] = useLocalStorage<Agent[]>('agents', 
-    personaList.map(p => ({
-      id: p.id,
-      role: p.name[language] || p.name['fr'],
-      specialization: p.specialization[language] || p.specialization['fr'],
-      prompt: p.values[language] || p.values['fr'],
-      icon: p.icon,
-      lastPsiScore: null,
-    }))
-  );
+  const [agents, setAgents] = useLocalStorage<Agent[]>('agents', []);
   
-  const [selectedAgentIds, setSelectedAgentIds] = useLocalStorage<string[]>('selected-agent-ids', 
-    personaList.filter(p => !ORCHESTRATOR_IDS.includes(p.id)).map(p => p.id)
+  const [selectedAgentIds, setSelectedAgentIds] = useLocalStorage<Set<string>>(
+    'selected-agent-ids', 
+    new Set(personaList.filter(p => !ORCHESTRATOR_IDS.includes(p.id)).map(p => p.id))
   );
 
   const [logs, setLogs] = useLocalStorage<LogEntry[]>('cognitive-logs', []);
@@ -133,16 +125,14 @@ export default function MultiAgentDashboard() {
       } else {
         newSet.delete(agentId);
       }
-      return Array.from(newSet);
+      return newSet;
     });
   };
 
   const handleStartMission = async () => {
-    const selectedAgents = agents.filter(agent => new Set(selectedAgentIds).has(agent.id));
-    const orchestrators = agents.filter(agent => ORCHESTRATOR_IDS.includes(agent.id));
-    const agentsForMission = [...selectedAgents, ...orchestrators];
-
-    if (selectedAgents.length < 2) {
+    const agentsForMission = agents.filter(agent => selectedAgentIds.has(agent.id) || ORCHESTRATOR_IDS.includes(agent.id));
+    
+    if (agentsForMission.filter(a => !ORCHESTRATOR_IDS.includes(a.id)).length < 2) {
       toast({
         variant: 'destructive',
         title: t.dashboard.toast_select_title[language],
@@ -150,17 +140,17 @@ export default function MultiAgentDashboard() {
       });
       return;
     }
-
+  
     setIsCollaborating(true);
     setCollaborationResult(null);
     setRefinedSummary(null);
     setCritiqueResult(null);
     setContributionAnalysis(null);
-
+  
     const agentListString = agentsForMission
       .map(agent => `- **Agent ID:** ${agent.id}\n  - **Agent Role:** ${agent.role}\n  - **Core Directive:** "${agent.prompt}"`)
       .join('\n\n');
-
+  
     try {
       const result = await runAgentCollaboration({
         mission,
@@ -188,23 +178,23 @@ export default function MultiAgentDashboard() {
           title: t.dashboard.toast_log_title[language],
           description: t.dashboard.toast_log_description[language],
         });
-
+  
         const expectedAgentIds = new Set(agentsForMission.map(a => a.id));
         const contributingAgentIds = new Set(result.agentContributions.map(log => log.agentId));
         
         const missingAgentIds = [...expectedAgentIds].filter(id => !contributingAgentIds.has(id));
         const participatingAgentRoles = [...contributingAgentIds]
             .map(id => agents.find(a => a.id === id)?.role || id)
-
-
+  
+  
         const missingAgentRoles = missingAgentIds.map(id => agents.find(a => a.id === id)?.role || id);
-
+  
         setContributionAnalysis({
             participating: participatingAgentRoles,
             missing: missingAgentRoles,
         });
       }
-
+  
     } catch (error) {
       console.error("Error during agent collaboration:", error);
       toast({
@@ -229,7 +219,7 @@ export default function MultiAgentDashboard() {
 
       if (result && result.recommendedAgentIds) {
         if (result.recommendedAgentIds.length > 0) {
-          setSelectedAgentIds(result.recommendedAgentIds);
+          setSelectedAgentIds(new Set(result.recommendedAgentIds));
           
           toast({
             title: `${t.dashboard.toast_suggest_title[language]}: ${result.missionClassification}`,
@@ -253,7 +243,7 @@ export default function MultiAgentDashboard() {
             duration: 15000,
           });
         } else {
-           setSelectedAgentIds([]);
+           setSelectedAgentIds(new Set());
            toast({
             variant: "destructive",
             title: `${t.dashboard.toast_suggest_title[language]}: ${result.missionClassification}`,
@@ -296,7 +286,7 @@ export default function MultiAgentDashboard() {
           });
           setCritiqueResult(critique);
           
-          const selectedAgents = agents.filter(agent => new Set(selectedAgentIds).has(agent.id) || ORCHESTRATOR_IDS.includes(agent.id));
+          const selectedAgents = agents.filter(agent => selectedAgentIds.has(agent.id) || ORCHESTRATOR_IDS.includes(agent.id));
           const agentContextString = selectedAgents
             .map(agent => `- **Agent ID:** ${agent.id}\n  - **Agent Role:** ${agent.role}\n  - **Core Directive:** "${agent.prompt}"`)
             .join('\n\n');
@@ -359,6 +349,22 @@ export default function MultiAgentDashboard() {
 
 
   useEffect(() => {
+    // Only run this on the client, after hydration
+    if (!isHydrated) {
+        setAgents(personaList.map(p => ({
+            id: p.id,
+            role: p.name[language] || p.name['fr'],
+            specialization: p.specialization[language] || p.specialization['fr'],
+            prompt: p.values[language] || p.values['fr'],
+            icon: p.icon,
+            lastPsiScore: null,
+        })));
+        setIsHydrated(true);
+    }
+  }, [isHydrated, language, setAgents]);
+
+
+  useEffect(() => {
     // On language change, update the agent roles and specializations from the persona list
     setAgents(prevAgents => 
       prevAgents.map(agent => {
@@ -377,10 +383,6 @@ export default function MultiAgentDashboard() {
       })
     );
   }, [language, setAgents]);
-
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
 
   const sortedAgents = useMemo(() => {
     return [...agents].sort((a, b) => {
@@ -690,7 +692,7 @@ export default function MultiAgentDashboard() {
                 key={agent.id} 
                 agent={agent} 
                 onPromptChange={handlePromptChange} 
-                isSelected={isOrchestrator || new Set(selectedAgentIds).has(agent.id)}
+                isSelected={isOrchestrator || selectedAgentIds.has(agent.id)}
                 onSelectionChange={handleAgentSelectionChange}
                 selectedModel={selectedModel}
                 isOrchestrator={isOrchestrator}
@@ -726,3 +728,5 @@ export default function MultiAgentDashboard() {
     </div>
   );
 }
+
+    

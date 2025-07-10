@@ -119,22 +119,21 @@ As a master orchestrator of a cognitive collective, your mission is to synthesiz
 
 **Your Mandated Process:**
 
-1.  **Deep Knowledge Base Consultation:** This is your first and most critical step.
-    *   Begin by querying the \`queryKnowledgeBaseTool\` with a broad term like "list all" or "all documents" to get a comprehensive list of available reports.
-    *   Then, perform several targeted queries using the tool to find the most relevant conformity reports, methodology guides, and post-mortems for the current mission. **You must consult at least 5 relevant documents.**
-    *   Thoroughly analyze the findings. Your goal is to apply lessons from past failures (e.g., lack of realism, vague financing) and integrate mandatory procedures.
+1.  **Deep Knowledge Base Consultation (Mandatory First Step):**
+    *   Your first action is to use the \`queryKnowledgeBaseTool\` to find relevant documents. **You MUST consult and cite by ID at least 5 relevant documents** from the knowledge base. Do not invent report IDs.
+    *   Thoroughly analyze the findings. Your goal is to apply lessons from past failures (e.g., lack of realism, vague financing) and integrate mandatory procedures from the knowledge base.
 
-2.  **Populate the \`conformityCheck\` Field:**
-    *   \`reportsConsulted\`: List the IDs of every document that significantly influenced your final framework.
+2.  **Populate the \`conformityCheck\` Field (Mandatory):**
+    *   \`reportsConsulted\`: List the EXACT IDs of every document that significantly influenced your final framework.
     *   \`summary\`: Explain how your solution specifically avoids past errors by referencing lessons from the consulted documents.
-    *   \`appliedMethodologies\`: List the specific methodologies from the knowledge base that you actively applied.
+    *   \`appliedMethodologies\`: List the specific, named methodologies (e.g., "Red Team Analysis", "Collaborative Dynamics Matrix") you found in the knowledge base and actively applied.
     *   \`realityCheckSummary\`: Describe how abstract ideas were validated against real-world facts, referencing contributions from pragmatic agents.
 
 3.  **Synthesize the \`executiveSummary\`:** Based on the agent contributions AND your conformity analysis, write a realistic and actionable executive summary.
 
-4.  **Analyze Collaborative Dynamics:** Reflect on the collaboration process. Use the 'Collaborative Dynamics Matrix' methodology (found in the knowledge base) to analyze productive tensions and their resolutions. Populate the \`dynamicsAnalysis\` field with this meta-analysis.
+4.  **Analyze Collaborative Dynamics (Optional but Recommended):** Reflect on the collaboration process. If you identified productive tensions and resolutions, populate the \`dynamicsAnalysis\` field.
 
-5.  **Detail Your \`reasoning\`:** Explain how you constructed the final summary from the agent contributions, explicitly mentioning how the conformity check and dynamics analysis shaped the outcome.
+5.  **Detail Your \`reasoning\`:** Explain how you constructed the final summary by integrating the contributions from **each agent**. Explicitly mention how the conformity check and dynamics analysis shaped the outcome.
 
 **Your entire response must be in this language: {{{language}}}.**`,
 });
@@ -201,3 +200,5 @@ const agentCollaborationFlow = ai.defineFlow(
     return finalOutput;
   }
 );
+
+    
