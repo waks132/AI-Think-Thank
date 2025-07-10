@@ -347,28 +347,39 @@ export default function MultiAgentDashboard() {
       setCritiqueResult(null);
   };
 
-
   useEffect(() => {
-    // Only run this on the client, after hydration
-    if (!isHydrated && agents.length === 0) {
-        setAgents(personaList.map(p => ({
-            id: p.id,
-            role: p.name[language] || p.name['fr'],
-            specialization: p.specialization[language] || p.specialization['fr'],
-            prompt: p.values[language] || p.values['fr'],
-            icon: p.icon,
-            lastPsiScore: null,
-        })));
+    if (!isHydrated) {
+      setAgents(currentAgents => {
+        const currentAgentMap = new Map(currentAgents.map(a => [a.id, a]));
+        const updatedAgents: Agent[] = personaList.map(persona => {
+          const existingAgent = currentAgentMap.get(persona.id);
+          const isOrchestrator = ORCHESTRATOR_IDS.includes(persona.id);
+          
+          // For orchestrators, always use the prompt from personas.ts
+          // For other agents, use the existing prompt if available, otherwise use the default.
+          const prompt = (isOrchestrator || !existingAgent) 
+            ? persona.values[language] 
+            : existingAgent.prompt;
+            
+          return {
+            id: persona.id,
+            role: persona.name[language],
+            specialization: persona.specialization[language],
+            prompt: prompt,
+            icon: persona.icon,
+            lastPsiScore: existingAgent?.lastPsiScore ?? null,
+          };
+        });
+        return updatedAgents;
+      });
+      setIsHydrated(true);
     }
-    setIsHydrated(true);
-  }, [isHydrated, language, agents, setAgents]);
-
+  }, [isHydrated, setAgents, language]);
 
   useEffect(() => {
-    // On language change, update agent roles, specializations, and default prompts.
-    // Preserve user-modified prompts.
+    if (!isHydrated) return;
+
     setAgents(prevAgents => {
-      // Create a set of all default prompts for easy lookup
       const allDefaultPrompts = new Set<string>();
       personaList.forEach(p => {
         allDefaultPrompts.add(p.values.fr);
@@ -378,24 +389,27 @@ export default function MultiAgentDashboard() {
       return prevAgents.map(agent => {
         const persona = personaMap.get(agent.id);
         if (persona) {
-          // If the agent's current prompt is a default one, translate it.
-          // Otherwise, keep the user's custom prompt.
           const isDefaultPrompt = allDefaultPrompts.has(agent.prompt);
-          const newPrompt = isDefaultPrompt ? persona.values[language] : agent.prompt;
+          // If it's a default prompt, translate it. Otherwise, keep the user's custom prompt.
+          // Orchestrator prompts are now handled by the initial hydration/sync logic and are not re-translated here
+          // unless they match a default string exactly.
+          const newPrompt = (isDefaultPrompt && !ORCHESTRATOR_IDS.includes(agent.id)) 
+              ? persona.values[language] 
+              : agent.prompt;
 
           return {
             ...agent,
             role: persona.name[language],
             specialization: persona.specialization[language],
             prompt: newPrompt,
-            icon: persona.icon,
           };
         }
         return agent;
       });
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language]);
+  }, [language, isHydrated]);
+
 
   const sortedAgents = useMemo(() => {
     return [...agents].sort((a, b) => {
