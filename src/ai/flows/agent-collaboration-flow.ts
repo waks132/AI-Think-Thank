@@ -126,11 +126,11 @@ const agentCollaborationSynthesisPrompt = ai.definePrompt({
     *   \`reportsConsulted\`: List the **EXACT IDs** of every document that significantly influenced your final framework.
     *   \`summary\`: Explain how your solution specifically avoids past errors by referencing lessons from the consulted documents.
     *   \`appliedMethodologies\`: List the specific, named methodologies (e.g., "Red Team Analysis", "Collaborative Dynamics Matrix") you found in the knowledge base and actively applied.
-    *   \`realityCheckSummary\`: Describe how abstract ideas were validated against real-world facts, referencing contributions from pragmatic agents like 'REALITY-ANCHOR'.
+    *   \`realityCheckSummary\`: Describe how abstract ideas were validated against real-world facts, referencing contributions from pragmatic agents.
 
 3.  **Synthesize the \`executiveSummary\`:** Based on the agent contributions AND your rigorous conformity analysis, write a realistic and actionable executive summary.
 
-4.  **Analyze Collaborative Dynamics (Optional but Recommended):** Reflect on the collaboration process. If you identified productive tensions and their resolutions (the core of the "Collaborative Dynamics Matrix"), populate the \`dynamicsAnalysis\` field. This demonstrates a higher level of orchestration.
+4.  **Analyze Collaborative Dynamics (Optional but Recommended):** Reflect on the collaboration process. If you identified productive tensions and resolutions, populate the \`dynamicsAnalysis\` field.
 
 5.  **Detail Your \`reasoning\`:** Explain how you constructed the final summary by integrating the contributions from **each agent**. Explicitly mention how the conformity check and dynamics analysis shaped the outcome.
 
@@ -146,7 +146,7 @@ const agentCollaborationFlow = ai.defineFlow(
   },
   async (input) => {
     // Step 1: Parse the agent list to get individual agent data
-    const agentDataRegex = /- \*\*Agent ID:\*\*\s*(.*?)\s*- \*\*Agent Role:\*\*\s*(.*?)\s*- \*\*Core Directive:\*\*\s*"(.*?)"/gs;
+    const agentDataRegex = /- \\*\\*Agent ID:\\*\\*\\s*(.*?)\\s*- \\*\\*Agent Role:\\*\\*\\s*(.*?)\\s*- \\*\\*Core Directive:\\*\\*\\s*\"(.*?)\"/gs;
     const agentsToSimulate = [];
     let match;
     while ((match = agentDataRegex.exec(input.agentList)) !== null) {
