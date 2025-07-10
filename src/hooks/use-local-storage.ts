@@ -1,6 +1,12 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
+
+// Helper function to check if a value is a Set
+function isSet<T>(value: any): value is Set<T> {
+  return value instanceof Set;
+}
 
 function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
   const [storedValue, setStoredValue] = useState<T>(() => {
@@ -9,7 +15,15 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val
     }
     try {
       const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
+      if (item) {
+        const parsedItem = JSON.parse(item);
+        // If the initial value was a Set, rehydrate the parsed array back into a Set.
+        if (isSet(initialValue)) {
+          return new Set(parsedItem) as T;
+        }
+        return parsedItem;
+      }
+      return initialValue;
     } catch (error) {
       console.error(error);
       return initialValue;
@@ -18,12 +32,15 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val
 
   const setValue = useCallback((value: T | ((val: T) => T)) => {
     try {
-      // Use the functional update form of useState's setter to avoid
-      // depending on 'storedValue' in the useCallback dependency array.
       setStoredValue(prevValue => {
         const valueToStore = value instanceof Function ? value(prevValue) : value;
         if (typeof window !== 'undefined') {
-          window.localStorage.setItem(key, JSON.stringify(valueToStore));
+          // If the value is a Set, convert it to an array before stringifying.
+          if (isSet(valueToStore)) {
+            window.localStorage.setItem(key, JSON.stringify(Array.from(valueToStore)));
+          } else {
+            window.localStorage.setItem(key, JSON.stringify(valueToStore));
+          }
         }
         return valueToStore;
       });
@@ -37,11 +54,14 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val
       if (e.key === key) {
         try {
           if (e.newValue) {
-            setStoredValue(JSON.parse(e.newValue));
+            const parsedItem = JSON.parse(e.newValue);
+             // If the initial value was a Set, rehydrate the parsed array back into a Set.
+            if (isSet(initialValue)) {
+              setStoredValue(new Set(parsedItem));
+            } else {
+              setStoredValue(parsedItem);
+            }
           } else {
-            // This will use the initialValue from the first render.
-            // This is an acceptable trade-off to prevent infinite loops
-            // when consumers pass unstable initial values.
             setStoredValue(initialValue);
           }
         } catch (error) {
@@ -54,10 +74,7 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
-    // The dependency array is intentionally incomplete to prevent loops.
-    // The `initialValue` used is the one from the first render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
+  }, [key, initialValue]);
 
   return [storedValue, setValue];
 }
