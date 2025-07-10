@@ -347,66 +347,49 @@ export default function MultiAgentDashboard() {
       setCritiqueResult(null);
   };
 
-  useEffect(() => {
-    if (!isHydrated) {
+  const syncAgents = useCallback(() => {
       setAgents(currentAgents => {
         const currentAgentMap = new Map(currentAgents.map(a => [a.id, a]));
+        
         const updatedAgents: Agent[] = personaList.map(persona => {
           const existingAgent = currentAgentMap.get(persona.id);
           const isOrchestrator = ORCHESTRATOR_IDS.includes(persona.id);
           
-          // For orchestrators, always use the prompt from personas.ts
-          // For other agents, use the existing prompt if available, otherwise use the default.
-          const prompt = (isOrchestrator || !existingAgent) 
-            ? persona.values[language] 
-            : existingAgent.prompt;
-            
+          let prompt = persona.values[language]; // Default to the official prompt for the current language
+          if (existingAgent && !isOrchestrator) {
+            // For non-orchestrators, check if the existing prompt is a default one.
+            const isDefaultFR = existingAgent.prompt === persona.values.fr;
+            const isDefaultEN = existingAgent.prompt === persona.values.en;
+            // If it's not a default prompt, it's a user-customized prompt, so keep it.
+            if (!isDefaultFR && !isDefaultEN) {
+              prompt = existingAgent.prompt;
+            }
+          }
+
           return {
             id: persona.id,
             role: persona.name[language],
             specialization: persona.specialization[language],
             prompt: prompt,
-            icon: persona.icon,
+            Icon: persona.Icon,
             lastPsiScore: existingAgent?.lastPsiScore ?? null,
           };
         });
         return updatedAgents;
       });
-      setIsHydrated(true);
-    }
-  }, [isHydrated, setAgents, language]);
+    }, [setAgents, language]);
 
   useEffect(() => {
-    if (!isHydrated) return;
+    if (!isHydrated) {
+      syncAgents();
+      setIsHydrated(true);
+    }
+  }, [isHydrated, syncAgents]);
 
-    setAgents(prevAgents => {
-      const allDefaultPrompts = new Set<string>();
-      personaList.forEach(p => {
-        allDefaultPrompts.add(p.values.fr);
-        allDefaultPrompts.add(p.values.en);
-      });
-
-      return prevAgents.map(agent => {
-        const persona = personaMap.get(agent.id);
-        if (persona) {
-          const isDefaultPrompt = allDefaultPrompts.has(agent.prompt);
-          // If it's a default prompt, translate it. Otherwise, keep the user's custom prompt.
-          // Orchestrator prompts are now handled by the initial hydration/sync logic and are not re-translated here
-          // unless they match a default string exactly.
-          const newPrompt = (isDefaultPrompt && !ORCHESTRATOR_IDS.includes(agent.id)) 
-              ? persona.values[language] 
-              : agent.prompt;
-
-          return {
-            ...agent,
-            role: persona.name[language],
-            specialization: persona.specialization[language],
-            prompt: newPrompt,
-          };
-        }
-        return agent;
-      });
-    });
+  useEffect(() => {
+    if (isHydrated) {
+      syncAgents();
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language, isHydrated]);
 
@@ -483,12 +466,14 @@ export default function MultiAgentDashboard() {
           {isHydrated && collaborationResult && (
             <div className="space-y-4 animate-fade-in pt-4">
               <Separator />
-              <h3 className="font-headline text-xl flex items-center gap-4">
-                {t.dashboard.outcome_title[language]}
+              <div className="flex items-center justify-between">
+                <h3 className="font-headline text-xl flex items-center gap-4">
+                  {t.dashboard.outcome_title[language]}
+                </h3>
                  <Button onClick={handleRefineSummary} disabled={isCollaborating || isSuggesting || isRefining || !collaborationResult} size="sm" variant="outline">
                     {isRefining ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t.dashboard.refine_summary_loading[language]}</> : <><WandSparkles className="mr-2 h-4 w-4" />{t.dashboard.refine_summary_button[language]}</>}
                 </Button>
-              </h3>
+              </div>
 
               {contributionAnalysis && (
                 <Card className="animate-fade-in" style={{ animationDelay: '200ms' }}>
@@ -681,7 +666,7 @@ export default function MultiAgentDashboard() {
                       <CardContent className="flex-grow">
                         <div className="space-y-4 max-h-[700px] overflow-y-auto p-4 border rounded-lg bg-background/50 h-full">
                             {collaborationResult.agentContributions.map((contrib, index) => {
-                                const Icon = personaMap.get(contrib.agentId)?.icon || BrainCircuit;
+                                const Icon = personaMap.get(contrib.agentId)?.Icon || BrainCircuit;
                                 return (
                                     <div key={contrib.agentId + '-' + index} className="flex items-start gap-4 animate-fade-in">
                                         <div className="p-2 bg-accent rounded-full">
