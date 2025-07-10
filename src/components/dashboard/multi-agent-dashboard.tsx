@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect } from 'react';
-import { Users, Loader2, Sparkles, FileText, BrainCircuit, ShieldCheck, MessageSquare, WandSparkles, Check, AlertTriangle, Route, Hammer, Lightbulb, CheckCircle } from 'lucide-react';
+import { Users, Loader2, Sparkles, FileText, BrainCircuit, ShieldCheck, MessageSquare, WandSparkles, Check, AlertTriangle, Route, Hammer, Lightbulb, CheckCircle, GitBranch } from 'lucide-react';
 import AgentCard from './agent-card';
 import type { Agent, AgentContribution, LogEntry, PromptVersion } from '@/lib/types';
 import useLocalStorage from '@/hooks/use-local-storage';
@@ -61,16 +61,16 @@ export default function MultiAgentDashboard() {
   
   const [agents, setAgents] = useLocalStorage<Agent[]>('agents', personaList.map(p => ({
     id: p.id,
-    role: p.name[language],
-    specialization: p.specialization[language],
-    prompt: p.values[language],
+    role: p.name[language] || p.name['fr'],
+    specialization: p.specialization[language] || p.specialization['fr'],
+    prompt: p.values[language] || p.values['fr'],
     icon: p.icon,
     lastPsiScore: null,
   })));
   
-  const [selectedAgentIds, setSelectedAgentIds] = useLocalStorage<Set<string>>('selected-agent-ids', new Set(
-      personaList.filter(p => !ORCHESTRATOR_IDS.includes(p.id)).map(p => p.id)
-  ));
+  const [selectedAgentIds, setSelectedAgentIds] = useLocalStorage<string[]>('selected-agent-ids', 
+    personaList.filter(p => !ORCHESTRATOR_IDS.includes(p.id)).map(p => p.id)
+  );
 
   const [logs, setLogs] = useLocalStorage<LogEntry[]>('cognitive-logs', []);
   const [promptHistories, setPromptHistories] = useLocalStorage<Record<string, PromptVersion[]>>('prompt-histories', {});
@@ -131,15 +131,13 @@ export default function MultiAgentDashboard() {
   const handleAgentSelectionChange = (agentId: string, isSelected: boolean) => {
     if (ORCHESTRATOR_IDS.includes(agentId)) return;
     setSelectedAgentIds(prev => {
-      const newSet = new Set(prev);
-      if (isSelected) newSet.add(agentId);
-      else newSet.delete(agentId);
-      return newSet;
+      if (isSelected) return [...prev, agentId];
+      else return prev.filter(id => id !== agentId);
     });
   };
 
   const handleStartMission = async () => {
-    const selectedAgents = agents.filter(agent => selectedAgentIds.has(agent.id));
+    const selectedAgents = agents.filter(agent => selectedAgentIds.includes(agent.id));
     const orchestrators = agents.filter(agent => ORCHESTRATOR_IDS.includes(agent.id));
     const agentsForMission = [...selectedAgents, ...orchestrators];
 
@@ -231,7 +229,7 @@ export default function MultiAgentDashboard() {
       if (result && result.recommendedAgentIds) {
         if (result.recommendedAgentIds.length > 0) {
           const recommendedSet = new Set(result.recommendedAgentIds);
-          setSelectedAgentIds(recommendedSet);
+          setSelectedAgentIds(result.recommendedAgentIds);
           
           toast({
             title: `${t.dashboard.toast_suggest_title[language]}: ${result.missionClassification}`,
@@ -255,7 +253,7 @@ export default function MultiAgentDashboard() {
             duration: 15000,
           });
         } else {
-           setSelectedAgentIds(new Set());
+           setSelectedAgentIds([]);
            toast({
             variant: "destructive",
             title: `${t.dashboard.toast_suggest_title[language]}: ${result.missionClassification}`,
@@ -298,7 +296,7 @@ export default function MultiAgentDashboard() {
           });
           setCritiqueResult(critique);
           
-          const selectedAgents = agents.filter(agent => selectedAgentIds.has(agent.id) || ORCHESTRATOR_IDS.includes(agent.id));
+          const selectedAgents = agents.filter(agent => selectedAgentIds.includes(agent.id) || ORCHESTRATOR_IDS.includes(agent.id));
           const agentContextString = selectedAgents
             .map(agent => `- **Agent ID:** ${agent.id}\n  - **Agent Role:** ${agent.role}\n  - **Core Directive:** "${agent.prompt}"`)
             .join('\n\n');
@@ -694,7 +692,7 @@ export default function MultiAgentDashboard() {
                 key={agent.id} 
                 agent={agent} 
                 onPromptChange={handlePromptChange} 
-                isSelected={isOrchestrator || selectedAgentIds.has(agent.id)}
+                isSelected={isOrchestrator || selectedAgentIds.includes(agent.id)}
                 onSelectionChange={handleAgentSelectionChange}
                 selectedModel={selectedModel}
                 isOrchestrator={isOrchestrator}
