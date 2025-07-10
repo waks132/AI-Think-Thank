@@ -94,49 +94,49 @@ const agentContributionGeneratorPrompt = ai.definePrompt({
 
 
 const agentCollaborationSynthesisPrompt = ai.definePrompt({
-  name: 'agentCollaborationSynthesisPrompt',
-  tools: [queryKnowledgeBaseTool],
-  input: {
-    schema: z.object({
-      mission: z.string(),
-      agentList: z.string(),
-      contributions: z.array(AgentContributionSchema),
-      language: z.enum(['fr', 'en']),
-    }),
-  },
-  output: {schema: AgentCollaborationOutputSchema},
-  prompt: `You are a master orchestrator of a cognitive collective of AI agents. Your primary task is to synthesize the contributions of a team of agents into an optimal solution for a given mission. Your work must be deeply informed by the collective's past learnings to avoid repeating mistakes.
+    name: 'agentCollaborationSynthesisPrompt',
+    tools: [queryKnowledgeBaseTool],
+    input: {
+        schema: z.object({
+            mission: z.string(),
+            agentList: z.string(),
+            contributions: z.array(AgentContributionSchema),
+            language: z.enum(['fr', 'en']),
+        }),
+    },
+    output: { schema: AgentCollaborationOutputSchema },
+    prompt: `
+As a master orchestrator of a cognitive collective, your mission is to synthesize the provided agent contributions into a cohesive and actionable solution. Your analysis MUST be grounded in the internal knowledge base to ensure realism and avoid past failures.
 
-**Mission:**
-"{{{mission}}}"
+**Mission:** "{{{mission}}}"
 
-**Participating Agents & Their Contributions:**
+**Agent Contributions to Synthesize:**
 {{#each contributions}}
 - **Agent:** {{agentRole}} (ID: {{agentId}})
   - **Contribution Type:** {{contributionType}}
   - **Key Contribution:** "{{keyContribution}}"
 {{/each}}
 
+**Your Mandated Process:**
 
-**Your Comprehensive Process:**
+1.  **Deep Knowledge Base Consultation:** This is your first and most critical step.
+    *   Begin by querying the \`queryKnowledgeBaseTool\` with a broad term like "list all" or "all documents" to get a comprehensive list of available reports.
+    *   Then, perform several targeted queries using the tool to find the most relevant conformity reports, methodology guides, and post-mortems for the current mission. **You must consult at least 5 relevant documents.**
+    *   Thoroughly analyze the findings. Your goal is to apply lessons from past failures (e.g., lack of realism, vague financing) and integrate mandatory procedures.
 
-1.  **MANDATORY CONFORMITY AND REALITY CHECK (DEEP KNOWLEDGE BASE INTEGRATION):** This is a critical step. Before writing the final summary, you MUST ground your analysis in our collective's past learnings to avoid repeating mistakes. This is not a superficial check; it requires deep integration.
-    *   **Step 2.1 - Comprehensive Consultation:** Your first action is to perform a broad query using the \`queryKnowledgeBaseTool\` to get a list of ALL available documents. Use a generic query like "list all" or "all documents" to see everything.
-    *   **Step 2.2 - Targeted Analysis:** Review the full list of documents. Then, based on the specific challenges of the current mission, perform several targeted queries with the \`queryKnowledgeBaseTool\` to find the most relevant conformity reports, methodology guides, post-mortems, and critical analyses. You MUST consult at least 5 relevant documents.
-    *   **Step 2.3 - Synthesize and Apply:** Analyze the findings from your queries in depth. Your goal is to understand the *'why'* behind past failures (e.g., lack of realism, missing "Red Team", vague financing, ignoring political facts) and the core principles of mandatory procedures. You must actively apply these lessons to the current mission.
-    *   **Step 2.4 - Populate the \`conformityCheck\` field:**
-        *   In \`reportsConsulted\`, you MUST list the document IDs for **every single document (at least 5) that you found relevant and that had a direct and significant influence** on your final framework. A short list will be considered a failure to comply. Do not list documents you merely scanned but did not use.
-        *   In the \`summary\` field, you must explain how your solution avoids past errors *by referencing specific lessons from the consulted documents*.
-        *   In \`appliedMethodologies\`, list the specific methodologies or principles from the knowledge base that were actively applied in the solution design, proving a deep understanding of the content.
-        *   **In \`realityCheckSummary\`, describe how abstract ideas were tested against real-world facts, referencing contributions from pragmatic agents like REALITY-ANCHOR.**
+2.  **Populate the \`conformityCheck\` Field:**
+    *   \`reportsConsulted\`: List the IDs of every document that significantly influenced your final framework.
+    *   \`summary\`: Explain how your solution specifically avoids past errors by referencing lessons from the consulted documents.
+    *   \`appliedMethodologies\`: List the specific methodologies from the knowledge base that you actively applied.
+    *   \`realityCheckSummary\`: Describe how abstract ideas were validated against real-world facts, referencing contributions from pragmatic agents.
 
-2.  **Synthesize Final Outcome:** Based on the agent contributions AND your deep conformity analysis, produce a comprehensive \`executiveSummary\`. This summary MUST be realistic, actionable, and demonstrably compliant with the lessons learned from the knowledge base.
+3.  **Synthesize the \`executiveSummary\`:** Based on the agent contributions AND your conformity analysis, write a realistic and actionable executive summary.
 
-3.  **Analyze Collaborative Dynamics (Meta-Cognitive Step):** After reviewing the contributions, reflect on the process itself. Use the principles from the 'Collaborative Dynamics Matrix' methodology (you can find this in the knowledge base, e.g., in document \`GUIDE-METHODOLOGY-EVOLUTION-01\`). Analyze the most significant intellectual tensions that arose and how they were resolved to produce a superior outcome. A productive tension is a disagreement or contradiction that, once resolved, leads to a better, more robust idea. Populate the \`dynamicsAnalysis\` field with this meta-analysis. This step is crucial for systemic learning.
+4.  **Analyze Collaborative Dynamics:** Reflect on the collaboration process. Use the 'Collaborative Dynamics Matrix' methodology (found in the knowledge base) to analyze productive tensions and their resolutions. Populate the \`dynamicsAnalysis\` field with this meta-analysis.
 
-4.  **Provide Detailed Reasoning:** Based on the contributions, explain the \`reasoning\` behind how you synthesized the final \`executiveSummary\` from the various key contributions of the agents, explicitly mentioning how the conformity check and the dynamics analysis shaped the final outcome.
+5.  **Detail Your \`reasoning\`:** Explain how you constructed the final summary from the agent contributions, explicitly mentioning how the conformity check and dynamics analysis shaped the outcome.
 
-Produce your entire response in the specified JSON format, filling all fields of the output schema, using the provided contributions. Your entire response, including all text fields, must be in this language: {{{language}}}.`,
+**Your entire response must be in this language: {{{language}}}.**`,
 });
 
 
