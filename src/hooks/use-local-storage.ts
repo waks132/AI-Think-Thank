@@ -19,7 +19,12 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val
         const parsedItem = JSON.parse(item);
         // If the initial value was a Set, rehydrate the parsed array back into a Set.
         if (isSet(initialValue)) {
-          return new Set(parsedItem) as T;
+           // Ensure the parsed item is an array before creating a Set from it.
+          if (Array.isArray(parsedItem)) {
+            return new Set(parsedItem) as T;
+          }
+          // If the stored value is corrupted (not an array), return the initial value.
+          return initialValue;
         }
         return parsedItem;
       }
@@ -57,7 +62,9 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val
             const parsedItem = JSON.parse(e.newValue);
              // If the initial value was a Set, rehydrate the parsed array back into a Set.
             if (isSet(initialValue)) {
-              setStoredValue(new Set(parsedItem));
+              if (Array.isArray(parsedItem)) {
+                setStoredValue(new Set(parsedItem));
+              }
             } else {
               setStoredValue(parsedItem);
             }
