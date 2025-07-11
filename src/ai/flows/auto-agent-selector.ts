@@ -74,7 +74,7 @@ const AutoAgentSelectorOutputSchema = z.object({
 
   orchestrationRationale: z.string().describe("Detailed reasoning for the final team composition, including justification for each excluded agent."),
   
-  specialProtocolsActivated: z.string().optional().describe("Specific instructions provided to the team based on mission classification. Used for simpler protocols."),
+ specialProtocolsActivated: z.string().nullable().optional().describe("Specific instructions provided to the team based on mission classification. Used for simpler protocols."),
 
   paradigmNativeProtocol: ParadigmNativeProtocolSchema.nullable().optional().describe("Detailed protocol information for PARADIGM-NATIVE missions, including the full 3-wave orchestration."),
 });
