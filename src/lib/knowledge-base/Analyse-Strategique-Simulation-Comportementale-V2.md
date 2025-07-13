@@ -72,4 +72,5 @@ Ce processus soulève des questions fondamentales :
 - **Sur la gouvernance :** Comment équilibrer innovation technologique et protection humaine ?
 
 ## Conclusion
-Ce document démontre que l'intelligence artificielle collective peut dépasser la simple agrégation d'analyses individuelles pour produire une synthèse stratégique sophistiquée, capable d'auto-critique et d'amélioration continue, tout en maintenant une conscience aiguë des enjeux éthiques et des limites fondamentales. C'est un exemple remarquable de métacognition artificielle collective en action.
+Ce document démontre que l'intelligence artificielle collective peut dépasser la simple agrégation d'analyses individuelles pour produire une synthèse stratégique sophistiquée, capable d'auto-critique et d'amélioration continue, tout en maintenant une conscience aiguë des enjeux éthiques et des limites fondamentales.
+C'est un exemple remarquable de métacognition artificielle collective en action.

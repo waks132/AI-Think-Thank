@@ -158,19 +158,19 @@ ID: ANALYSIS-PERFORMANCE-EUROPE-01
 ## **🎯 IMPACT ATTENDU**
 
 **Court terme (6 mois)** :
-- Position européenne unifiée G20 Finances
-- Lancement programme R&D CBDC post-quantique
-- Consensus minimal 20+ États membres
+- **Position européenne unifiée G20 Finances**
+- **Lancement programme R&D CBDC post-quantique**
+- **Consensus minimal 20+ États membres**
 
 **Moyen terme (2-3 ans)** :
-- Déploiement pilote stablecoin public européen
-- Standards internationaux traçabilité anonyme
-- Réduction 30% dépendance stablecoins privés
+- **Déploiement pilote stablecoin public européen**
+- **Standards internationaux traçabilité anonyme**
+- **Réduction 30% dépendance stablecoins privés**
 
 **Long terme (5-7 ans)** :
-- Leadership mondial architecture monétaire numérique
-- Référence technique pour banques centrales
-- Souveraineté monétaire européenne restaurée
+- **Leadership mondial architecture monétaire numérique**
+- **Référence technique pour banques centrales**
+- **Souveraineté monétaire européenne restaurée**
 
 ---
 
