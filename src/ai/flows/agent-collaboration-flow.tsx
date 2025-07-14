@@ -158,26 +158,25 @@ const agentCollaborationFlow = ai.defineFlow(
       });
     }
 
-    // Step 2: Generate contributions for each agent individually
-    const contributions: AgentContribution[] = await Promise.all(
-      agentsToSimulate.map(async (agent) => {
-        const contributionResult = await agentContributionGeneratorPrompt({
-          mission: input.mission,
-          agent: agent,
-          language: input.language,
-        });
-        const contributionOutput = contributionResult.output;
-        if (!contributionOutput) {
-          throw new Error(`Failed to generate contribution for agent ${agent.role}`);
-        }
-        return {
-          agentId: agent.id,
-          agentRole: agent.role,
-          ...contributionOutput,
-        };
-      })
-    );
-
+    // Step 2: Generate contributions for each agent sequentially to avoid rate limiting
+    const contributions: AgentContribution[] = [];
+    for (const agent of agentsToSimulate) {
+      const contributionResult = await agentContributionGeneratorPrompt({
+        mission: input.mission,
+        agent: agent,
+        language: input.language,
+      });
+      const contributionOutput = contributionResult.output;
+      if (!contributionOutput) {
+        throw new Error(`Failed to generate contribution for agent ${agent.role}`);
+      }
+      contributions.push({
+        agentId: agent.id,
+        agentRole: agent.role,
+        ...contributionOutput,
+      });
+    }
+    
     // Step 3: Synthesize the results
     const synthesisResult = await agentCollaborationSynthesisPrompt({
       mission: input.mission,
