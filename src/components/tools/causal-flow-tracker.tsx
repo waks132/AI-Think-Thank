@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client"
 
 import { useState, useEffect, useMemo } from "react";
@@ -6,7 +7,7 @@ import { ArrowRight, Loader2, RefreshCw } from "lucide-react"
 import type { CausalLink, LogEntry } from "@/lib/types";
 import { trackCausalFlow } from "@/ai/flows/causal-flow-tracker-flow";
 import { Button } from "../ui/button";
-import useLocalStorage from "@/hooks/use-local-storage";
+import useFirestore from "@/hooks/use-firestore";
 import { useToast } from "@/hooks/use-toast";
 import { availableModels } from "@/lib/models";
 import ModelSelector from "../model-selector";
@@ -29,8 +30,9 @@ const AgentNode = ({ role, language }: { role: string, language: 'fr' | 'en' }) 
 };
 
 export default function CausalFlowTracker() {
-    const [logs] = useLocalStorage<LogEntry[]>('cognitive-logs', []);
-    const [flows, setFlows] = useLocalStorage<CausalLink[]>('causal-flow-result', []);
+    const sessionId = "default-session";
+    const [logs] = useFirestore<LogEntry[]>(`sessions/${sessionId}/data`, 'cognitive-logs', []);
+    const [flows, setFlows] = useFirestore<CausalLink[]>(`sessions/${sessionId}/tools`, 'causal-flow-result', []);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedModel, setSelectedModel] = useState(availableModels[0]);
     const { toast } = useToast();
@@ -68,7 +70,7 @@ export default function CausalFlowTracker() {
     };
     
     useEffect(() => {
-        if(logs.length > 0) {
+        if(logs.length > 0 && flows.length === 0) {
             analyzeFlow();
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps

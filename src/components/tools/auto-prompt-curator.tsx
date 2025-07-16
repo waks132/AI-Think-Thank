@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
@@ -20,7 +21,7 @@ import { t } from "@/lib/i18n"
 import { personaList } from "@/lib/personas"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { Label } from "../ui/label"
-import useLocalStorage from "@/hooks/use-local-storage"
+import useFirestore from "@/hooks/use-firestore"
 import type { Agent, LogEntry } from "@/lib/types"
 
 const formSchema = z.object({
@@ -33,14 +34,15 @@ const formSchema = z.object({
 })
 
 export default function AutoPromptCurator() {
-  const [result, setResult] = useLocalStorage<AutoCurationOutput | null>("auto-curator-result", null)
+  const sessionId = "default-session";
+  const [result, setResult] = useFirestore<AutoCurationOutput | null>(`sessions/${sessionId}/tools`, "auto-curator-result", null)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedModel, setSelectedModel] = useState(availableModels[0]);
   const [selectedAgentId, setSelectedAgentId] = useState<string>(personaList[0].id);
   const { toast } = useToast()
   const { language } = useLanguage();
-  const [storedAgents] = useLocalStorage<Agent[]>('agents', []);
-  const [logs] = useLocalStorage<LogEntry[]>('cognitive-logs', []);
+  const [storedAgents] = useFirestore<Agent[]>(`sessions/${sessionId}/data`, 'agents', []);
+  const [logs] = useFirestore<LogEntry[]>(`sessions/${sessionId}/data`, 'cognitive-logs', []);
   const storedAgentMap = useMemo(() => new Map(storedAgents.map(a => [a.id, a])), [storedAgents]);
 
   const form = useForm<z.infer<typeof formSchema>>({

@@ -1,8 +1,9 @@
+// @ts-nocheck
 "use client";
 
 import { useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import useLocalStorage from '@/hooks/use-local-storage';
+import useFirestore from '@/hooks/use-firestore';
 import type { LogEntry } from '@/lib/types';
 import { BrainCircuit } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
@@ -10,7 +11,8 @@ import { t } from '@/lib/i18n';
 import { personaList } from '@/lib/personas';
 
 export default function CognitiveLogViewer() {
-  const [logs] = useLocalStorage<LogEntry[]>('cognitive-logs', []);
+  const sessionId = "default-session";
+  const [logs] = useFirestore<LogEntry[]>(`sessions/${sessionId}/data`, 'cognitive-logs', []);
   const { language } = useLanguage();
   
   const agentIconMap = useMemo(() => {

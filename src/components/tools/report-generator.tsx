@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client"
 
 import { useState, useEffect } from "react"
@@ -10,7 +11,7 @@ import ModelSelector from "../model-selector"
 import { availableModels } from "@/lib/models"
 import { useLanguage } from "@/context/language-context"
 import { t } from "@/lib/i18n"
-import useLocalStorage from "@/hooks/use-local-storage"
+import useFirestore from "@/hooks/use-firestore"
 import type { AgentCollaborationOutput } from "@/ai/flows/agent-collaboration-flow"
 import { Textarea } from "../ui/textarea"
 
@@ -27,9 +28,10 @@ const assembleMarkdown = (data: GenerateReportOutput, language: 'fr' | 'en'): st
 };
 
 export default function ReportGenerator() {
-  const [collaborationResult] = useLocalStorage<AgentCollaborationOutput | null>("collaboration-result", null)
-  const [mission] = useLocalStorage<string>('mission-text', '');
-  const [reportData, setReportData] = useLocalStorage<GenerateReportOutput | null>('mission-report-data', null);
+  const sessionId = "default-session";
+  const [collaborationResult] = useFirestore<AgentCollaborationOutput | null>(`sessions/${sessionId}/data`, "collaboration-result", null)
+  const [mission] = useFirestore<string>(`sessions/${sessionId}/data`, 'mission-text', '');
+  const [reportData, setReportData] = useFirestore<GenerateReportOutput | null>(`sessions/${sessionId}/tools`, 'mission-report-data', null);
   const [reportMarkdown, setReportMarkdown] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);

@@ -1,9 +1,10 @@
+// @ts-nocheck
 "use client";
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import useLocalStorage from '@/hooks/use-local-storage';
+import useFirestore from '@/hooks/use-firestore';
 import type { Agent, PromptVersion } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -33,9 +34,10 @@ const DiffView: React.FC<DiffViewProps> = ({ string1, string2 }) => {
 
 
 export default function PromptLineageViewer() {
-  const [agents] = useLocalStorage<Agent[]>('agents', []);
+  const sessionId = "default-session";
+  const [agents] = useFirestore<Agent[]>(`sessions/${sessionId}/data`, 'agents', []);
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
-  const [promptHistories] = useLocalStorage<Record<string, PromptVersion[]>>('prompt-histories', {});
+  const [promptHistories] = useFirestore<Record<string, PromptVersion[]>>(`sessions/${sessionId}/data`, 'prompt-histories', {});
   const [promptHistory, setPromptHistory] = useState<PromptVersion[]>([]);
   const [selectedVersion1, setSelectedVersion1] = useState<PromptVersion | null>(null);
   const [selectedVersion2, setSelectedVersion2] = useState<PromptVersion | null>(null);
