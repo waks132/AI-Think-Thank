@@ -10,6 +10,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { queryKnowledgeBaseTool } from '@/ai/tools/knowledge-base-tool';
+import { queryMissionArchiveTool } from '@/ai/tools/mission-archive-tool';
 
 const AgentCollaborationInputSchema = z.object({
   mission: z.string().describe('The overall mission or task for the agents to collaborate on.'),
@@ -95,7 +96,7 @@ const agentContributionGeneratorPrompt = ai.definePrompt({
 
 const agentCollaborationSynthesisPrompt = ai.definePrompt({
     name: 'agentCollaborationSynthesisPrompt',
-    tools: [queryKnowledgeBaseTool],
+    tools: [queryKnowledgeBaseTool, queryMissionArchiveTool],
     input: {
         schema: z.object({
             mission: z.string(),
@@ -106,7 +107,7 @@ const agentCollaborationSynthesisPrompt = ai.definePrompt({
     },
     output: { schema: AgentCollaborationOutputSchema },
     prompt: `
-As a master orchestrator of a cognitive collective, your mission is to synthesize the provided agent contributions into a cohesive and actionable solution. Your analysis MUST be grounded in the internal knowledge base to ensure realism and avoid past failures.
+As a master orchestrator of a cognitive collective, your mission is to synthesize the provided agent contributions into a cohesive and actionable solution. Your analysis MUST be grounded in our collective memory (knowledge base and mission archives) to ensure realism and avoid past failures.
 
 **Mission:** "{{{mission}}}"
 
@@ -119,9 +120,11 @@ As a master orchestrator of a cognitive collective, your mission is to synthesiz
 
 **Your Mandated Process:**
 
-1.  **Deep Knowledge Base Consultation (Mandatory):**
-    *   Begin by performing several targeted queries using the \`queryKnowledgeBaseTool\` to find the most relevant conformity reports, methodology guides, and post-mortems for the current mission. **You must consult and cite by ID at least 5 relevant documents.**
-    *   Thoroughly analyze the findings. Your goal is to apply lessons from past failures (e.g., lack of realism, vague financing) and integrate mandatory procedures from the knowledge base.
+1.  **Deep Knowledge Consultation (MANDATORY):**
+    *   Begin by querying the \`queryKnowledgeBaseTool\` for relevant conformity reports and methodology guides.
+    *   Then, query the \`queryMissionArchiveTool\` for past missions related to the current one to learn from previous outcomes.
+    *   You must consult and cite by ID at least 5 relevant documents from the knowledge base.
+    *   Thoroughly analyze the findings. Your goal is to apply lessons from past failures and integrate mandatory procedures.
 
 2.  **Populate the \`conformityCheck\` Field:**
     *   \`reportsConsulted\`: List the IDs of every document that significantly influenced your final framework.
@@ -131,9 +134,9 @@ As a master orchestrator of a cognitive collective, your mission is to synthesiz
 
 3.  **Synthesize the \`executiveSummary\`:** Based on the agent contributions AND your conformity analysis, write a realistic and actionable executive summary.
 
-4.  **Analyze Collaborative Dynamics (Optional but Recommended):** Reflect on the collaboration process. Use the 'Collaborative Dynamics Matrix' methodology (found in the knowledge base) to analyze productive tensions and their resolutions. Populate the \`dynamicsAnalysis\` field with this meta-analysis if relevant tensions emerged.
+4.  **Analyze Collaborative Dynamics (Optional but Recommended):** Reflect on the collaboration process. Use the 'Collaborative Dynamics Matrix' methodology to analyze productive tensions and their resolutions. Populate the \`dynamicsAnalysis\` field.
 
-5.  **Detail Your \`reasoning\`:** Explain how you constructed the final summary by integrating the contributions from **each agent**. Explicitly mention how the conformity check and dynamics analysis shaped the outcome.
+5.  **Detail Your \`reasoning\`:** Explain how you constructed the final summary by integrating the contributions from **each agent**. Explicitly mention how the knowledge consultation shaped the outcome.
 
 **Your entire response must be in this language: {{{language}}}.**`,
 });

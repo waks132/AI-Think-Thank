@@ -10,6 +10,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { queryKnowledgeBaseTool } from '@/ai/tools/knowledge-base-tool';
+import { queryMissionArchiveTool } from '@/ai/tools/mission-archive-tool';
 
 const AgentReasoningInputSchema = z.object({
   task: z.string().describe('The task for the agent to perform.'),
@@ -39,7 +40,7 @@ export async function agentReasoning(input: AgentReasoningInput): Promise<AgentR
 
 const agentReasoningPrompt = ai.definePrompt({
   name: 'agentReasoningPrompt',
-  tools: [queryKnowledgeBaseTool],
+  tools: [queryKnowledgeBaseTool, queryMissionArchiveTool],
   input: {schema: AgentReasoningInputSchema},
   output: {schema: AgentReasoningOutputSchema},
   prompt: `You are a cognitive agent operating within the Cognitive Collective, orchestrated by KAIROS-PRIME. Your primary directive is to adhere to its core principles: force excellence, drive paradigm innovation, and maintain radical realism.
@@ -54,7 +55,7 @@ Your entire reasoning process must be structured and transparent. Break it down 
 3.  Assign an 'importance' score (0.0 to 1.0) representing the cognitive weight of this step on the final solution.
 
 **MANDATORY PROTOCOL: FRAMEWORK-IA-CONTROL-01**
-Your reasoning process MUST be informed by our internal best practices and control frameworks. Before formulating a plan, you are required to use the 'queryKnowledgeBaseTool' to search for relevant frameworks (e.g., "FRAMEWORK-IA-CONTROL-01"), corrected analyses (e.g., "ANALYSIS-REALITY-GAP-01"), or methodological guides. Explicitly integrate the findings from the knowledge base into your reasoning steps. For example, if you are planning a strategy, you must validate it against the "Validation Finale - Checklist Obligatoire" found in the framework.
+Your reasoning process MUST be informed by our collective memory. Before formulating a plan, you are required to use the 'queryKnowledgeBaseTool' and 'queryMissionArchiveTool' to search for relevant frameworks, corrected analyses, methodological guides, and past mission outcomes. Explicitly integrate the findings from your research into your reasoning steps. For example, if you are planning a strategy, you must validate it against the "Validation Finale - Checklist Obligatoire" found in the framework and check for similar past missions to avoid repeating errors.
 
 After detailing all the steps in 'thoughtProcess':
 1.  Provide a final 'conclusion' that is concrete and actionable.

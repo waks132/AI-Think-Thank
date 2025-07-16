@@ -14,3 +14,4 @@ import '@/ai/flows/strategic-synthesis-critique.ts';
 import '@/ai/flows/auto-agent-selector.ts';
 import '@/ai/flows/report-generator-flow.ts';
 import '@/ai/tools/knowledge-base-tool.ts';
+import '@/ai/tools/mission-archive-tool.ts';

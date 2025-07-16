@@ -27,6 +27,7 @@ import { Skeleton } from '../ui/skeleton';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { addDocument } from '@/services/firestore-service';
 const Diff = require('diff');
 
 const personaMap = new Map(personaList.map(p => [p.id, p]));
@@ -164,6 +165,29 @@ export default function MultiAgentDashboard() {
       });
       setCollaborationResult(result);
       
+      // Archive mission result to a new collection
+      try {
+        const missionArchiveData = {
+          missionText: mission,
+          result: result,
+          createdAt: new Date().toISOString(),
+          model: selectedModel,
+          language: language,
+        };
+        await addDocument('mission-archives', missionArchiveData);
+        toast({
+          title: "Mission Archivée",
+          description: "Le résultat de la mission a été sauvegardé dans les archives.",
+        });
+      } catch (archiveError) {
+        console.error("Error archiving mission:", archiveError);
+        toast({
+          variant: "destructive",
+          title: "Échec de l'archivage",
+          description: "Le résultat de la mission n'a pas pu être archivé.",
+        });
+      }
+
       if (result.agentContributions) {
         const missionStartTime = new Date();
         const newLogEntries: LogEntry[] = result.agentContributions.map((contrib, index) => ({

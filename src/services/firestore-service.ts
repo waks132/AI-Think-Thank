@@ -11,6 +11,11 @@ import {
   getDoc,
   setDoc,
   onSnapshot,
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
   type Firestore,
 } from 'firebase/firestore';
 
@@ -75,6 +80,20 @@ export async function saveDocument<T>(collectionName: string, docId: string, dat
 }
 
 /**
+ * Adds a new document to a specified Firestore collection with an auto-generated ID.
+ * @param collectionName The name of the collection.
+ * @param data The data to save.
+ * @returns The ID of the newly created document.
+ */
+export async function addDocument<T>(collectionName: string, data: T): Promise<string> {
+  ensureFirestoreInitialized();
+  const collectionRef = collection(db, collectionName);
+  const docRef = await addDoc(collectionRef, data);
+  return docRef.id;
+}
+
+
+/**
  * Subscribes to real-time updates for a document.
  * @param collectionName The name of the collection.
  * @param docId The ID of the document.
@@ -92,4 +111,44 @@ export function subscribeToDoc<T>(collectionName: string, docId: string, callbac
     }
   });
   return unsubscribe;
+}
+
+/**
+ * Searches a Firestore collection for documents where any field contains the query string.
+ * This is a simplified search and may be slow on large collections.
+ * For production apps, a dedicated search service like Algolia or Elasticsearch is recommended.
+ * @param collectionName The name of the collection.
+ * @param searchQuery The string to search for.
+ * @returns An array of matching documents.
+ */
+export async function searchCollection<T>(collectionName: string, searchQuery: string): Promise<T[]> {
+  ensureFirestoreInitialized();
+  const collectionRef = collection(db, collectionName);
+  const q = await getDocs(collectionRef);
+  const results: T[] = [];
+  const lowerCaseQuery = searchQuery.toLowerCase();
+
+  q.forEach((doc) => {
+    const data = doc.data();
+    let match = false;
+    // Iterate over all fields in the document
+    for (const key in data) {
+      if (Object.prototype.hasOwnProperty.call(data, key)) {
+        try {
+          // Convert field value to string and check for inclusion
+          if (JSON.stringify(data[key]).toLowerCase().includes(lowerCaseQuery)) {
+            match = true;
+            break; // Found a match, no need to check other fields
+          }
+        } catch (e) {
+          // Ignore fields that can't be stringified
+        }
+      }
+    }
+    if (match) {
+      results.push({ id: doc.id, ...data } as T);
+    }
+  });
+
+  return results;
 }
