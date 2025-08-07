@@ -1,0 +1,118 @@
+rules_version = '2';
+
+/**
+ * TECHNOS FORGE FIREBASE SECURITY RULES
+ * Production-optimized Firestore security with granular access control
+ * Compatible with AI Think Tank multi-agent architecture
+ */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 🧠 SESSIONS - Core cognitive collaboration data
+    match /sessions/{sessionId} {
+      // Allow authenticated users to manage their sessions
+      allow read, write: if request.auth != null && isSessionOwner(sessionId);
+      
+      // Nested data collections for agent collaborations
+      match /data/{document=**} {
+        allow read, write: if request.auth != null && isSessionOwner(sessionId);
+      }
+      
+      // Performance metrics tracking
+      match /metrics/{metricId} {
+        allow read: if request.auth != null && isSessionOwner(sessionId);
+        allow create: if request.auth != null && 
+                      isSessionOwner(sessionId) &&
+                      isValidMetric();
+      }
+    }
+    
+    // 📚 KNOWLEDGE BASE - Read-only access for AI training data
+    match /knowledge-base/{documentId} {
+      allow read: if true; // Public read access for AI agent training
+      allow write: if false; // Only admin can modify via backend
+    }
+    
+    // 🤖 AGENTS - Agent personas and configurations
+    match /agents/{agentId} {
+      allow read: if true; // Agents are public for collaboration
+      allow write: if request.auth != null && 
+                   request.auth.token.admin == true; // Admin only
+    }
+    
+    // 📊 ANALYTICS - System performance and usage metrics
+    match /analytics/{analyticsId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && isValidAnalytic();
+      allow update: if false; // Analytics are immutable
+    }
+    
+    // 🔥 COLLABORATION RESULTS - AI-generated outputs
+    match /collaborations/{collaborationId} {
+      allow read: if request.auth != null && 
+                  (resource.data.ownerId == request.auth.uid || 
+                   resource.data.public == true);
+      allow create: if request.auth != null && 
+                    request.resource.data.ownerId == request.auth.uid &&
+                    isValidCollaboration();
+      allow update: if request.auth != null && 
+                    resource.data.ownerId == request.auth.uid;
+    }
+    
+    // 🎯 OPTIMIZATION DATA - Firebase performance tracking
+    match /optimization/{optimizationId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && isValidOptimization();
+    }
+    
+    // 🚨 SECURITY FUNCTIONS
+    function isSessionOwner(sessionId) {
+      return request.auth != null && 
+             (sessionId.matches(request.auth.uid + '.*') ||
+              get(/databases/$(database)/documents/sessions/$(sessionId)).data.ownerId == request.auth.uid);
+    }
+    
+    function isValidMetric() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['timestamp', 'sessionId', 'cognitiveCoherence']) &&
+             data.timestamp is timestamp &&
+             data.cognitiveCoherence is number &&
+             data.cognitiveCoherence >= 0 &&
+             data.cognitiveCoherence <= 1;
+    }
+    
+    function isValidAnalytic() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['timestamp', 'event', 'userId']) &&
+             data.timestamp is timestamp &&
+             data.event is string &&
+             data.userId == request.auth.uid;
+    }
+    
+    function isValidCollaboration() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['mission', 'agentContributions', 'executiveSummary']) &&
+             data.mission is string &&
+             data.agentContributions is list &&
+             data.executiveSummary is string &&
+             data.agentContributions.size() >= 1 &&
+             data.agentContributions.size() <= 45; // Max 45 agents
+    }
+    
+    function isValidOptimization() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['timestamp', 'metrics', 'recommendations']) &&
+             data.timestamp is timestamp &&
+             data.metrics is map &&
+             data.recommendations is list;
+    }
+    
+    // 🛡️ RATE LIMITING (basic protection)
+    function isNotTooFrequent() {
+      // Allow max 100 writes per minute per user
+      return request.auth != null &&
+             request.time > resource.data.lastWrite + duration.value(600, 'ms');
+    }
+  }
+}

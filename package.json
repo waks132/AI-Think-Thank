@@ -5,11 +5,17 @@
   "scripts": {
     "dev": "next dev --turbopack -p 9002",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
-    "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
-    "build": "next build",
+    "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts", 
+    "build": "next build && next export",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "firebase:emulators": "firebase emulators:start",
+    "firebase:deploy": "npm run build && firebase deploy",
+    "firebase:deploy:hosting": "npm run build && firebase deploy --only hosting",
+    "firebase:deploy:rules": "firebase deploy --only firestore:rules,firestore:indexes",
+    "test:cognitive": "node -e \"console.log('🧠 Cognitive tests would run here')\"",
+    "optimize:firebase": "node -e \"const { firebaseOptimizer } = require('./src/lib/firebase-optimization.ts'); console.log(firebaseOptimizer.generateOptimizationReport())\""
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.14.0",

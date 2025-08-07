@@ -147,16 +147,57 @@ const agentCollaborationFlow = ai.defineFlow(
     outputSchema: AgentCollaborationOutputSchema,
   },
   async (input) => {
-    // Step 1: Parse the agent list to get individual agent data
-    const agentDataRegex = /- \\*\\*Agent ID:\\*\\*\\s*(.*?)\\s*- \\*\\*Agent Role:\\*\\*\\s*(.*?)\\s*- \\*\\*Core Directive:\\*\\*\\s*\"(.*?)\"/gs;
+    // Step 1: TECHNOS FORGE ENHANCED PARSING - Multiple parsing strategies for resilience
     const agentsToSimulate = [];
-    let match;
-    while ((match = agentDataRegex.exec(input.agentList)) !== null) {
-      agentsToSimulate.push({
-        id: match[1].trim(),
-        role: match[2].trim(),
-        prompt: match[3].trim(),
-      });
+    
+    try {
+      // Primary parsing strategy - original regex
+      const agentDataRegex = /- \\*\\*Agent ID:\\*\\*\\s*(.*?)\\s*- \\*\\*Agent Role:\\*\\*\\s*(.*?)\\s*- \\*\\*Core Directive:\\*\\*\\s*\"(.*?)\"/gs;
+      let match;
+      while ((match = agentDataRegex.exec(input.agentList)) !== null) {
+        agentsToSimulate.push({
+          id: match[1].trim(),
+          role: match[2].trim(),
+          prompt: match[3].trim(),
+        });
+      }
+      
+      // Fallback parsing strategies if primary fails
+      if (agentsToSimulate.length === 0) {
+        // Strategy 2: Alternative markdown format
+        const altRegex = /##?\s*(.+?)\s*\n.*?(?:Role|Description):\s*(.+?)\n.*?(?:Directive|Prompt):\s*[\"'](.+?)[\"']/gs;
+        let altMatch;
+        while ((altMatch = altRegex.exec(input.agentList)) !== null) {
+          agentsToSimulate.push({
+            id: altMatch[1].trim().replace(/\s+/g, '_').toUpperCase(),
+            role: altMatch[2].trim(),
+            prompt: altMatch[3].trim(),
+          });
+        }
+      }
+      
+      // Strategy 3: JSON-like structure parsing
+      if (agentsToSimulate.length === 0) {
+        const jsonRegex = /{[\s\S]*?"id":\s*"([^"]+)"[\s\S]*?"role":\s*"([^"]+)"[\s\S]*?"prompt":\s*"([^"]+)"[\s\S]*?}/gs;
+        let jsonMatch;
+        while ((jsonMatch = jsonRegex.exec(input.agentList)) !== null) {
+          agentsToSimulate.push({
+            id: jsonMatch[1].trim(),
+            role: jsonMatch[2].trim(),
+            prompt: jsonMatch[3].trim(),
+          });
+        }
+      }
+      
+      if (agentsToSimulate.length === 0) {
+        throw new Error('No agents could be parsed from the provided agent list');
+      }
+      
+      console.log(`Successfully parsed ${agentsToSimulate.length} agents using enhanced parsing system`);
+      
+    } catch (parseError) {
+      console.error('Agent parsing failed:', parseError);
+      throw new Error(`Failed to parse agent list: ${parseError.message}`);
     }
 
     // Step 2: Generate contributions for each agent sequentially to avoid rate limiting

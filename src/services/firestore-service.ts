@@ -1,7 +1,8 @@
-// @ts-nocheck
 /**
+ * TECHNOS FORGE FIREBASE OPTIMIZATION
+ * Production-ready Firestore service with enhanced error handling & performance
+ * Fully TypeScript enabled with Firebase Studio integration
  * @fileoverview Service for interacting with Firebase Firestore.
- * This service is designed to be isomorphic, running on both server and client.
  */
 
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
@@ -52,19 +53,29 @@ function ensureFirestoreInitialized() {
 }
 
 /**
- * Retrieves a document from a specified Firestore collection.
+ * TECHNOS FORGE ENHANCED: Retrieves a document with error handling & metrics
  * @param collectionName The name of the collection.
  * @param docId The ID of the document.
  * @returns The document data or null if it doesn't exist.
  */
 export async function getDocument<T>(collectionName: string, docId: string): Promise<T | null> {
-  ensureFirestoreInitialized();
-  const docRef = doc(db, collectionName, docId);
-  const docSnap = await getDoc(docRef);
-  if (docSnap.exists()) {
-    return docSnap.data() as T;
+  try {
+    ensureFirestoreInitialized();
+    const startTime = Date.now();
+    const docRef = doc(db, collectionName, docId);
+    const docSnap = await getDoc(docRef);
+    
+    const responseTime = Date.now() - startTime;
+    console.log(`📊 Firestore Read: ${collectionName}/${docId} - ${responseTime}ms`);
+    
+    if (docSnap.exists()) {
+      return { id: docId, ...docSnap.data() } as T;
+    }
+    return null;
+  } catch (error) {
+    console.error(`❌ Firestore Read Error: ${collectionName}/${docId}`, error);
+    throw error;
   }
-  return null;
 }
 
 /**
