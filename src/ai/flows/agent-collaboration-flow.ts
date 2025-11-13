@@ -197,7 +197,7 @@ const agentCollaborationFlow = ai.defineFlow(
       
     } catch (parseError) {
       console.error('Agent parsing failed:', parseError);
-      throw new Error(`Failed to parse agent list: ${parseError.message}`);
+      throw new Error(`Failed to parse agent list: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
     }
 
     // Step 2: Generate contributions for each agent sequentially to avoid rate limiting

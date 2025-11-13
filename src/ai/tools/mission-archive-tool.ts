@@ -20,20 +20,16 @@ export const queryMissionArchiveTool = ai.defineTool(
   {
     name: 'queryMissionArchiveTool',
     description: "Searches the mission archives stored in Firestore. Use this to find information about past missions, their outcomes, and the reasoning behind them. This helps in learning from past experiences to inform current tasks.",
-    input: {
-      schema: z.object({
-        query: z.string().describe('Keywords or phrases to search for in the mission archives. Be specific to get relevant results.'),
-      })
-    },
-    output: {
-      schema: z.array(MissionArchiveSchema).describe("A list of archived missions that match the query."),
-    },
+    inputSchema: z.object({
+      query: z.string().describe('Keywords or phrases to search for in the mission archives. Be specific to get relevant results.'),
+    }),
+    outputSchema: z.array(MissionArchiveSchema).describe("A list of archived missions that match the query."),
   },
   async (input) => {
     console.log(`[Mission Archive Tool] Querying for: "${input.query}"`);
     const results = await searchCollection<any>('mission-archives', input.query);
     console.log(`[Mission Archive Tool] Found ${results.length} results.`);
-    
+
     // Map full results to the simplified schema for the AI
     return results.map(doc => ({
       id: doc.id,

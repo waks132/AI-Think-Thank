@@ -1,4 +1,4 @@
-import type { AgentContribution } from './ai/flows/agent-collaboration-flow';
+import type { AgentContribution } from '@/ai/flows/agent-collaboration-flow';
 
 export interface Agent {
   id: string;
@@ -26,6 +26,14 @@ export interface LogEntry {
 export interface HeatmapWord {
     word: string;
     weight: number;
+}
+
+export interface CausalLink {
+  from: string;
+  to: string;
+  reason: string;
+  turn: number;
+  influentialQuote: string;
 }
 
 export type { AgentContribution };

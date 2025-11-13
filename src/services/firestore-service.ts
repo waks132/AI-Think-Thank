@@ -84,10 +84,10 @@ export async function getDocument<T>(collectionName: string, docId: string): Pro
  * @param docId The ID of the document.
  * @param data The data to save.
  */
-export async function saveDocument<T>(collectionName: string, docId: string, data: T): Promise<void> {
+export async function saveDocument<T extends Record<string, any>>(collectionName: string, docId: string, data: T): Promise<void> {
   ensureFirestoreInitialized();
   const docRef = doc(db, collectionName, docId);
-  await setDoc(docRef, data, { merge: true });
+  await setDoc(docRef, data as any, { merge: true });
 }
 
 /**
@@ -96,10 +96,10 @@ export async function saveDocument<T>(collectionName: string, docId: string, dat
  * @param data The data to save.
  * @returns The ID of the newly created document.
  */
-export async function addDocument<T>(collectionName: string, data: T): Promise<string> {
+export async function addDocument<T extends Record<string, any>>(collectionName: string, data: T): Promise<string> {
   ensureFirestoreInitialized();
   const collectionRef = collection(db, collectionName);
-  const docRef = await addDoc(collectionRef, data);
+  const docRef = await addDoc(collectionRef, data as any);
   return docRef.id;
 }
 

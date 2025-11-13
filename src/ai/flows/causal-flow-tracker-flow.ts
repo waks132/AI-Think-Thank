@@ -58,7 +58,7 @@ const causalFlowTrackerFlow = ai.defineFlow(
     outputSchema: CausalFlowTrackerOutputSchema,
   },
   async (input) => {
-    const response = await prompt(input, {model: input.model, retries: 5});
+    const response = await prompt(input, {model: input.model});
     return response.output!;
   }
 );

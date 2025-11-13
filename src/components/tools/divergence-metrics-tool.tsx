@@ -19,7 +19,7 @@ import { Badge } from "../ui/badge"
 import { useLanguage } from "@/context/language-context"
 import { t } from "@/lib/i18n"
 import useFirestore from "@/hooks/use-firestore"
-const Diff = require('diff');
+import { diffWords } from 'diff';
 
 const formSchema = z.object({
   promptVersionA: z.string().min(10, { message: "Prompt A must be at least 10 characters." }),
@@ -27,7 +27,7 @@ const formSchema = z.object({
 })
 
 const DiffView = ({ string1, string2 }: { string1: string; string2: string }) => {
-    const differences = Diff.diffWords(string1, string2);
+    const differences = diffWords(string1, string2);
     return (
         <pre className="whitespace-pre-wrap text-sm leading-relaxed">
             {differences.map((part: any, index: number) => {

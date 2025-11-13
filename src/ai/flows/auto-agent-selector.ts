@@ -168,12 +168,14 @@ const autoAgentSelectorFlow = ai.defineFlow(
     // Prevent orchestrators from being in the list of selectable agents for the model
     const selectableAgents = input.agents.filter(agent => !ORCHESTRATOR_IDS.includes(agent.id));
     
-    let response = await autoAgentSelectorPrompt({...input, agents: selectableAgents}, {model: 'googleai/gemini-1.5-flash-latest', retries: 10});
+    let response = await autoAgentSelectorPrompt({...input, agents: selectableAgents}, {model: 'googleai/gemini-1.5-flash-latest'});
 
     // Exclude paradigmNativeProtocol if not required by mission classification
     if (response.output?.missionClassification !== "PARADIGM-NATIVE" && response.output?.missionClassification !== "Scepticisme + PARADIGM-NATIVE") {
-      const { paradigmNativeProtocol, ...rest } = response.output;
-      return rest as AutoAgentSelectorOutput; // Cast to ensure correct type after destructuring
+      if (response.output && 'paradigmNativeProtocol' in response.output) {
+        const { paradigmNativeProtocol, ...rest } = response.output;
+        return rest as AutoAgentSelectorOutput; // Cast to ensure correct type after destructuring
+      }
     }
 
     return response.output as AutoAgentSelectorOutput;
