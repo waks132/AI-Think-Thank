@@ -12,8 +12,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/context/language-context';
 import { t } from '@/lib/i18n';
-
-const Diff = require('diff');
+import { diffWords } from 'diff';
 
 interface DiffViewProps {
   string1: string;
@@ -21,7 +20,7 @@ interface DiffViewProps {
 }
 
 const DiffView: React.FC<DiffViewProps> = ({ string1, string2 }) => {
-    const differences = Diff.diffWords(string1, string2);
+    const differences = diffWords(string1, string2);
     return (
         <pre className="whitespace-pre-wrap text-sm">
             {differences.map((part: any, index: number) => {

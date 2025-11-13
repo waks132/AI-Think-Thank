@@ -154,20 +154,20 @@ export class ImpossibleProblemsSolver {
     technique: string
   ): Promise<string> {
     // This would integrate with the LLM system for breakthrough generation
-    const breakthroughs = {
+    const breakthroughs: Record<string, string> = {
       'meta-level-thinking': `🧠 **META-COGNITIVE BREAKTHROUGH**: The impossibility exists only at the current level of analysis. By ascending to a meta-level, we can observe that the problem's constraints are self-referential and can be transcended through dimensional shift.`,
-      
+
       'dialectical-synthesis': `⚡ **DIALECTICAL RESOLUTION**: The apparent contradictions in "${problem.description}" can be resolved through Hegelian synthesis - both opposing forces are partially true and can coexist in a higher-order framework that encompasses both perspectives.`,
-      
+
       'constraint-dissolution': `🔓 **CONSTRAINT TRANSCENDENCE**: The perceived impossibility stems from artificial constraints. By identifying and dissolving the fundamental assumptions that create these limitations, we open new solution spaces.`,
-      
+
       'paradigm-shifting': `🌟 **PARADIGM REVOLUTION**: The problem appears impossible within the current conceptual framework. A complete paradigm shift reveals that the question itself is based on false premises, opening entirely new approaches.`,
-      
+
       'recursive-resolution': `🔄 **RECURSIVE BREAKTHROUGH**: The solution lies in applying the problem to itself recursively, creating a self-solving mechanism that transforms the impossibility into a dynamic equilibrium.`,
-      
+
       'dimensional-transcendence': `🌌 **DIMENSIONAL LEAP**: By expanding our conceptual dimensions beyond the 3D constraints of the problem space, we can access solution pathways that are invisible from lower-dimensional perspectives.`
     };
-    
+
     return breakthroughs[technique] || breakthroughs['meta-level-thinking'];
   }
 
@@ -177,7 +177,7 @@ export class ImpossibleProblemsSolver {
     technique: string
   ): Promise<{ implementation: string[], verification: string }> {
     
-    const implementations = {
+    const implementations: Record<string, string[]> = {
       'meta-level-thinking': [
         '1. **Identify the Meta-Level**: Recognize that the problem exists within a specific conceptual framework',
         '2. **Transcend Current Level**: Step outside the problem\'s native dimensional space',
@@ -185,7 +185,7 @@ export class ImpossibleProblemsSolver {
         '4. **Implement Multi-Level Solution**: Create solutions that operate simultaneously across multiple conceptual levels',
         '5. **Validate Consistency**: Ensure the solution remains coherent across all operational levels'
       ],
-      
+
       'dialectical-synthesis': [
         '1. **Thesis Identification**: Clearly define the first contradictory element',
         '2. **Antithesis Recognition**: Identify the opposing contradictory force',
@@ -193,7 +193,7 @@ export class ImpossibleProblemsSolver {
         '4. **Dynamic Balance**: Implement mechanisms for maintaining productive tension',
         '5. **Continuous Evolution**: Allow the synthesis to evolve and adapt over time'
       ],
-      
+
       'constraint-dissolution': [
         '1. **Constraint Mapping**: Systematically identify all perceived limitations',
         '2. **Assumption Analysis**: Question the fundamental assumptions behind each constraint',
@@ -203,12 +203,12 @@ export class ImpossibleProblemsSolver {
       ]
     };
 
-    const verifications = {
+    const verifications: Record<string, string> = {
       'meta-level-thinking': 'Verification through multi-level consistency checking and recursive validation of meta-assumptions',
       'dialectical-synthesis': 'Verification through tension analysis and synthesis stability assessment',
       'constraint-dissolution': 'Verification through constraint independence testing and solution space mapping'
     };
-    
+
     return {
       implementation: implementations[technique] || implementations['meta-level-thinking'],
       verification: verifications[technique] || verifications['meta-level-thinking']
@@ -258,7 +258,7 @@ export class ImpossibleProblemsSolver {
         description: 'Resolve the grandfather paradox in time travel while maintaining causal consistency.',
         constraints: ['causality', 'temporal consistency', 'free will'],
         contradictions: ['cause before effect', 'effect prevents cause'],
-        complexity: 'temporal',
+        complexity: 'paradoxical',
         impossibilityType: 'temporal'
       },
       {

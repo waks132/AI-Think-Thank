@@ -74,7 +74,6 @@ const agentReasoningFlow = ai.defineFlow(
   async (input) => {
     const response = await agentReasoningPrompt(input, {
       model: input.model,
-      retries: 10,
     });
     return response.output!;
   }

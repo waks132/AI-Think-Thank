@@ -17,14 +17,10 @@ export const queryKnowledgeBaseTool = ai.defineTool(
   {
     name: 'queryKnowledgeBaseTool',
     description: "Searches the internal knowledge base of corrected analyses, best practices, and cognitive patterns to find relevant information. Use this to fill knowledge gaps, learn from past mistakes, and improve the quality of your reasoning. You can search by keywords or by a specific document ID.",
-    input: {
-      schema: z.object({
-        query: z.string().describe('A keyword, phrase, or a specific document ID (e.g., "REPORT-TEST-NEXUS-PRIME-05") to search for in the knowledge base. Be specific to get the best results.'),
-      })
-    },
-    output: {
-      schema: z.array(KnowledgeDocumentSchema).describe("A list of documents from the knowledge base that match the query."),
-    },
+    inputSchema: z.object({
+      query: z.string().describe('A keyword, phrase, or a specific document ID (e.g., "REPORT-TEST-NEXUS-PRIME-05") to search for in the knowledge base. Be specific to get the best results.'),
+    }),
+    outputSchema: z.array(KnowledgeDocumentSchema).describe("A list of documents from the knowledge base that match the query."),
   },
   async (input) => {
     console.log(`[Knowledge Base Tool] Querying for: "${input.query}"`);

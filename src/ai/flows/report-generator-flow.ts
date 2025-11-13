@@ -87,7 +87,6 @@ const generateReportFlow = ai.defineFlow(
     const response = await reportPrompt(input, {
       model: input.model,
       config: {maxOutputTokens: 8192},
-      retries: 5,
     });
     return response.output!;
   }
