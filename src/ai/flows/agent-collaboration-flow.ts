@@ -8,6 +8,7 @@
  */
 
 import {ai, JSON_OUTPUT_DIRECTIVE} from '@/ai/genkit';
+import {withLLMRetry} from '@/ai/resilience';
 import {z} from 'genkit';
 import { queryKnowledgeBaseTool } from '@/ai/tools/knowledge-base-tool';
 import { queryMissionArchiveTool } from '@/ai/tools/mission-archive-tool';
@@ -204,11 +205,14 @@ const agentCollaborationFlow = ai.defineFlow(
     // Step 2: Generate contributions for each agent sequentially to avoid rate limiting
     const contributions: AgentContribution[] = [];
     for (const agent of agentsToSimulate) {
-      const contributionResult = await agentContributionGeneratorPrompt({
-        mission: input.mission,
-        agent: agent,
-        language: input.language,
-      });
+      const contributionResult = await withLLMRetry(
+        () => agentContributionGeneratorPrompt({
+          mission: input.mission,
+          agent: agent,
+          language: input.language,
+        }),
+        { label: `contribution:${agent.role}` }
+      );
       const contributionOutput = contributionResult.output;
       if (!contributionOutput) {
         throw new Error(`Failed to generate contribution for agent ${agent.role}`);
@@ -221,15 +225,18 @@ const agentCollaborationFlow = ai.defineFlow(
     }
 
     // Step 3: Synthesize the results
-    const synthesisResult = await agentCollaborationSynthesisPrompt({
-      mission: input.mission,
-      agentList: input.agentList,
-      contributions: contributions,
-      language: input.language,
-    }, {
-      model: input.model,
-      config: { maxOutputTokens: 8192 },
-    });
+    const synthesisResult = await withLLMRetry(
+      () => agentCollaborationSynthesisPrompt({
+        mission: input.mission,
+        agentList: input.agentList,
+        contributions: contributions,
+        language: input.language,
+      }, {
+        model: input.model,
+        config: { maxOutputTokens: 8192 },
+      }),
+      { label: 'agentCollaborationSynthesis' }
+    );
 
     const finalOutput = synthesisResult.output;
     if (!finalOutput) {
