@@ -7,7 +7,7 @@
  * - AgentCollaborationOutput - The return type for the runAgentCollaboration function.
  */
 
-import {ai, JSON_OUTPUT_DIRECTIVE} from '@/ai/genkit';
+import {ai, JSON_OUTPUT_DIRECTIVE, getModelConfig} from '@/ai/genkit';
 import {withLLMRetry} from '@/ai/resilience';
 import {z} from 'genkit';
 import { queryKnowledgeBaseTool } from '@/ai/tools/knowledge-base-tool';
@@ -171,7 +171,7 @@ const agentCollaborationFlow = ai.defineFlow(
           mission: input.mission,
           agent: agent,
           language: input.language,
-        }),
+        }, { model: input.model, config: getModelConfig(input.model) }),
         { label: `contribution:${agent.role}` }
       );
       const contributionOutput = contributionResult.output;
@@ -194,7 +194,7 @@ const agentCollaborationFlow = ai.defineFlow(
         language: input.language,
       }, {
         model: input.model,
-        config: { maxOutputTokens: 8192 },
+        config: getModelConfig(input.model),
       }),
       { label: 'agentCollaborationSynthesis' }
     );

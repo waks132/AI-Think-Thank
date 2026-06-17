@@ -7,7 +7,7 @@
  * - CognitiveHeatmapOutput - The return type for the generateCognitiveHeatmap function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, getModelConfig} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const CognitiveHeatmapInputSchema = z.object({
@@ -52,7 +52,7 @@ const cognitiveHeatmapFlow = ai.defineFlow(
     outputSchema: CognitiveHeatmapOutputSchema,
   },
   async (input) => {
-    const response = await prompt(input, {model: input.model});
+    const response = await prompt(input, {model: input.model, config: getModelConfig(input.model)});
     return response.output!;
   }
 );

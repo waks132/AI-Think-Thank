@@ -7,7 +7,7 @@
  * - AutoAgentSelectorOutput - The return type for the autoAgentSelector function.
  */
 
-import {ai, JSON_OUTPUT_DIRECTIVE} from '@/ai/genkit';
+import {ai, JSON_OUTPUT_DIRECTIVE, getModelConfig} from '@/ai/genkit';
 import {withLLMRetry} from '@/ai/resilience';
 import {z} from 'genkit';
 import { queryKnowledgeBaseTool } from '@/ai/tools/knowledge-base-tool';
@@ -173,7 +173,7 @@ const autoAgentSelectorFlow = ai.defineFlow(
     // VERSION LOCALE : on laisse le modèle par défaut NVIDIA (défini dans genkit.ts
     // via NVIDIA_DEFAULT_MODEL), ou celui passé en entrée le cas échéant.
     let response = await withLLMRetry(
-      () => autoAgentSelectorPrompt({...input, agents: selectableAgents}, {model: input.model}),
+      () => autoAgentSelectorPrompt({...input, agents: selectableAgents}, {model: input.model, config: getModelConfig(input.model)}),
       { label: 'autoAgentSelector' }
     );
 

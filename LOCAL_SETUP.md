@@ -119,6 +119,21 @@ génération de base, mode JSON, JSON schema strict, function calling.
 3. **Modèle par défaut** = `mistral-large-3` (meilleur compromis JSON+tools+vitesse).
    Pour les missions très lourdes en tools, `kimi-k2.6` est le plus fiable.
 
+4. **Couche de résilience** (`src/ai/resilience.ts`) : `withLLMRetry` enveloppe
+   les appels des flows à tools avec retry + backoff exponentiel (gère 429 et
+   sorties structurées incomplètes).
+
+5. **Paramètres de génération par modèle** (`getModelConfig` dans `genkit.ts`) :
+   temperature / top_p / max_tokens réglés par modèle, plus options spécifiques
+   (ex. `chat_template_kwargs.thinking=false` pour deepseek). ⚠️ Deux pièges du
+   plugin vérifiés en test :
+   - **`maxOutputTokens` est IGNORÉ** par `@genkit-ai/compat-oai` (jamais mappé
+     vers `max_tokens`). On utilise donc `max_tokens` **brut**, qui lui passe
+     via le passthrough des clés inconnues.
+   - **Désactiver le thinking de deepseek** le rend ~2× plus rapide mais réduit
+     la qualité du raisonnement (a échoué un calcul simple en test). Repassez à
+     `thinking: true` dans `genkit.ts` pour les missions à raisonnement profond.
+
 ## Points de vigilance NVIDIA (à tester après installation)
 
 1. **Sorties structurées (JSON/Zod).** 12 flows demandent un JSON conforme à un

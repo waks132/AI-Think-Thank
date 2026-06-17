@@ -61,3 +61,63 @@ export const JSON_OUTPUT_DIRECTIVE =
   "\n\nFORMAT DE SORTIE STRICT : Répondez UNIQUEMENT avec un seul objet JSON brut " +
   "conforme au schéma de sortie. N'utilisez PAS de blocs de code markdown " +
   "(pas de ```), n'ajoutez AUCUN texte, commentaire ou prose avant ou après le JSON.";
+
+/**
+ * Paramètres de génération PAR MODÈLE — AJUSTEMENT NVIDIA.
+ *
+ * ⚠️ Deux pièges du plugin @genkit-ai/compat-oai vérifiés empiriquement :
+ *  1. `maxOutputTokens` est IGNORÉ par le plugin (destructuré mais jamais
+ *     mappé vers max_tokens). Il faut donc passer `max_tokens` BRUT.
+ *  2. Toute clé de config inconnue est transmise telle quelle dans le corps de
+ *     la requête (`...restOfConfig`). On peut donc passer des paramètres
+ *     spécifiques NVIDIA comme `chat_template_kwargs` (ex. thinking deepseek).
+ *
+ * Les clés sont les IDs de modèle SANS le préfixe "nvidia/".
+ */
+export type GenConfig = Record<string, unknown>;
+
+const DEFAULT_GEN_CONFIG: GenConfig = {
+  temperature: 0.3,
+  top_p: 1,
+  max_tokens: 4096,
+};
+
+const MODEL_GEN_CONFIG: Record<string, GenConfig> = {
+  // Défaut : rapide et déterministe, idéal pour la sortie structurée JSON.
+  'mistralai/mistral-large-3-675b-instruct-2512': {
+    temperature: 0.15,
+    top_p: 1,
+    max_tokens: 4096,
+  },
+  // Robuste sur le combo tools+schéma, mais lent : on lui laisse de la marge.
+  'moonshotai/kimi-k2.6': {
+    temperature: 0.6,
+    top_p: 1,
+    max_tokens: 8192,
+  },
+  // Modèle à raisonnement. `thinking:false` = bien plus rapide (évite les
+  // timeouts sur tools+schéma) MAIS qualité de raisonnement réduite.
+  // Repasser à `true` pour les missions exigeant un raisonnement profond.
+  'deepseek-ai/deepseek-v4-pro': {
+    temperature: 0.6,
+    top_p: 0.95,
+    max_tokens: 8192,
+    chat_template_kwargs: { thinking: false },
+  },
+  // JSON fiable ; tools instables via Genkit -> à réserver aux flows sans tools.
+  'openai/gpt-oss-120b': {
+    temperature: 0.4,
+    top_p: 1,
+    max_tokens: 8192,
+  },
+};
+
+/**
+ * Retourne les paramètres de génération par défaut pour un modèle donné
+ * (fusionnés avec les valeurs par défaut globales). `model` peut inclure ou
+ * non le préfixe "nvidia/"; `undefined` => modèle par défaut.
+ */
+export function getModelConfig(model?: string): GenConfig {
+  const id = (model ?? NVIDIA_DEFAULT_MODEL).replace(/^nvidia\//, '');
+  return { ...DEFAULT_GEN_CONFIG, ...(MODEL_GEN_CONFIG[id] ?? {}) };
+}

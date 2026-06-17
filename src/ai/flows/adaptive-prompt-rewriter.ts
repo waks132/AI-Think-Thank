@@ -9,7 +9,7 @@
  * - AdaptivePromptRewriterOutput - The return type for the adaptivePromptRewriter function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, getModelConfig} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const AdaptivePromptRewriterInputSchema = z.object({
@@ -90,7 +90,7 @@ const adaptivePromptRewriterFlow = ai.defineFlow(
     outputSchema: AdaptivePromptRewriterOutputSchema,
   },
   async (input) => {
-    const response = await adaptivePromptRewriterPrompt(input, {model: input.model});
+    const response = await adaptivePromptRewriterPrompt(input, {model: input.model, config: getModelConfig(input.model)});
     return response.output!;
   }
 );

@@ -7,7 +7,7 @@
  * - CausalFlowTrackerOutput - The return type for the trackCausalFlow function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, getModelConfig} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const CausalFlowTrackerInputSchema = z.object({
@@ -58,7 +58,7 @@ const causalFlowTrackerFlow = ai.defineFlow(
     outputSchema: CausalFlowTrackerOutputSchema,
   },
   async (input) => {
-    const response = await prompt(input, {model: input.model});
+    const response = await prompt(input, {model: input.model, config: getModelConfig(input.model)});
     return response.output!;
   }
 );

@@ -7,7 +7,7 @@
  * - GenerateReportOutput - The return type for the function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, getModelConfig} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateReportInputSchema = z.object({
@@ -86,7 +86,7 @@ const generateReportFlow = ai.defineFlow(
   async (input) => {
     const response = await reportPrompt(input, {
       model: input.model,
-      config: {maxOutputTokens: 8192},
+      config: getModelConfig(input.model),
     });
     return response.output!;
   }

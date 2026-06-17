@@ -7,7 +7,7 @@
  * - CognitiveClashSimulatorOutput - The return type for the cognitiveClashSimulator function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, getModelConfig} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const PerspectiveSchema = z.object({
@@ -122,7 +122,7 @@ const cognitiveClashSimulatorFlow = ai.defineFlow(
   async (input) => {
     const response = await prompt(input, {
       model: input.model,
-      config: { maxOutputTokens: 8192 },
+      config: getModelConfig(input.model),
     });
     return response.output!;
   }

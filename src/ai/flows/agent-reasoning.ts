@@ -7,7 +7,7 @@
  * - AgentReasoningOutput - The return type for the agentReasoning function.
  */
 
-import {ai, JSON_OUTPUT_DIRECTIVE} from '@/ai/genkit';
+import {ai, JSON_OUTPUT_DIRECTIVE, getModelConfig} from '@/ai/genkit';
 import {withLLMRetry} from '@/ai/resilience';
 import {z} from 'genkit';
 import { queryKnowledgeBaseTool } from '@/ai/tools/knowledge-base-tool';
@@ -75,7 +75,7 @@ const agentReasoningFlow = ai.defineFlow(
   },
   async (input) => {
     const response = await withLLMRetry(
-      () => agentReasoningPrompt(input, { model: input.model }),
+      () => agentReasoningPrompt(input, { model: input.model, config: getModelConfig(input.model) }),
       { label: 'agentReasoning' }
     );
     return response.output!;

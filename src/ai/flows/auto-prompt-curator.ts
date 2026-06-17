@@ -7,7 +7,7 @@
  * - AutoCurationOutput - The return type for the autoCuration function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, getModelConfig} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const AutoCurationInputSchema = z.object({
@@ -92,7 +92,7 @@ const autoCurationFlow = ai.defineFlow(
     outputSchema: AutoCurationOutputSchema,
   },
   async (input) => {
-    const response = await autoCurationPrompt(input, {model: input.model});
+    const response = await autoCurationPrompt(input, {model: input.model, config: getModelConfig(input.model)});
     return response.output!;
   }
 );
