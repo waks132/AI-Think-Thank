@@ -4,7 +4,8 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { searchCollection } from '@/services/firestore-service';
+import { searchCollection, isFirebaseEnabled } from '@/services/firestore-service';
+import { searchArchives } from '@/services/local-archive-service';
 import { z } from 'genkit';
 
 // Simplified schema for the output to avoid overwhelming the model
@@ -27,7 +28,10 @@ export const queryMissionArchiveTool = ai.defineTool(
   },
   async (input) => {
     console.log(`[Mission Archive Tool] Querying for: "${input.query}"`);
-    const results = await searchCollection<any>('mission-archives', input.query);
+    // Route selon le mode : Firestore si activé, sinon archive locale (fichiers).
+    const results = isFirebaseEnabled()
+      ? await searchCollection<any>('mission-archives', input.query)
+      : await searchArchives(input.query);
     console.log(`[Mission Archive Tool] Found ${results.length} results.`);
 
     // Map full results to the simplified schema for the AI
