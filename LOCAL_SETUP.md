@@ -6,7 +6,32 @@ Firebase local**. Aucune dépendance à Google Gemini ni à un Firestore cloud.
 
 ---
 
-## 1. Prérequis
+## 🚀 Lancement le plus simple (recommandé, sans connaissances techniques)
+
+1. Installez **Node.js 20+** une seule fois : <https://nodejs.org> (bouton « LTS »).
+   *(Optionnel, pour une base 100% locale : installez aussi Java — <https://adoptium.net>.)*
+2. **Double-cliquez** sur le fichier correspondant à votre système :
+   - **Windows** : `Lancer-Windows.bat`
+   - **macOS** : `Lancer-Mac.command`
+   - **Linux** : `Lancer-Linux.sh` (ou `./Lancer-Linux.sh` dans un terminal)
+3. Au premier lancement, collez votre **clé NVIDIA** (`nvapi-…`) quand on vous la
+   demande. On l'obtient gratuitement sur <https://build.nvidia.com>.
+
+Le lanceur s'occupe de tout : vérification de Node, installation des
+dépendances, création de la config, démarrage de la base locale (si Java est
+présent) et de l'application, puis ouverture automatique du navigateur sur
+<http://localhost:9002>. Pour arrêter : fermez la fenêtre (ou Ctrl+C).
+
+> Équivalent en ligne de commande : `npm run local`.
+>
+> ℹ️ macOS peut afficher un avertissement de sécurité au premier double-clic :
+> faites un clic droit sur le fichier → **Ouvrir** → **Ouvrir**.
+
+---
+
+## Installation manuelle (développeurs)
+
+### 1. Prérequis
 
 - **Node.js 20+** (le projet cible `nodejs_20`)
 - **Java JDK 11+** (requis par les émulateurs Firebase)
