@@ -8,6 +8,7 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
 import {
   getFirestore,
+  connectFirestoreEmulator,
   doc,
   getDoc,
   setDoc,
@@ -20,26 +21,50 @@ import {
   type Firestore,
 } from 'firebase/firestore';
 
-// Your web app's Firebase configuration
+// VERSION LOCALE : configuration Firebase surchargeable par variables d'env.
+// Avec l'émulateur, projectId/apiKey peuvent rester des valeurs factices.
 const firebaseConfig = {
-  apiKey: "AIzaSyDZkXzqMwnNlp6rues-pIebFxWroA72H3Y",
-  authDomain: "cognitive-collective.firebaseapp.com",
-  projectId: "cognitive-collective",
-  storageBucket: "cognitive-collective.firebasestorage.app",
-  messagingSenderId: "137160897256",
-  appId: "1:137160897256:web:9f5a4cf22bebf3ecbd0f5d"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "AIzaSyDZkXzqMwnNlp6rues-pIebFxWroA72H3Y",
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? "cognitive-collective.firebaseapp.com",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? "cognitive-collective",
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? "cognitive-collective.firebasestorage.app",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? "137160897256",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? "1:137160897256:web:9f5a4cf22bebf3ecbd0f5d"
 };
 
 
 let app: FirebaseApp;
 let db: Firestore;
+let emulatorConnected = false;
+
+/**
+ * VERSION LOCALE : connecte Firestore à l'émulateur local lorsque
+ * NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true'. Idempotent (une seule fois).
+ */
+function maybeConnectEmulator(database: Firestore) {
+  if (emulatorConnected) return;
+  if (process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR !== 'true') return;
+
+  const host = process.env.NEXT_PUBLIC_FIRESTORE_EMULATOR_HOST ?? '127.0.0.1';
+  const port = Number(process.env.NEXT_PUBLIC_FIRESTORE_EMULATOR_PORT ?? '8080');
+  try {
+    connectFirestoreEmulator(database, host, port);
+    emulatorConnected = true;
+    console.log(`🔧 Firestore connecté à l'émulateur local: ${host}:${port}`);
+  } catch (e) {
+    // déjà connecté / déjà utilisé : sans danger
+    emulatorConnected = true;
+  }
+}
 
 if (typeof window !== 'undefined' && !getApps().length) {
   app = initializeApp(firebaseConfig);
   db = getFirestore(app);
+  maybeConnectEmulator(db);
 } else if (typeof window !== 'undefined') {
   app = getApp();
   db = getFirestore(app);
+  maybeConnectEmulator(db);
 }
 
 /**
@@ -49,6 +74,7 @@ function ensureFirestoreInitialized() {
   if (!db) {
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     db = getFirestore(app);
+    maybeConnectEmulator(db);
   }
 }
 

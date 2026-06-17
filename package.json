@@ -18,7 +18,7 @@
     "optimize:firebase": "node -e \"const { firebaseOptimizer } = require('./src/lib/firebase-optimization.ts'); console.log(firebaseOptimizer.generateOptimizationReport())\""
   },
   "dependencies": {
-    "@genkit-ai/googleai": "^1.14.0",
+    "@genkit-ai/compat-oai": "^1.14.0",
     "@genkit-ai/next": "^1.14.0",
     "@hookform/resolvers": "^4.1.3",
     "@radix-ui/react-accordion": "^1.2.3",

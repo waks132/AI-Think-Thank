@@ -168,7 +168,9 @@ const autoAgentSelectorFlow = ai.defineFlow(
     // Prevent orchestrators from being in the list of selectable agents for the model
     const selectableAgents = input.agents.filter(agent => !ORCHESTRATOR_IDS.includes(agent.id));
     
-    let response = await autoAgentSelectorPrompt({...input, agents: selectableAgents}, {model: 'googleai/gemini-1.5-flash-latest'});
+    // VERSION LOCALE : on laisse le modèle par défaut NVIDIA (défini dans genkit.ts
+    // via NVIDIA_DEFAULT_MODEL), ou celui passé en entrée le cas échéant.
+    let response = await autoAgentSelectorPrompt({...input, agents: selectableAgents}, {model: input.model});
 
     // Exclude paradigmNativeProtocol if not required by mission classification
     if (response.output?.missionClassification !== "PARADIGM-NATIVE" && response.output?.missionClassification !== "Scepticisme + PARADIGM-NATIVE") {
