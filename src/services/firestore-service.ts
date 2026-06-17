@@ -38,6 +38,18 @@ let db: Firestore;
 let emulatorConnected = false;
 
 /**
+ * Indique si Firebase doit être utilisé. Par défaut NON : la version locale
+ * fonctionne entièrement avec localStorage (voir useFirestore). Firebase n'est
+ * activé que si l'émulateur local est demandé, ou via un flag cloud explicite.
+ */
+export function isFirebaseEnabled(): boolean {
+  return (
+    process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true' ||
+    process.env.NEXT_PUBLIC_USE_FIREBASE === 'true'
+  );
+}
+
+/**
  * VERSION LOCALE : connecte Firestore à l'émulateur local lorsque
  * NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true'. Idempotent (une seule fois).
  */
@@ -57,23 +69,23 @@ function maybeConnectEmulator(database: Firestore) {
   }
 }
 
-if (typeof window !== 'undefined' && !getApps().length) {
-  app = initializeApp(firebaseConfig);
-  db = getFirestore(app);
-  maybeConnectEmulator(db);
-} else if (typeof window !== 'undefined') {
-  app = getApp();
+// N'initialise Firebase QUE s'il est explicitement activé (émulateur ou cloud).
+// Sinon, aucune connexion n'est tentée -> aucune erreur "client is offline".
+if (isFirebaseEnabled() && typeof window !== 'undefined') {
+  app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   db = getFirestore(app);
   maybeConnectEmulator(db);
 }
 
 /**
  * Ensures Firestore is initialized, especially for server-side contexts.
+ * Ne fait rien si Firebase est désactivé.
  */
 function ensureFirestoreInitialized() {
+  if (!isFirebaseEnabled()) return;
   if (!db) {
-    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-    db = getFirestore(app);
+    const fbApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    db = getFirestore(fbApp);
     maybeConnectEmulator(db);
   }
 }
@@ -85,22 +97,19 @@ function ensureFirestoreInitialized() {
  * @returns The document data or null if it doesn't exist.
  */
 export async function getDocument<T>(collectionName: string, docId: string): Promise<T | null> {
+  if (!isFirebaseEnabled()) return null;
   try {
     ensureFirestoreInitialized();
-    const startTime = Date.now();
     const docRef = doc(db, collectionName, docId);
     const docSnap = await getDoc(docRef);
-    
-    const responseTime = Date.now() - startTime;
-    console.log(`📊 Firestore Read: ${collectionName}/${docId} - ${responseTime}ms`);
-    
     if (docSnap.exists()) {
       return { id: docId, ...docSnap.data() } as T;
     }
     return null;
   } catch (error) {
-    console.error(`❌ Firestore Read Error: ${collectionName}/${docId}`, error);
-    throw error;
+    // Dégradation gracieuse : ne JAMAIS jeter (sinon casse l'UI/les flows).
+    console.warn(`⚠️ Firestore Read indisponible (${collectionName}/${docId}) — ignoré.`);
+    return null;
   }
 }
 
@@ -111,9 +120,14 @@ export async function getDocument<T>(collectionName: string, docId: string): Pro
  * @param data The data to save.
  */
 export async function saveDocument<T extends Record<string, any>>(collectionName: string, docId: string, data: T): Promise<void> {
-  ensureFirestoreInitialized();
-  const docRef = doc(db, collectionName, docId);
-  await setDoc(docRef, data as any, { merge: true });
+  if (!isFirebaseEnabled()) return;
+  try {
+    ensureFirestoreInitialized();
+    const docRef = doc(db, collectionName, docId);
+    await setDoc(docRef, data as any, { merge: true });
+  } catch {
+    console.warn(`⚠️ Firestore Write indisponible (${collectionName}/${docId}) — ignoré.`);
+  }
 }
 
 /**
@@ -123,10 +137,17 @@ export async function saveDocument<T extends Record<string, any>>(collectionName
  * @returns The ID of the newly created document.
  */
 export async function addDocument<T extends Record<string, any>>(collectionName: string, data: T): Promise<string> {
-  ensureFirestoreInitialized();
-  const collectionRef = collection(db, collectionName);
-  const docRef = await addDoc(collectionRef, data as any);
-  return docRef.id;
+  const localId = `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  if (!isFirebaseEnabled()) return localId;
+  try {
+    ensureFirestoreInitialized();
+    const collectionRef = collection(db, collectionName);
+    const docRef = await addDoc(collectionRef, data as any);
+    return docRef.id;
+  } catch {
+    console.warn(`⚠️ Firestore Add indisponible (${collectionName}) — id local généré.`);
+    return localId;
+  }
 }
 
 
@@ -138,16 +159,19 @@ export async function addDocument<T extends Record<string, any>>(collectionName:
  * @returns An unsubscribe function.
  */
 export function subscribeToDoc<T>(collectionName: string, docId: string, callback: (data: T | null) => void): () => void {
-  ensureFirestoreInitialized();
-  const docRef = doc(db, collectionName, docId);
-  const unsubscribe = onSnapshot(docRef, (docSnap) => {
-    if (docSnap.exists()) {
-      callback(docSnap.data() as T);
-    } else {
-      callback(null);
-    }
-  });
-  return unsubscribe;
+  if (!isFirebaseEnabled()) return () => {};
+  try {
+    ensureFirestoreInitialized();
+    const docRef = doc(db, collectionName, docId);
+    const unsubscribe = onSnapshot(
+      docRef,
+      (docSnap) => callback(docSnap.exists() ? (docSnap.data() as T) : null),
+      () => { /* erreur de flux ignorée (offline) */ }
+    );
+    return unsubscribe;
+  } catch {
+    return () => {};
+  }
 }
 
 /**
@@ -159,9 +183,16 @@ export function subscribeToDoc<T>(collectionName: string, docId: string, callbac
  * @returns An array of matching documents.
  */
 export async function searchCollection<T>(collectionName: string, searchQuery: string): Promise<T[]> {
-  ensureFirestoreInitialized();
-  const collectionRef = collection(db, collectionName);
-  const q = await getDocs(collectionRef);
+  if (!isFirebaseEnabled()) return [];
+  let q;
+  try {
+    ensureFirestoreInitialized();
+    const collectionRef = collection(db, collectionName);
+    q = await getDocs(collectionRef);
+  } catch {
+    console.warn(`⚠️ Firestore Search indisponible (${collectionName}) — résultat vide.`);
+    return [];
+  }
   const results: T[] = [];
   const lowerCaseQuery = searchQuery.toLowerCase();
 

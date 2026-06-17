@@ -197,6 +197,21 @@ génération de base, mode JSON, JSON schema strict, function calling.
 4. **Coût en crédits.** Les endpoints gratuits consomment les crédits offerts.
    Surveillez votre quota sur le tableau de bord NVIDIA Build.
 
+## Persistance des données (état des outils)
+
+La version locale stocke l'état des modules (résultats des outils, agents,
+mission, logs…) dans le **localStorage du navigateur** par défaut. Conséquences :
+
+- ✅ **Tous les modules fonctionnent sans aucune base de données** ni connexion —
+  plus d'erreur « Failed to get document because the client is offline ».
+- ✅ L'état est conservé d'une session à l'autre (même navigateur).
+- ℹ️ Pour repartir de zéro : videz le stockage du site (DevTools → Application →
+  Local Storage) ou utilisez une fenêtre privée.
+- ℹ️ Pour activer une vraie base partagée (multi-postes), mettez
+  `NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true` (émulateur local) **et** démarrez-le,
+  ou `NEXT_PUBLIC_USE_FIREBASE=true` pour le cloud. La synchro Firebase est alors
+  best-effort : toute erreur réseau est silencieuse et ne bloque jamais l'UI.
+
 ## Dépannage rapide
 
 - **`NVIDIA_API_KEY est manquant`** dans la console → `.env.local` non chargé ou
