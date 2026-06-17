@@ -171,7 +171,7 @@ const agentCollaborationFlow = ai.defineFlow(
           mission: input.mission,
           agent: agent,
           language: input.language,
-        }, { model: input.model, config: getModelConfig(input.model) }),
+        }, { model: input.model, config: getModelConfig(input.model, 'creative') }),
         { label: `contribution:${agent.role}` }
       );
       const contributionOutput = contributionResult.output;
@@ -194,7 +194,7 @@ const agentCollaborationFlow = ai.defineFlow(
         language: input.language,
       }, {
         model: input.model,
-        config: getModelConfig(input.model),
+        config: getModelConfig(input.model, 'analytical'),
       }),
       { label: 'agentCollaborationSynthesis' }
     );

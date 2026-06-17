@@ -123,16 +123,27 @@ génération de base, mode JSON, JSON schema strict, function calling.
    les appels des flows à tools avec retry + backoff exponentiel (gère 429 et
    sorties structurées incomplètes).
 
-5. **Paramètres de génération par modèle** (`getModelConfig` dans `genkit.ts`) :
-   temperature / top_p / max_tokens réglés par modèle, plus options spécifiques
-   (ex. `chat_template_kwargs.thinking=false` pour deepseek). ⚠️ Deux pièges du
-   plugin vérifiés en test :
+5. **Paramètres de génération par modèle ET par type de flow**
+   (`getModelConfig(model, profile)` dans `genkit.ts`). Fusion en couches :
+   valeurs globales < config modèle (top_p, thinking…) < profil de flow
+   (temperature + max_tokens). Profils :
+
+   | Profil | temp | max_tokens | Flows |
+   |---|---|---|---|
+   | `precise` | 0.10 | 8192 | sélection d'agents (classification déterministe) |
+   | `metrics` | 0.10 | 2048 | métriques de divergence (scoring court) |
+   | `analytical` | 0.30 | 8192 | synthèse, rapports, heatmap, flux causal, curation |
+   | `reasoning` | 0.45 | 6144 | raisonnement d'agent, critique stratégique |
+   | `creative` | 0.85 | 4096 | contributions d'agents, clash cognitif, réécriture |
+
+   ⚠️ Deux pièges du plugin vérifiés en test :
    - **`maxOutputTokens` est IGNORÉ** par `@genkit-ai/compat-oai` (jamais mappé
-     vers `max_tokens`). On utilise donc `max_tokens` **brut**, qui lui passe
-     via le passthrough des clés inconnues.
-   - **Désactiver le thinking de deepseek** le rend ~2× plus rapide mais réduit
-     la qualité du raisonnement (a échoué un calcul simple en test). Repassez à
-     `thinking: true` dans `genkit.ts` pour les missions à raisonnement profond.
+     vers `max_tokens`). On utilise donc `max_tokens` **brut**, qui passe via le
+     passthrough des clés inconnues.
+   - **deepseek `chat_template_kwargs.thinking`** : actuellement **`true`**
+     (raisonnement profond, meilleure qualité, plus lent — peut atteindre les
+     timeouts sur tools+schéma). Passez à `false` dans `genkit.ts` pour
+     privilégier la vitesse (≈2× plus rapide) au détriment de la qualité.
 
 ## Points de vigilance NVIDIA (à tester après installation)
 

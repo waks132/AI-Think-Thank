@@ -61,7 +61,7 @@ const strategicSynthesisCritiqueFlow = ai.defineFlow(
     outputSchema: StrategicSynthesisCritiqueOutputSchema,
   },
   async (input) => {
-    const response = await prompt(input, {model: input.model, config: getModelConfig(input.model)});
+    const response = await prompt(input, {model: input.model, config: getModelConfig(input.model, 'reasoning')});
     return response.output!;
   }
 );

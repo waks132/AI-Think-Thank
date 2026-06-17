@@ -86,7 +86,7 @@ const generateReportFlow = ai.defineFlow(
   async (input) => {
     const response = await reportPrompt(input, {
       model: input.model,
-      config: getModelConfig(input.model),
+      config: getModelConfig(input.model, 'analytical'),
     });
     return response.output!;
   }

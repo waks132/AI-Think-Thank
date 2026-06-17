@@ -95,14 +95,14 @@ const MODEL_GEN_CONFIG: Record<string, GenConfig> = {
     top_p: 1,
     max_tokens: 8192,
   },
-  // Modèle à raisonnement. `thinking:false` = bien plus rapide (évite les
-  // timeouts sur tools+schéma) MAIS qualité de raisonnement réduite.
-  // Repasser à `true` pour les missions exigeant un raisonnement profond.
+  // Modèle à raisonnement. `thinking:true` = raisonnement profond (meilleure
+  // qualité) mais plus lent (peut atteindre les timeouts sur tools+schéma).
+  // Repasser à `false` pour privilégier la vitesse au détriment de la qualité.
   'deepseek-ai/deepseek-v4-pro': {
     temperature: 0.6,
     top_p: 0.95,
     max_tokens: 8192,
-    chat_template_kwargs: { thinking: false },
+    chat_template_kwargs: { thinking: true },
   },
   // JSON fiable ; tools instables via Genkit -> à réserver aux flows sans tools.
   'openai/gpt-oss-120b': {
@@ -113,11 +113,37 @@ const MODEL_GEN_CONFIG: Record<string, GenConfig> = {
 };
 
 /**
- * Retourne les paramètres de génération par défaut pour un modèle donné
- * (fusionnés avec les valeurs par défaut globales). `model` peut inclure ou
- * non le préfixe "nvidia/"; `undefined` => modèle par défaut.
+ * Profils de génération PAR TYPE DE FLOW.
+ *
+ * La température et le nombre de tokens dépendent davantage de la NATURE de la
+ * tâche que du modèle : une sélection d'agents doit être déterministe, une
+ * génération créative doit diverger. Le profil est appliqué APRÈS la config
+ * modèle et surcharge `temperature` + `max_tokens` (le modèle garde son `top_p`
+ * et ses options spéciales comme `chat_template_kwargs`).
  */
-export function getModelConfig(model?: string): GenConfig {
+export type FlowProfile =
+  | 'precise'     // sélection/classification : déterministe, gros schéma
+  | 'analytical'  // synthèse fondée, rapports, analyse causale
+  | 'reasoning'   // raisonnement structuré, critique stratégique
+  | 'creative'    // contributions d'agents, clash cognitif, réécriture
+  | 'metrics';    // scoring / métriques : déterministe et court
+
+const PROFILE_OVERRIDES: Record<FlowProfile, GenConfig> = {
+  precise:    { temperature: 0.1,  max_tokens: 8192 },
+  analytical: { temperature: 0.3,  max_tokens: 8192 },
+  reasoning:  { temperature: 0.45, max_tokens: 6144 },
+  creative:   { temperature: 0.85, max_tokens: 4096 },
+  metrics:    { temperature: 0.1,  max_tokens: 2048 },
+};
+
+/**
+ * Retourne les paramètres de génération pour un modèle + un type de flow.
+ * Fusion : valeurs globales < config modèle < profil de flow.
+ * `model` peut inclure ou non le préfixe "nvidia/"; `undefined` => défaut.
+ * `profile` optionnel ; absent => config modèle seule.
+ */
+export function getModelConfig(model?: string, profile?: FlowProfile): GenConfig {
   const id = (model ?? NVIDIA_DEFAULT_MODEL).replace(/^nvidia\//, '');
-  return { ...DEFAULT_GEN_CONFIG, ...(MODEL_GEN_CONFIG[id] ?? {}) };
+  const base = { ...DEFAULT_GEN_CONFIG, ...(MODEL_GEN_CONFIG[id] ?? {}) };
+  return profile ? { ...base, ...PROFILE_OVERRIDES[profile] } : base;
 }

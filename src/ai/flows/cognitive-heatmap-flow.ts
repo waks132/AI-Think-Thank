@@ -52,7 +52,7 @@ const cognitiveHeatmapFlow = ai.defineFlow(
     outputSchema: CognitiveHeatmapOutputSchema,
   },
   async (input) => {
-    const response = await prompt(input, {model: input.model, config: getModelConfig(input.model)});
+    const response = await prompt(input, {model: input.model, config: getModelConfig(input.model, 'analytical')});
     return response.output!;
   }
 );

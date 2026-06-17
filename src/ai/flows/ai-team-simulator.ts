@@ -122,7 +122,7 @@ const cognitiveClashSimulatorFlow = ai.defineFlow(
   async (input) => {
     const response = await prompt(input, {
       model: input.model,
-      config: getModelConfig(input.model),
+      config: getModelConfig(input.model, 'creative'),
     });
     return response.output!;
   }
