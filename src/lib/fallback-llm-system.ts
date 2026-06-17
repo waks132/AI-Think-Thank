@@ -49,7 +49,7 @@ class FallbackLLMSystem {
     // VERSION LOCALE : providers NVIDIA NIM (endpoints gratuits, OpenAI-compatible).
     // Le modèle par défaut est piloté par NVIDIA_DEFAULT_MODEL (voir .env.local).
     const defaultModel =
-      process.env.NVIDIA_DEFAULT_MODEL ?? 'meta/llama-3.3-70b-instruct';
+      process.env.NVIDIA_DEFAULT_MODEL ?? 'mistralai/mistral-large-3-675b-instruct-2512';
     const defaultProviders: LLMProvider[] = [
       {
         id: 'nvidia-default',

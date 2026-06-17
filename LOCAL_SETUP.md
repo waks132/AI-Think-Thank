@@ -85,22 +85,63 @@ transparente.
 
 ---
 
+## Résultats des tests réels (modèles NVIDIA via Genkit)
+
+Tests effectués sur les 9 modèles fournis, en reproduisant le pattern exact de
+l'app (`definePrompt` + schéma Zod de sortie + `defineTool`). Capacités testées :
+génération de base, mode JSON, JSON schema strict, function calling.
+
+| Modèle | JSON | Tools | Combo tools+schéma | Vitesse | Retenu |
+|---|---|---|---|---|---|
+| `mistralai/mistral-large-3-675b-instruct-2512` | ✅ | ✅ | ✅ (avec directive anti-fences) | ⚡ rapide | ✅ **défaut** |
+| `moonshotai/kimi-k2.6` | ✅ | ✅ | ✅ nativement | 🐢 ~60s | ✅ (robuste) |
+| `deepseek-ai/deepseek-v4-pro` | ✅ | ✅ | ⚠️ très lent (>150s) | 🐢 | ✅ (secours) |
+| `openai/gpt-oss-120b` | ✅ | ⚠️ | ❌ bug `ToolDescription` | ⚡ | ⚠️ JSON seul |
+| `nvidia/llama-3.3-nemotron-super-49b` | ❌ vide | ✅ | ❌ | — | ❌ exclu |
+| `meta/llama-4-maverick-17b` | ✅ | ❌ pas d'appel | ❌ | ⚡ | ❌ exclu |
+| `mistralai/mistral-medium-3.5-128b` | ⚠️ | ✅ | ⚠️ | 🐢 15-66s | ❌ exclu |
+| `z-ai/glm-5.1` | ⏱️ timeout | — | — | >90s | ❌ exclu |
+| `qwen/qwen3.5-122b-a10b` | ⏱️ timeout | — | — | >90s | ❌ exclu |
+
+### Ajustements appliqués au code suite aux tests
+
+1. **Directive anti-fences** (`JSON_OUTPUT_DIRECTIVE` dans `src/ai/genkit.ts`).
+   Quand on combine `tools` + sortie structurée, les modèles NVIDIA entourent
+   souvent leur JSON de blocs markdown ```` ```json ```` ou ajoutent de la prose,
+   ce qui casse le parsing de Genkit (`JSON5: invalid character`). La directive
+   est ajoutée aux 4 flows à tools (`agent-reasoning`, `agent-collaboration` x2,
+   `auto-agent-selector`) pour forcer un JSON brut. Validé empiriquement.
+
+2. **Liste de modèles curée** (`src/lib/models.ts`) : seuls les 4 modèles qui
+   passent les tests sont exposés dans l'UI ; les 5 défaillants sont exclus
+   (avec justification en commentaire).
+
+3. **Modèle par défaut** = `mistral-large-3` (meilleur compromis JSON+tools+vitesse).
+   Pour les missions très lourdes en tools, `kimi-k2.6` est le plus fiable.
+
 ## Points de vigilance NVIDIA (à tester après installation)
 
 1. **Sorties structurées (JSON/Zod).** 12 flows demandent un JSON conforme à un
-   schéma. Tous les modèles NVIDIA ne supportent pas le `response_format` de
-   façon égale. Si un flow renvoie une erreur de parsing, essayez un autre
-   modèle (Llama 3.3 / Nemotron sont les plus fiables) ou réduisez la
-   complexité du schéma.
+   schéma. La directive anti-fences (cf. ci-dessus) corrige les cas problématiques.
+   Si un flow renvoie encore une erreur de parsing, basculez sur `kimi-k2.6`
+   (le plus robuste) ou réduisez la complexité du schéma.
 
 2. **Function calling.** 4 flows utilisent des *tools*
    (`agent-reasoning`, `agent-collaboration-flow`, `auto-agent-selector`).
-   Vérifiez que le modèle choisi annonce `tool_calling` sur build.nvidia.com.
+   Évitez `llama-4-maverick` (ne déclenche pas les tools) et `gpt-oss-120b`
+   (bug de sérialisation des tools via Genkit).
 
-3. **Rate limits du tier gratuit.** Le `fallback-llm-system` fait un
-   *health-check* toutes les 60 s et les simulations multi-agents génèrent de
-   nombreux appels. En cas d'erreurs 429, espacez les requêtes, réduisez le
-   nombre d'agents, ou augmentez les délais de retry.
+3. **Rate limits du tier gratuit (IMPORTANT).** Observé pendant les tests :
+   `mistral-large-3` renvoie des **429 (RESOURCE_EXHAUSTED) très rapidement** en
+   rafale. Le `fallback-llm-system` fait en plus un *health-check* toutes les
+   60 s et les simulations multi-agents génèrent de nombreux appels parallèles.
+   Recommandations :
+   - réduire le nombre d'agents par mission ;
+   - ne pas lancer plusieurs missions simultanément ;
+   - en cas de 429 persistants, basculer le modèle par défaut sur un autre
+     endpoint (chaque modèle a son propre quota) ;
+   - envisager d'augmenter les délais de retry / désactiver le health-check
+     périodique pour un usage local mono-utilisateur.
 
 4. **Coût en crédits.** Les endpoints gratuits consomment les crédits offerts.
    Surveillez votre quota sur le tableau de bord NVIDIA Build.

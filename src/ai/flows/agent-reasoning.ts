@@ -7,7 +7,7 @@
  * - AgentReasoningOutput - The return type for the agentReasoning function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, JSON_OUTPUT_DIRECTIVE} from '@/ai/genkit';
 import {z} from 'genkit';
 import { queryKnowledgeBaseTool } from '@/ai/tools/knowledge-base-tool';
 import { queryMissionArchiveTool } from '@/ai/tools/mission-archive-tool';
@@ -62,6 +62,7 @@ After detailing all the steps in 'thoughtProcess':
 2.  Provide a 'reflexiveReview' of your own plan. This critique must be sharp and identify a specific, non-trivial weakness, a potential failure mode, or a biased assumption in your own reasoning.
 
 Produce your entire response in valid JSON that adheres to the output schema. Your entire response, including all text fields, must be in this language: {{{language}}}.
+${JSON_OUTPUT_DIRECTIVE}
 `,
 });
 

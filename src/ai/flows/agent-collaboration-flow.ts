@@ -7,7 +7,7 @@
  * - AgentCollaborationOutput - The return type for the runAgentCollaboration function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, JSON_OUTPUT_DIRECTIVE} from '@/ai/genkit';
 import {z} from 'genkit';
 import { queryKnowledgeBaseTool } from '@/ai/tools/knowledge-base-tool';
 import { queryMissionArchiveTool } from '@/ai/tools/mission-archive-tool';
@@ -136,7 +136,8 @@ As a master orchestrator of a cognitive collective, your mission is to synthesiz
 
 5.  **Detail Your \`reasoning\`:** Explain how you constructed the final summary by integrating the contributions from **each agent**. Explicitly mention how the knowledge consultation shaped the outcome.
 
-**Your entire response must be in this language: {{{language}}}.**`,
+**Your entire response must be in this language: {{{language}}}.**
+${JSON_OUTPUT_DIRECTIVE}`,
 });
 
 

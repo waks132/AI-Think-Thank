@@ -7,7 +7,7 @@
  * - AutoAgentSelectorOutput - The return type for the autoAgentSelector function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, JSON_OUTPUT_DIRECTIVE} from '@/ai/genkit';
 import {z} from 'genkit';
 import { queryKnowledgeBaseTool } from '@/ai/tools/knowledge-base-tool';
 
@@ -155,6 +155,7 @@ Si votre analyse (basée sur la Matrice de Décision) conduit à une classificat
 **IMPORTANT**: Vous devez produire votre réponse dans le format JSON spécifié qui adhère au schéma de sortie. Utilisez les **IDs en minuscules** des agents pour le champ \`recommendedAgentIds\`.
 
 Votre réponse entière, y compris tous les champs de texte, doit être dans cette langue : {{{language}}}.
+${JSON_OUTPUT_DIRECTIVE}
 `,
 });
 
