@@ -25,7 +25,7 @@ export interface LLMRetryOptions {
 
 /** Détermine si une erreur justifie un nouvel essai. */
 function isRetriable(message: string): boolean {
-  return /(429|RESOURCE_EXHAUSTED|rate.?limit|Schema validation|JSON5|invalid character|Parse Error|INVALID_ARGUMENT|timeout|ECONNRESET|503|502)/i.test(
+  return /(429|RESOURCE_EXHAUSTED|rate.?limit|Schema validation|JSON5|invalid character|Parse Error|INVALID_ARGUMENT|timeout|ECONNRESET|503|502|NOT_FOUND|not found|ABORTED|maximum tool call)/i.test(
     message
   );
 }

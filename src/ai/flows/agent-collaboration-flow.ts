@@ -10,7 +10,7 @@
 import {ai, JSON_OUTPUT_DIRECTIVE, getModelConfig} from '@/ai/genkit';
 import {withLLMRetry} from '@/ai/resilience';
 import {z} from 'genkit';
-import { queryKnowledgeBaseTool } from '@/ai/tools/knowledge-base-tool';
+import { queryKnowledgeBaseTool, queryKnowledgeArchiveTool } from '@/ai/tools/knowledge-base-tool';
 import { queryMissionArchiveTool } from '@/ai/tools/mission-archive-tool';
 
 const AgentCollaborationInputSchema = z.object({
@@ -96,7 +96,7 @@ const agentContributionGeneratorPrompt = ai.definePrompt({
 
 const agentCollaborationSynthesisPrompt = ai.definePrompt({
     name: 'agentCollaborationSynthesisPrompt',
-    tools: [queryKnowledgeBaseTool, queryMissionArchiveTool],
+    tools: [queryKnowledgeBaseTool, queryMissionArchiveTool, queryKnowledgeArchiveTool],
     input: {
         schema: z.object({
             mission: z.string(),
@@ -154,7 +154,7 @@ const agentCollaborationFlow = ai.defineFlow(
     
     try {
       // Primary parsing strategy - original regex
-      const agentDataRegex = /- \\*\\*Agent ID:\\*\\*\\s*(.*?)\\s*- \\*\\*Agent Role:\\*\\*\\s*(.*?)\\s*- \\*\\*Core Directive:\\*\\*\\s*\"(.*?)\"/gs;
+      const agentDataRegex = /-\s*\*\*Agent ID:\*\*\s*(.*?)\s*-\s*\*\*Agent Role:\*\*\s*(.*?)\s*-\s*\*\*Core Directive:\*\*\s*"(.*?)"/gs;
       let match;
       while ((match = agentDataRegex.exec(input.agentList)) !== null) {
         agentsToSimulate.push({
@@ -234,7 +234,7 @@ const agentCollaborationFlow = ai.defineFlow(
       }, {
         model: input.model,
         config: getModelConfig(input.model, 'analytical'),
-        maxTurns: 3,
+        maxTurns: 5,
       }),
       { label: 'agentCollaborationSynthesis' }
     );

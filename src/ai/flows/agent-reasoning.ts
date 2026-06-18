@@ -10,7 +10,7 @@
 import {ai, JSON_OUTPUT_DIRECTIVE, getModelConfig} from '@/ai/genkit';
 import {withLLMRetry} from '@/ai/resilience';
 import {z} from 'genkit';
-import { queryKnowledgeBaseTool } from '@/ai/tools/knowledge-base-tool';
+import { queryKnowledgeBaseTool, queryKnowledgeArchiveTool } from '@/ai/tools/knowledge-base-tool';
 import { queryMissionArchiveTool } from '@/ai/tools/mission-archive-tool';
 
 const AgentReasoningInputSchema = z.object({
@@ -41,7 +41,7 @@ export async function agentReasoning(input: AgentReasoningInput): Promise<AgentR
 
 const agentReasoningPrompt = ai.definePrompt({
   name: 'agentReasoningPrompt',
-  tools: [queryKnowledgeBaseTool, queryMissionArchiveTool],
+  tools: [queryKnowledgeBaseTool, queryMissionArchiveTool, queryKnowledgeArchiveTool],
   input: {schema: AgentReasoningInputSchema},
   output: {schema: AgentReasoningOutputSchema},
   prompt: `You are a cognitive agent operating within the Cognitive Collective, orchestrated by KAIROS-PRIME. Your primary directive is to adhere to its core principles: force excellence, drive paradigm innovation, and maintain radical realism.
@@ -75,7 +75,7 @@ const agentReasoningFlow = ai.defineFlow(
   },
   async (input) => {
     const response = await withLLMRetry(
-      () => agentReasoningPrompt(input, { model: input.model, config: getModelConfig(input.model, 'reasoning'), maxTurns: 3 }),
+      () => agentReasoningPrompt(input, { model: input.model, config: getModelConfig(input.model, 'reasoning'), maxTurns: 5 }),
       { label: 'agentReasoning' }
     );
     return response.output!;
