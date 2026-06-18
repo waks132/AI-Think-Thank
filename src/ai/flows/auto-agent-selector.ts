@@ -49,7 +49,7 @@ const AutoAgentSelectorOutputSchema = z.object({
     falseChoiceScore: z.number().describe("Score (0-10) for false choice manipulation."),
     anchoringScore: z.number().describe("Score (0-10) for cognitive anchoring."),
     totalManipulationScore: z.number().describe("Total manipulation score (0-50)."),
-  }).describe("The assessment of potential manipulation in the mission framing."),
+  }).optional().describe("Optional internal assessment of potential manipulation (not displayed)."),
   
   authenticityAssessment: z.object({
     genuineInterdependencies: z.number().describe("Score (0-10) for genuine interdependencies."),
@@ -58,7 +58,7 @@ const AutoAgentSelectorOutputSchema = z.object({
     absenceOfArtificialUrgency: z.number().describe("Score (0-10) for absence of artificial urgency."),
     historicalPrecedent: z.number().describe("Score (0-10) for historical precedent."),
     totalAuthenticityScore: z.number().describe("Total authenticity score (0-50)."),
-  }).describe("The assessment of the mission's authentic complexity."),
+  }).optional().describe("Optional internal assessment of authentic complexity (not displayed)."),
 
   missionClassification: z.enum([
     "REJETER", 
