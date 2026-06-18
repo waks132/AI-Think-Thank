@@ -8,7 +8,7 @@
  * Lancement : `node scripts/launch.mjs` (ou via les fichiers lancer.* fournis).
  */
 import { spawn, spawnSync, execSync } from 'node:child_process';
-import { existsSync, copyFileSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, copyFileSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { createInterface } from 'node:readline/promises';
 import { stdin, stdout, platform } from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -136,13 +136,25 @@ async function main() {
   const children = [];
   if (useEmulator) {
     log(c.g('✔ Java détecté → base de données locale (émulateur Firestore)'));
-    log(c.y('… Démarrage de l\'émulateur Firestore…'));
-    children.push(spawn('npx', ['-y', 'firebase-tools', 'emulators:start', '--only', 'firestore'],
-      { cwd: ROOT, stdio: 'inherit', shell: platform === 'win32' }));
-    await new Promise((r) => setTimeout(r, 6000));
+    log(c.y('… Démarrage de l\'émulateur Firestore (1er lancement : téléchargement, patientez)…'));
+    // Persistance : on importe les données précédentes si elles existent, et on
+    // exporte à l'arrêt -> la mémoire de l'émulateur survit aux redémarrages.
+    const exportDir = join(ROOT, '.data', 'firestore');
+    mkdirSync(exportDir, { recursive: true });
+    const hasExport = existsSync(join(exportDir, 'firebase-export-metadata.json'));
+    const emuArgs = [
+      '-y', 'firebase-tools', 'emulators:start',
+      '--only', 'firestore',
+      '--project', 'demo-aitt',
+      '--export-on-exit', '.data/firestore',
+    ];
+    if (hasExport) emuArgs.push('--import', '.data/firestore');
+    children.push(spawn('npx', emuArgs, { cwd: ROOT, stdio: 'inherit', shell: platform === 'win32' }));
+    await new Promise((r) => setTimeout(r, 8000));
   } else {
-    log(c.y('ℹ Java non détecté → mode sans base locale (persistance via le cloud du projet d\'origine).'));
-    log(c.y('  Pour une base 100% locale, installez Java (https://adoptium.net) puis relancez.'));
+    log(c.y('ℹ Java non détecté → persistance 100% locale par fichiers (localStorage + .data).'));
+    log(c.y('  C\'est suffisant pour un usage mono-poste. Java n\'est nécessaire que pour'));
+    log(c.y('  une base Firestore partagée (https://adoptium.net).'));
   }
 
   log(c.y('… Démarrage de l\'application…\n'));
