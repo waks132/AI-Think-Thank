@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack -p 9002",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
-    "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts", 
+    "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
     "build": "next build && next export",
     "start": "next start",
     "lint": "next lint",
@@ -14,12 +14,13 @@
     "firebase:deploy": "npm run build && firebase deploy",
     "firebase:deploy:hosting": "npm run build && firebase deploy --only hosting",
     "firebase:deploy:rules": "firebase deploy --only firestore:rules,firestore:indexes",
-    "test:cognitive": "node -e \"console.log('🧠 Cognitive tests would run here')\"",
-    "optimize:firebase": "node -e \"const { firebaseOptimizer } = require('./src/lib/firebase-optimization.ts'); console.log(firebaseOptimizer.generateOptimizationReport())\""
+    "test:cognitive": "node -e \"console.log('\ud83e\udde0 Cognitive tests would run here')\"",
+    "optimize:firebase": "node -e \"const { firebaseOptimizer } = require('./src/lib/firebase-optimization.ts'); console.log(firebaseOptimizer.generateOptimizationReport())\"",
+    "local": "node scripts/launch.mjs"
   },
   "dependencies": {
-    "@genkit-ai/googleai": "^1.14.0",
-    "@genkit-ai/next": "^1.14.0",
+    "@genkit-ai/compat-oai": "^1.37.0",
+    "@genkit-ai/next": "^1.37.0",
     "@hookform/resolvers": "^4.1.3",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",
@@ -49,7 +50,7 @@
     "dotenv": "^16.5.0",
     "embla-carousel-react": "^8.6.0",
     "firebase": "^11.9.1",
-    "genkit": "^1.14.0",
+    "genkit": "^1.37.0",
     "lucide-react": "^0.475.0",
     "next": "15.3.3",
     "patch-package": "^8.0.0",
@@ -67,7 +68,7 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "genkit-cli": "^1.14.0",
+    "genkit-cli": "^1.37.0",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"

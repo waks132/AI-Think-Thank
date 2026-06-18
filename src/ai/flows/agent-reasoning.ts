@@ -7,9 +7,10 @@
  * - AgentReasoningOutput - The return type for the agentReasoning function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, JSON_OUTPUT_DIRECTIVE, getModelConfig} from '@/ai/genkit';
+import {withModelFallback} from '@/ai/providers';
 import {z} from 'genkit';
-import { queryKnowledgeBaseTool } from '@/ai/tools/knowledge-base-tool';
+import { queryKnowledgeBaseTool, queryKnowledgeArchiveTool } from '@/ai/tools/knowledge-base-tool';
 import { queryMissionArchiveTool } from '@/ai/tools/mission-archive-tool';
 
 const AgentReasoningInputSchema = z.object({
@@ -40,7 +41,7 @@ export async function agentReasoning(input: AgentReasoningInput): Promise<AgentR
 
 const agentReasoningPrompt = ai.definePrompt({
   name: 'agentReasoningPrompt',
-  tools: [queryKnowledgeBaseTool, queryMissionArchiveTool],
+  tools: [queryKnowledgeBaseTool, queryMissionArchiveTool, queryKnowledgeArchiveTool],
   input: {schema: AgentReasoningInputSchema},
   output: {schema: AgentReasoningOutputSchema},
   prompt: `You are a cognitive agent operating within the Cognitive Collective, orchestrated by KAIROS-PRIME. Your primary directive is to adhere to its core principles: force excellence, drive paradigm innovation, and maintain radical realism.
@@ -62,6 +63,7 @@ After detailing all the steps in 'thoughtProcess':
 2.  Provide a 'reflexiveReview' of your own plan. This critique must be sharp and identify a specific, non-trivial weakness, a potential failure mode, or a biased assumption in your own reasoning.
 
 Produce your entire response in valid JSON that adheres to the output schema. Your entire response, including all text fields, must be in this language: {{{language}}}.
+${JSON_OUTPUT_DIRECTIVE}
 `,
 });
 
@@ -72,9 +74,10 @@ const agentReasoningFlow = ai.defineFlow(
     outputSchema: AgentReasoningOutputSchema,
   },
   async (input) => {
-    const response = await agentReasoningPrompt(input, {
-      model: input.model,
-    });
+    const response = await withModelFallback(
+      (model) => agentReasoningPrompt(input, { model, config: getModelConfig(model, 'reasoning'), maxTurns: 5 }),
+      { label: 'agentReasoning', requireTools: true, preferredModel: input.model }
+    );
     return response.output!;
   }
 );

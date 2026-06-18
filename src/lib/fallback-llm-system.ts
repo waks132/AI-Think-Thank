@@ -46,18 +46,29 @@ class FallbackLLMSystem {
   }
 
   private initializeProviders() {
+    // VERSION LOCALE : providers NVIDIA NIM (endpoints gratuits, OpenAI-compatible).
+    // Le modèle par défaut est piloté par NVIDIA_DEFAULT_MODEL (voir .env.local).
+    const defaultModel =
+      process.env.NVIDIA_DEFAULT_MODEL ?? 'mistralai/mistral-large-3-675b-instruct-2512';
     const defaultProviders: LLMProvider[] = [
       {
-        id: 'gemini-2.0-flash',
-        name: 'Google Gemini 2.0 Flash',
-        model: 'googleai/gemini-2.0-flash',
+        id: 'nvidia-default',
+        name: `NVIDIA NIM (${defaultModel})`,
+        model: `nvidia/${defaultModel}`,
         priority: 1,
         status: 'active',
         lastSuccess: Date.now(),
         failureCount: 0,
         avgResponseTime: 0
       },
-      // Add more providers as needed
+      // Ajoutez d'autres modèles NVIDIA ici pour un fallback multi-modèles, ex. :
+      // {
+      //   id: 'nvidia-nemotron',
+      //   name: 'NVIDIA Nemotron 70B',
+      //   model: 'nvidia/nvidia/llama-3.1-nemotron-70b-instruct',
+      //   priority: 2,
+      //   status: 'active', lastSuccess: Date.now(), failureCount: 0, avgResponseTime: 0,
+      // },
     ];
     
     defaultProviders.forEach(provider => {

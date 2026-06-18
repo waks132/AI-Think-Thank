@@ -7,7 +7,8 @@
  * - AgentCollaborationOutput - The return type for the runAgentCollaboration function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, JSON_OUTPUT_DIRECTIVE, getModelConfig} from '@/ai/genkit';
+import {withModelFallback} from '@/ai/providers';
 import {z} from 'genkit';
 import { queryKnowledgeBaseTool } from '@/ai/tools/knowledge-base-tool';
 import { queryMissionArchiveTool } from '@/ai/tools/mission-archive-tool';
@@ -138,7 +139,8 @@ As a master orchestrator of a cognitive collective, your mission is to synthesiz
 
 5.  **Detail Your \`reasoning\`:** Explain how you constructed the final summary by integrating the contributions from **each agent**. Explicitly mention how the knowledge consultation shaped the outcome.
 
-**Your entire response must be in this language: {{{language}}}.**`,
+**Your entire response must be in this language: {{{language}}}.**
+${JSON_OUTPUT_DIRECTIVE}`,
 });
 
 
@@ -164,11 +166,14 @@ const agentCollaborationFlow = ai.defineFlow(
     // Step 2: Generate contributions for each agent sequentially to avoid rate limiting
     const contributions: AgentContribution[] = [];
     for (const agent of agentsToSimulate) {
-      const contributionResult = await agentContributionGeneratorPrompt({
-        mission: input.mission,
-        agent: agent,
-        language: input.language,
-      });
+      const contributionResult = await withModelFallback(
+        (model) => agentContributionGeneratorPrompt({
+          mission: input.mission,
+          agent: agent,
+          language: input.language,
+        }, { model, config: getModelConfig(model, 'creative') }),
+        { label: `contribution:${agent.role}`, preferredModel: input.model }
+      );
       const contributionOutput = contributionResult.output;
       if (!contributionOutput) {
         throw new Error(`Failed to generate contribution for agent ${agent.role}`);
@@ -179,17 +184,21 @@ const agentCollaborationFlow = ai.defineFlow(
         ...contributionOutput,
       });
     }
-    
+
     // Step 3: Synthesize the results
-    const synthesisResult = await agentCollaborationSynthesisPrompt({
-      mission: input.mission,
-      agentList: input.agentList,
-      contributions: contributions,
-      language: input.language,
-    }, {
-      model: input.model,
-      config: { maxOutputTokens: 8192 },
-    });
+    const synthesisResult = await withModelFallback(
+      (model) => agentCollaborationSynthesisPrompt({
+        mission: input.mission,
+        agentList: input.agentList,
+        contributions: contributions,
+        language: input.language,
+      }, {
+        model,
+        config: getModelConfig(model, 'analytical'),
+        maxTurns: 5,
+      }),
+      { label: 'agentCollaborationSynthesis', requireTools: true, preferredModel: input.model }
+    );
 
     const finalOutput = synthesisResult.output;
     if (!finalOutput) {

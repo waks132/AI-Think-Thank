@@ -7,9 +7,10 @@
  * - AutoAgentSelectorOutput - The return type for the autoAgentSelector function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, JSON_OUTPUT_DIRECTIVE, getModelConfig} from '@/ai/genkit';
+import {withModelFallback} from '@/ai/providers';
 import {z} from 'genkit';
-import { queryKnowledgeBaseTool } from '@/ai/tools/knowledge-base-tool';
+import { queryKnowledgeBaseTool, queryKnowledgeArchiveTool } from '@/ai/tools/knowledge-base-tool';
 
 const ORCHESTRATOR_IDS = ['kairos-1', 'disruptor'];
 
@@ -48,7 +49,7 @@ const AutoAgentSelectorOutputSchema = z.object({
     falseChoiceScore: z.number().describe("Score (0-10) for false choice manipulation."),
     anchoringScore: z.number().describe("Score (0-10) for cognitive anchoring."),
     totalManipulationScore: z.number().describe("Total manipulation score (0-50)."),
-  }).describe("The assessment of potential manipulation in the mission framing."),
+  }).optional().describe("Optional internal assessment of potential manipulation (not displayed)."),
   
   authenticityAssessment: z.object({
     genuineInterdependencies: z.number().describe("Score (0-10) for genuine interdependencies."),
@@ -57,7 +58,7 @@ const AutoAgentSelectorOutputSchema = z.object({
     absenceOfArtificialUrgency: z.number().describe("Score (0-10) for absence of artificial urgency."),
     historicalPrecedent: z.number().describe("Score (0-10) for historical precedent."),
     totalAuthenticityScore: z.number().describe("Total authenticity score (0-50)."),
-  }).describe("The assessment of the mission's authentic complexity."),
+  }).optional().describe("Optional internal assessment of authentic complexity (not displayed)."),
 
   missionClassification: z.enum([
     "REJETER", 
@@ -86,7 +87,7 @@ export async function autoAgentSelector(input: AutoAgentSelectorInput): Promise<
 
 const autoAgentSelectorPrompt = ai.definePrompt({
   name: 'autoAgentSelectorPrompt',
-  tools: [queryKnowledgeBaseTool],
+  tools: [queryKnowledgeBaseTool, queryKnowledgeArchiveTool],
   input: {schema: AutoAgentSelectorInputSchema},
   output: {schema: AutoAgentSelectorOutputSchema},
   prompt: `# Directive KAIROS-1 v9.3 - SÉLECTION SOUSTRACTIVE & ORCHESTRATION PAR VAGUES
@@ -155,6 +156,7 @@ Si votre analyse (basée sur la Matrice de Décision) conduit à une classificat
 **IMPORTANT**: Vous devez produire votre réponse dans le format JSON spécifié qui adhère au schéma de sortie. Utilisez les **IDs en minuscules** des agents pour le champ \`recommendedAgentIds\`.
 
 Votre réponse entière, y compris tous les champs de texte, doit être dans cette langue : {{{language}}}.
+${JSON_OUTPUT_DIRECTIVE}
 `,
 });
 
@@ -168,7 +170,12 @@ const autoAgentSelectorFlow = ai.defineFlow(
     // Prevent orchestrators from being in the list of selectable agents for the model
     const selectableAgents = input.agents.filter(agent => !ORCHESTRATOR_IDS.includes(agent.id));
     
-    let response = await autoAgentSelectorPrompt({...input, agents: selectableAgents}, {model: 'googleai/gemini-1.5-flash-latest'});
+    // VERSION LOCALE : on laisse le modèle par défaut NVIDIA (défini dans genkit.ts
+    // via NVIDIA_DEFAULT_MODEL), ou celui passé en entrée le cas échéant.
+    let response = await withModelFallback(
+      (model) => autoAgentSelectorPrompt({...input, agents: selectableAgents}, {model, config: getModelConfig(model, 'precise'), maxTurns: 5}),
+      { label: 'autoAgentSelector', requireTools: true, preferredModel: input.model }
+    );
 
     // Exclude paradigmNativeProtocol if not required by mission classification
     if (response.output?.missionClassification !== "PARADIGM-NATIVE" && response.output?.missionClassification !== "Scepticisme + PARADIGM-NATIVE") {

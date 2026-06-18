@@ -7,7 +7,8 @@
  * - StrategicSynthesisCritiqueOutput - The return type for the function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, getModelConfig} from '@/ai/genkit';
+import {withModelFallback} from '@/ai/providers';
 import {z} from 'genkit';
 
 const StrategicSynthesisCritiqueInputSchema = z.object({
@@ -61,7 +62,7 @@ const strategicSynthesisCritiqueFlow = ai.defineFlow(
     outputSchema: StrategicSynthesisCritiqueOutputSchema,
   },
   async (input) => {
-    const response = await prompt(input, {model: input.model});
+    const response = await withModelFallback((model) => prompt(input, {model, config: getModelConfig(model, 'reasoning')}), { label: 'strategic-synthesis-critique', preferredModel: input.model });
     return response.output!;
   }
 );

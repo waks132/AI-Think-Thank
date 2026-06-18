@@ -4,7 +4,8 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { searchCollection } from '@/services/firestore-service';
+import { searchCollection, isFirebaseEnabled } from '@/services/firestore-service';
+import { searchArchives } from '@/services/local-archive-service';
 import { z } from 'genkit';
 
 // Simplified schema for the output to avoid overwhelming the model
@@ -27,16 +28,20 @@ export const queryMissionArchiveTool = ai.defineTool(
   },
   async (input) => {
     console.log(`[Mission Archive Tool] Querying for: "${input.query}"`);
-    const results = await searchCollection<any>('mission-archives', input.query);
+    // Route selon le mode : Firestore si activé, sinon archive locale (fichiers).
+    const results = isFirebaseEnabled()
+      ? await searchCollection<any>('mission-archives', input.query)
+      : await searchArchives(input.query);
     console.log(`[Mission Archive Tool] Found ${results.length} results.`);
 
-    // Map full results to the simplified schema for the AI
-    return results.map(doc => ({
-      id: doc.id,
-      missionText: doc.missionText,
-      createdAt: doc.createdAt,
-      executiveSummary: doc.result?.executiveSummary || 'N/A',
-      reasoning: doc.result?.reasoning || 'N/A',
+    // Bornage (perf) : 5 missions max, champs longs tronqués.
+    const trunc = (s: string, n = 800) => (s && s.length > n ? s.slice(0, n) + '…' : s);
+    return results.slice(0, 5).map((doc) => ({
+      id: String(doc.id ?? 'unknown'),
+      missionText: trunc(doc.missionText ?? 'N/A', 400),
+      createdAt: doc.createdAt ?? '',
+      executiveSummary: trunc(doc.result?.executiveSummary ?? 'N/A'),
+      reasoning: trunc(doc.result?.reasoning ?? 'N/A'),
     }));
   }
 );

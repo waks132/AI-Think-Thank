@@ -41,25 +41,56 @@ function extractIdFromContent(content: string): string | null {
 /**
  * Lists all documents in the knowledge base.
  */
-export async function listKnowledgeBase(): Promise<KnowledgeDocument[]> {
-    try {
-        const filenames = await fs.readdir(knowledgeBasePath);
-        const documents = await Promise.all(
-            filenames.map(async (filename) => {
-                const filePath = path.join(knowledgeBasePath, filename);
-                const content = await fs.readFile(filePath, 'utf-8');
-                const id = extractIdFromContent(content);
-                return { id, filename, content };
-            })
-        );
-        return documents;
-    } catch (error) {
-        console.error("Error reading knowledge base directory:", error);
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            return [];
+async function readFileWithRetry(filePath: string, attempts = 3): Promise<string> {
+    let lastErr: unknown;
+    for (let i = 0; i < attempts; i++) {
+        try {
+            return await fs.readFile(filePath, 'utf-8');
+        } catch (e) {
+            lastErr = e;
+            // EPERM/EBUSY sont souvent transitoires sous Windows (OneDrive,
+            // antivirus, indexation) : on réessaie brièvement.
+            await new Promise((r) => setTimeout(r, 120 * (i + 1)));
         }
-        throw error;
     }
+    throw lastErr;
+}
+
+export async function listKnowledgeBase(): Promise<KnowledgeDocument[]> {
+    let entries: import('fs').Dirent[];
+    try {
+        entries = await fs.readdir(knowledgeBasePath, { withFileTypes: true });
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
+        console.error("Error reading knowledge base directory:", error);
+        return [];
+    }
+
+    // Garder tous les FICHIERS (ignore les sous-dossiers, qui faisaient planter
+    // readFile sous Windows). On conserve .md, .txt, etc. comme à l'origine.
+    const files = entries.filter((e) => e.isFile()).map((e) => e.name);
+
+    // Lecture RÉSILIENTE : un fichier illisible (verrou Windows/OneDrive/antivirus)
+    // ne doit PAS faire échouer toute la base de connaissances.
+    const settled = await Promise.allSettled(
+        files.map(async (filename) => {
+            const filePath = path.join(knowledgeBasePath, filename);
+            const content = await readFileWithRetry(filePath);
+            const id = extractIdFromContent(content);
+            return { id, filename, content } as KnowledgeDocument;
+        })
+    );
+
+    const documents: KnowledgeDocument[] = [];
+    let skipped = 0;
+    for (const r of settled) {
+        if (r.status === 'fulfilled') documents.push(r.value);
+        else skipped++;
+    }
+    if (skipped > 0) {
+        console.warn(`⚠️ Base de connaissances : ${skipped}/${files.length} fichier(s) ignoré(s) car illisibles (verrou/permission).`);
+    }
+    return documents;
 }
 
 /**

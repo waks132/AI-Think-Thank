@@ -7,7 +7,8 @@
  * - GenerateReportOutput - The return type for the function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, getModelConfig} from '@/ai/genkit';
+import {withModelFallback} from '@/ai/providers';
 import {z} from 'genkit';
 
 const GenerateReportInputSchema = z.object({
@@ -84,10 +85,10 @@ const generateReportFlow = ai.defineFlow(
     outputSchema: GenerateReportOutputSchema,
   },
   async (input) => {
-    const response = await reportPrompt(input, {
-      model: input.model,
-      config: {maxOutputTokens: 8192},
-    });
+    const response = await withModelFallback((model) => reportPrompt(input, {
+      model,
+      config: getModelConfig(model, 'analytical'),
+    }), { label: 'report-generator', preferredModel: input.model });
     return response.output!;
   }
 );

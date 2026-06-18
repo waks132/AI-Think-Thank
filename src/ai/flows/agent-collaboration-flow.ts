@@ -7,9 +7,10 @@
  * - AgentCollaborationOutput - The return type for the runAgentCollaboration function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, JSON_OUTPUT_DIRECTIVE, getModelConfig} from '@/ai/genkit';
+import {withModelFallback} from '@/ai/providers';
 import {z} from 'genkit';
-import { queryKnowledgeBaseTool } from '@/ai/tools/knowledge-base-tool';
+import { queryKnowledgeBaseTool, queryKnowledgeArchiveTool } from '@/ai/tools/knowledge-base-tool';
 import { queryMissionArchiveTool } from '@/ai/tools/mission-archive-tool';
 
 const AgentCollaborationInputSchema = z.object({
@@ -95,7 +96,7 @@ const agentContributionGeneratorPrompt = ai.definePrompt({
 
 const agentCollaborationSynthesisPrompt = ai.definePrompt({
     name: 'agentCollaborationSynthesisPrompt',
-    tools: [queryKnowledgeBaseTool, queryMissionArchiveTool],
+    tools: [queryKnowledgeBaseTool, queryMissionArchiveTool, queryKnowledgeArchiveTool],
     input: {
         schema: z.object({
             mission: z.string(),
@@ -136,7 +137,8 @@ As a master orchestrator of a cognitive collective, your mission is to synthesiz
 
 5.  **Detail Your \`reasoning\`:** Explain how you constructed the final summary by integrating the contributions from **each agent**. Explicitly mention how the knowledge consultation shaped the outcome.
 
-**Your entire response must be in this language: {{{language}}}.**`,
+**Your entire response must be in this language: {{{language}}}.**
+${JSON_OUTPUT_DIRECTIVE}`,
 });
 
 
@@ -152,7 +154,7 @@ const agentCollaborationFlow = ai.defineFlow(
     
     try {
       // Primary parsing strategy - original regex
-      const agentDataRegex = /- \\*\\*Agent ID:\\*\\*\\s*(.*?)\\s*- \\*\\*Agent Role:\\*\\*\\s*(.*?)\\s*- \\*\\*Core Directive:\\*\\*\\s*\"(.*?)\"/gs;
+      const agentDataRegex = /-\s*\*\*Agent ID:\*\*\s*(.*?)\s*-\s*\*\*Agent Role:\*\*\s*(.*?)\s*-\s*\*\*Core Directive:\*\*\s*"(.*?)"/gs;
       let match;
       while ((match = agentDataRegex.exec(input.agentList)) !== null) {
         agentsToSimulate.push({
@@ -203,11 +205,14 @@ const agentCollaborationFlow = ai.defineFlow(
     // Step 2: Generate contributions for each agent sequentially to avoid rate limiting
     const contributions: AgentContribution[] = [];
     for (const agent of agentsToSimulate) {
-      const contributionResult = await agentContributionGeneratorPrompt({
-        mission: input.mission,
-        agent: agent,
-        language: input.language,
-      });
+      const contributionResult = await withModelFallback(
+        (model) => agentContributionGeneratorPrompt({
+          mission: input.mission,
+          agent: agent,
+          language: input.language,
+        }, { model, config: getModelConfig(model, 'creative') }),
+        { label: `contribution:${agent.role}`, preferredModel: input.model }
+      );
       const contributionOutput = contributionResult.output;
       if (!contributionOutput) {
         throw new Error(`Failed to generate contribution for agent ${agent.role}`);
@@ -220,15 +225,19 @@ const agentCollaborationFlow = ai.defineFlow(
     }
 
     // Step 3: Synthesize the results
-    const synthesisResult = await agentCollaborationSynthesisPrompt({
-      mission: input.mission,
-      agentList: input.agentList,
-      contributions: contributions,
-      language: input.language,
-    }, {
-      model: input.model,
-      config: { maxOutputTokens: 8192 },
-    });
+    const synthesisResult = await withModelFallback(
+      (model) => agentCollaborationSynthesisPrompt({
+        mission: input.mission,
+        agentList: input.agentList,
+        contributions: contributions,
+        language: input.language,
+      }, {
+        model,
+        config: getModelConfig(model, 'analytical'),
+        maxTurns: 5,
+      }),
+      { label: 'agentCollaborationSynthesis', requireTools: true, preferredModel: input.model }
+    );
 
     const finalOutput = synthesisResult.output;
     if (!finalOutput) {

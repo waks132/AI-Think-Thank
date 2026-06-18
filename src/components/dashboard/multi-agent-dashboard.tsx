@@ -32,7 +32,7 @@ import { Skeleton } from '../ui/skeleton';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
-import { addDocument } from '@/services/firestore-service';
+import { archiveMission } from '@/app/actions/mission-archive-actions';
 const Diff = require('diff');
 
 const personaMap = new Map(personaList.map(p => [p.id, p]));
@@ -179,7 +179,7 @@ export default function MultiAgentDashboard() {
           model: selectedModel,
           language: language,
         };
-        await addDocument('mission-archives', missionArchiveData);
+        await archiveMission(missionArchiveData);
         toast({
           title: "Mission Archivée",
           description: "Le résultat de la mission a été sauvegardé dans les archives.",
