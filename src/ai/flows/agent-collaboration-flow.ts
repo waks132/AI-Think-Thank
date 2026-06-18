@@ -234,6 +234,7 @@ const agentCollaborationFlow = ai.defineFlow(
       }, {
         model: input.model,
         config: getModelConfig(input.model, 'analytical'),
+        maxTurns: 3,
       }),
       { label: 'agentCollaborationSynthesis' }
     );

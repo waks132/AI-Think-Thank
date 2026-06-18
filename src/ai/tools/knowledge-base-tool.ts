@@ -25,7 +25,23 @@ export const queryKnowledgeBaseTool = ai.defineTool(
   async (input) => {
     console.log(`[Knowledge Base Tool] Querying for: "${input.query}"`);
     const results = await searchKnowledgeBase(input.query);
-    console.log(`[Knowledge Base Tool] Found ${results.length} results.`);
-    return results;
+
+    // BORNAGE (perf endpoints gratuits) : sans limite, une requête large peut
+    // renvoyer ~120k tokens et faire « étouffer » le modèle (lenteur/timeouts).
+    // On garde les plus pertinents (searchKnowledgeBase trie par pertinence) et
+    // on tronque le contenu de chaque document.
+    const MAX_DOCS = 6;
+    const MAX_CHARS = 1500;
+    const limited = results.slice(0, MAX_DOCS).map((d) => ({
+      ...d,
+      content:
+        d.content.length > MAX_CHARS
+          ? d.content.slice(0, MAX_CHARS) + '\n…[contenu tronqué]'
+          : d.content,
+    }));
+    console.log(
+      `[Knowledge Base Tool] Found ${results.length} results -> ${limited.length} renvoyés (tronqués).`
+    );
+    return limited;
   }
 );

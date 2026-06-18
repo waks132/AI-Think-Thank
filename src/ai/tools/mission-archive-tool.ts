@@ -34,13 +34,14 @@ export const queryMissionArchiveTool = ai.defineTool(
       : await searchArchives(input.query);
     console.log(`[Mission Archive Tool] Found ${results.length} results.`);
 
-    // Map full results to the simplified schema for the AI
-    return results.map(doc => ({
-      id: doc.id,
-      missionText: doc.missionText,
-      createdAt: doc.createdAt,
-      executiveSummary: doc.result?.executiveSummary || 'N/A',
-      reasoning: doc.result?.reasoning || 'N/A',
+    // Bornage (perf) : 5 missions max, champs longs tronqués.
+    const trunc = (s: string, n = 800) => (s && s.length > n ? s.slice(0, n) + '…' : s);
+    return results.slice(0, 5).map((doc) => ({
+      id: String(doc.id ?? 'unknown'),
+      missionText: trunc(doc.missionText ?? 'N/A', 400),
+      createdAt: doc.createdAt ?? '',
+      executiveSummary: trunc(doc.result?.executiveSummary ?? 'N/A'),
+      reasoning: trunc(doc.result?.reasoning ?? 'N/A'),
     }));
   }
 );

@@ -173,7 +173,7 @@ const autoAgentSelectorFlow = ai.defineFlow(
     // VERSION LOCALE : on laisse le modèle par défaut NVIDIA (défini dans genkit.ts
     // via NVIDIA_DEFAULT_MODEL), ou celui passé en entrée le cas échéant.
     let response = await withLLMRetry(
-      () => autoAgentSelectorPrompt({...input, agents: selectableAgents}, {model: input.model, config: getModelConfig(input.model, 'precise')}),
+      () => autoAgentSelectorPrompt({...input, agents: selectableAgents}, {model: input.model, config: getModelConfig(input.model, 'precise'), maxTurns: 3}),
       { label: 'autoAgentSelector' }
     );
 

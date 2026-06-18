@@ -75,7 +75,7 @@ const agentReasoningFlow = ai.defineFlow(
   },
   async (input) => {
     const response = await withLLMRetry(
-      () => agentReasoningPrompt(input, { model: input.model, config: getModelConfig(input.model, 'reasoning') }),
+      () => agentReasoningPrompt(input, { model: input.model, config: getModelConfig(input.model, 'reasoning'), maxTurns: 3 }),
       { label: 'agentReasoning' }
     );
     return response.output!;
