@@ -34,13 +34,17 @@ function isRetriable(message: string): boolean {
  * Exécute `fn` avec retry + backoff exponentiel sur les erreurs transitoires
  * (rate limit) et de format (sortie structurée incomplète).
  */
+const isRateLimit = (message: string) =>
+  /(429|RESOURCE_EXHAUSTED|rate.?limit)/i.test(message);
+
 export async function withLLMRetry<T>(
   fn: () => Promise<T>,
   opts: LLMRetryOptions = {}
 ): Promise<T> {
-  const maxAttempts = opts.maxAttempts ?? 3;
-  const baseDelay = opts.baseDelayMs ?? 1500;
+  const maxAttempts = opts.maxAttempts ?? 5;
+  const baseDelay = opts.baseDelayMs ?? 3000;
   const label = opts.label ?? 'LLM';
+  const MAX_DELAY = 30000;
 
   let lastError: unknown;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -54,7 +58,13 @@ export async function withLLMRetry<T>(
         throw err;
       }
 
-      const delay = baseDelay * Math.pow(2, attempt - 1);
+      let delay = Math.min(baseDelay * Math.pow(2, attempt - 1), MAX_DELAY);
+      // Les rate limits du tier gratuit NVIDIA se réinitialisent lentement :
+      // on attend plus longtemps pour leur laisser le temps de récupérer.
+      if (isRateLimit(message)) delay = Math.max(delay, 8000);
+      // Jitter pour éviter les rafales synchronisées (fan-out multi-agents).
+      delay += Math.floor(Math.random() * 500);
+
       console.warn(
         `[${label}] tentative ${attempt}/${maxAttempts} échouée : ` +
           `${message.slice(0, 100)} — nouvel essai dans ${delay}ms`
