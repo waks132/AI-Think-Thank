@@ -8,7 +8,7 @@
  */
 
 import {ai, JSON_OUTPUT_DIRECTIVE, getModelConfig} from '@/ai/genkit';
-import {withLLMRetry} from '@/ai/resilience';
+import {withModelFallback} from '@/ai/providers';
 import {z} from 'genkit';
 import { queryKnowledgeBaseTool, queryKnowledgeArchiveTool } from '@/ai/tools/knowledge-base-tool';
 import { queryMissionArchiveTool } from '@/ai/tools/mission-archive-tool';
@@ -205,13 +205,13 @@ const agentCollaborationFlow = ai.defineFlow(
     // Step 2: Generate contributions for each agent sequentially to avoid rate limiting
     const contributions: AgentContribution[] = [];
     for (const agent of agentsToSimulate) {
-      const contributionResult = await withLLMRetry(
-        () => agentContributionGeneratorPrompt({
+      const contributionResult = await withModelFallback(
+        (model) => agentContributionGeneratorPrompt({
           mission: input.mission,
           agent: agent,
           language: input.language,
-        }, { model: input.model, config: getModelConfig(input.model, 'creative') }),
-        { label: `contribution:${agent.role}` }
+        }, { model, config: getModelConfig(model, 'creative') }),
+        { label: `contribution:${agent.role}`, preferredModel: input.model }
       );
       const contributionOutput = contributionResult.output;
       if (!contributionOutput) {
@@ -225,18 +225,18 @@ const agentCollaborationFlow = ai.defineFlow(
     }
 
     // Step 3: Synthesize the results
-    const synthesisResult = await withLLMRetry(
-      () => agentCollaborationSynthesisPrompt({
+    const synthesisResult = await withModelFallback(
+      (model) => agentCollaborationSynthesisPrompt({
         mission: input.mission,
         agentList: input.agentList,
         contributions: contributions,
         language: input.language,
       }, {
-        model: input.model,
-        config: getModelConfig(input.model, 'analytical'),
+        model,
+        config: getModelConfig(model, 'analytical'),
         maxTurns: 5,
       }),
-      { label: 'agentCollaborationSynthesis' }
+      { label: 'agentCollaborationSynthesis', requireTools: true, preferredModel: input.model }
     );
 
     const finalOutput = synthesisResult.output;

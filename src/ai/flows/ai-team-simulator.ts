@@ -8,6 +8,7 @@
  */
 
 import {ai, getModelConfig} from '@/ai/genkit';
+import {withModelFallback} from '@/ai/providers';
 import {z} from 'genkit';
 
 const PerspectiveSchema = z.object({
@@ -120,10 +121,10 @@ const cognitiveClashSimulatorFlow = ai.defineFlow(
     outputSchema: CognitiveClashSimulatorOutputSchema,
   },
   async (input) => {
-    const response = await prompt(input, {
-      model: input.model,
-      config: getModelConfig(input.model, 'creative'),
-    });
+    const response = await withModelFallback((model) => prompt(input, {
+      model,
+      config: getModelConfig(model, 'creative'),
+    }), { label: 'ai-team-simulator', preferredModel: input.model });
     return response.output!;
   }
 );

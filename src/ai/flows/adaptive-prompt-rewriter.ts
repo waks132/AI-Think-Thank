@@ -10,6 +10,7 @@
  */
 
 import {ai, getModelConfig} from '@/ai/genkit';
+import {withModelFallback} from '@/ai/providers';
 import {z} from 'genkit';
 
 const AdaptivePromptRewriterInputSchema = z.object({
@@ -90,7 +91,7 @@ const adaptivePromptRewriterFlow = ai.defineFlow(
     outputSchema: AdaptivePromptRewriterOutputSchema,
   },
   async (input) => {
-    const response = await adaptivePromptRewriterPrompt(input, {model: input.model, config: getModelConfig(input.model, 'creative')});
+    const response = await withModelFallback((model) => adaptivePromptRewriterPrompt(input, {model, config: getModelConfig(model, 'creative')}), { label: 'adaptive-prompt-rewriter', preferredModel: input.model });
     return response.output!;
   }
 );

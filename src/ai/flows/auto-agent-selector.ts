@@ -8,7 +8,7 @@
  */
 
 import {ai, JSON_OUTPUT_DIRECTIVE, getModelConfig} from '@/ai/genkit';
-import {withLLMRetry} from '@/ai/resilience';
+import {withModelFallback} from '@/ai/providers';
 import {z} from 'genkit';
 import { queryKnowledgeBaseTool, queryKnowledgeArchiveTool } from '@/ai/tools/knowledge-base-tool';
 
@@ -172,9 +172,9 @@ const autoAgentSelectorFlow = ai.defineFlow(
     
     // VERSION LOCALE : on laisse le modèle par défaut NVIDIA (défini dans genkit.ts
     // via NVIDIA_DEFAULT_MODEL), ou celui passé en entrée le cas échéant.
-    let response = await withLLMRetry(
-      () => autoAgentSelectorPrompt({...input, agents: selectableAgents}, {model: input.model, config: getModelConfig(input.model, 'precise'), maxTurns: 5}),
-      { label: 'autoAgentSelector' }
+    let response = await withModelFallback(
+      (model) => autoAgentSelectorPrompt({...input, agents: selectableAgents}, {model, config: getModelConfig(model, 'precise'), maxTurns: 5}),
+      { label: 'autoAgentSelector', requireTools: true, preferredModel: input.model }
     );
 
     // Exclude paradigmNativeProtocol if not required by mission classification

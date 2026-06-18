@@ -8,6 +8,7 @@
  */
 
 import {ai, getModelConfig} from '@/ai/genkit';
+import {withModelFallback} from '@/ai/providers';
 import {z} from 'genkit';
 
 const CausalFlowTrackerInputSchema = z.object({
@@ -58,7 +59,7 @@ const causalFlowTrackerFlow = ai.defineFlow(
     outputSchema: CausalFlowTrackerOutputSchema,
   },
   async (input) => {
-    const response = await prompt(input, {model: input.model, config: getModelConfig(input.model, 'analytical')});
+    const response = await withModelFallback((model) => prompt(input, {model, config: getModelConfig(model, 'analytical')}), { label: 'causal-flow-tracker-flow', preferredModel: input.model });
     return response.output!;
   }
 );

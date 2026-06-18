@@ -8,6 +8,7 @@
  */
 
 import {ai, getModelConfig} from '@/ai/genkit';
+import {withModelFallback} from '@/ai/providers';
 import {z} from 'genkit';
 
 const CognitiveHeatmapInputSchema = z.object({
@@ -52,7 +53,7 @@ const cognitiveHeatmapFlow = ai.defineFlow(
     outputSchema: CognitiveHeatmapOutputSchema,
   },
   async (input) => {
-    const response = await prompt(input, {model: input.model, config: getModelConfig(input.model, 'analytical')});
+    const response = await withModelFallback((model) => prompt(input, {model, config: getModelConfig(model, 'analytical')}), { label: 'cognitive-heatmap-flow', preferredModel: input.model });
     return response.output!;
   }
 );

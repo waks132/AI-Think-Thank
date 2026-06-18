@@ -197,6 +197,32 @@ génération de base, mode JSON, JSON schema strict, function calling.
 4. **Coût en crédits.** Les endpoints gratuits consomment les crédits offerts.
    Surveillez votre quota sur le tableau de bord NVIDIA Build.
 
+## Routeur multi-fournisseurs (bascule intelligente)
+
+L'app peut utiliser plusieurs fournisseurs LLM (tous compatibles OpenAI) et
+**bascule automatiquement** de l'un à l'autre en cas d'échec (429, JSON
+invalide, timeout…). Politique : **GRATUIT d'abord, PAYANT en secours**.
+
+Ordre d'essai : **NVIDIA (gratuit)** → **OpenRouter `:free` (gratuit)** →
+**Mistral (payant)** → **OpenAI (payant)**. Un fournisseur n'est activé que si
+sa clé est dans `.env.local` :
+
+```dotenv
+NVIDIA_API_KEY=nvapi-...            # gratuit
+OPENROUTER_API_KEY=sk-or-...        # gratuit (modèles :free découverts auto)
+MISTRAL_API_KEY=...                 # payant (secours fiable)
+OPENAI_API_KEY=sk-...               # payant (secours fiable : gpt-4o-mini)
+```
+
+- **Sélecteur d'agents / collaboration** (flows lourds) : sur le tier gratuit
+  seul, c'est lent (~2 min, JSON parfois capricieux). **Dès qu'une clé payante
+  est présente**, le routeur bascule sur `gpt-4o-mini` / `mistral-large-latest`
+  en cas d'échec → **rapide et fiable**.
+- **OpenRouter** : les modèles gratuits sont récupérés dynamiquement via son API
+  `/models` (filtre `:free` + support des outils), avec cache 30 min.
+- Dans l'UI, laissez le modèle sur **`auto`** pour profiter de la bascule ;
+  ou forcez `nvidia/…`, `mistral/…`, `openai/…`, `openrouter/…`.
+
 ## Persistance des données (état des outils)
 
 La version locale stocke l'état des modules (résultats des outils, agents,

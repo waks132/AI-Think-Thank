@@ -8,6 +8,7 @@
  */
 
 import {ai, getModelConfig} from '@/ai/genkit';
+import {withModelFallback} from '@/ai/providers';
 import {z} from 'genkit';
 
 const AutoCurationInputSchema = z.object({
@@ -92,7 +93,7 @@ const autoCurationFlow = ai.defineFlow(
     outputSchema: AutoCurationOutputSchema,
   },
   async (input) => {
-    const response = await autoCurationPrompt(input, {model: input.model, config: getModelConfig(input.model, 'analytical')});
+    const response = await withModelFallback((model) => autoCurationPrompt(input, {model, config: getModelConfig(model, 'analytical')}), { label: 'auto-prompt-curator', preferredModel: input.model });
     return response.output!;
   }
 );

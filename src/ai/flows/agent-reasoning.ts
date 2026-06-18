@@ -8,7 +8,7 @@
  */
 
 import {ai, JSON_OUTPUT_DIRECTIVE, getModelConfig} from '@/ai/genkit';
-import {withLLMRetry} from '@/ai/resilience';
+import {withModelFallback} from '@/ai/providers';
 import {z} from 'genkit';
 import { queryKnowledgeBaseTool, queryKnowledgeArchiveTool } from '@/ai/tools/knowledge-base-tool';
 import { queryMissionArchiveTool } from '@/ai/tools/mission-archive-tool';
@@ -74,9 +74,9 @@ const agentReasoningFlow = ai.defineFlow(
     outputSchema: AgentReasoningOutputSchema,
   },
   async (input) => {
-    const response = await withLLMRetry(
-      () => agentReasoningPrompt(input, { model: input.model, config: getModelConfig(input.model, 'reasoning'), maxTurns: 5 }),
-      { label: 'agentReasoning' }
+    const response = await withModelFallback(
+      (model) => agentReasoningPrompt(input, { model, config: getModelConfig(model, 'reasoning'), maxTurns: 5 }),
+      { label: 'agentReasoning', requireTools: true, preferredModel: input.model }
     );
     return response.output!;
   }

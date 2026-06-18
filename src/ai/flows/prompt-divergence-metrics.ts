@@ -8,6 +8,7 @@
  */
 
 import {ai, getModelConfig} from '@/ai/genkit';
+import {withModelFallback} from '@/ai/providers';
 import {z} from 'genkit';
 
 const CalculatePromptDivergenceInputSchema = z.object({
@@ -63,7 +64,7 @@ const calculatePromptDivergenceFlow = ai.defineFlow(
     outputSchema: CalculatePromptDivergenceOutputSchema,
   },
   async (input) => {
-    const response = await prompt(input, {model: input.model, config: getModelConfig(input.model, 'metrics')});
+    const response = await withModelFallback((model) => prompt(input, {model, config: getModelConfig(model, 'metrics')}), { label: 'prompt-divergence-metrics', preferredModel: input.model });
     return response.output!;
   }
 );
